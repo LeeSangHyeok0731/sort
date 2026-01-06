@@ -81,11 +81,18 @@ export default function SortVisualizer() {
   const [playing, setPlaying] = useState(false);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmId>("bubble");
+  const [selectedAlgo2, setSelectedAlgo2] = useState<AlgorithmId>("quick");
+  const [isCompareMode, setIsCompareMode] = useState(false);
   const [isSortedFeedback, setIsSortedFeedback] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
   const [executionTime, setExecutionTime] = useState<number | null>(null);
+  const [executionTime2, setExecutionTime2] = useState<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
+
+  const [array2, setArray2] = useState<ArrayItem[]>([]);
+  const [steps2, setSteps2] = useState<SortStep[]>([]);
+  const [stepIndex2, setStepIndex2] = useState(0);
 
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
@@ -93,6 +100,8 @@ export default function SortVisualizer() {
   // 1. Sync state from URL and enforce defaults
   useEffect(() => {
     const algoParam = searchParams.get("algo");
+    const algo2Param = searchParams.get("algo2");
+    const compareParam = searchParams.get("compare");
     const speedParam = searchParams.get("speed");
     const sizeParam = searchParams.get("size");
 
@@ -106,10 +115,22 @@ export default function SortVisualizer() {
       return;
     }
 
+    // sync compare mode
+    if (compareParam === "true" && !isCompareMode) setIsCompareMode(true);
+    if (compareParam === "false" && isCompareMode) setIsCompareMode(false);
+
     // sync algo
     const algoFromUrl = algoParam as AlgorithmId;
     if (ALGORITHMS.some((a) => a.id === algoFromUrl)) {
       if (algoFromUrl !== selectedAlgo) setSelectedAlgo(algoFromUrl);
+    }
+
+    // sync algo2
+    if (algo2Param) {
+      const algo2FromUrl = algo2Param as AlgorithmId;
+      if (ALGORITHMS.some((a) => a.id === algo2FromUrl)) {
+        if (algo2FromUrl !== selectedAlgo2) setSelectedAlgo2(algo2FromUrl);
+      }
     }
 
     // sync speed
@@ -131,7 +152,9 @@ export default function SortVisualizer() {
   }, [searchParams]);
 
   // 2. Helper to update URL only when state changes from user UI actions
-  const updateUrlParams = (updates: Record<string, string | number>) => {
+  const updateUrlParams = (
+    updates: Record<string, string | number | boolean>
+  ) => {
     const params = new URLSearchParams(searchParams.toString());
     let changed = false;
     Object.entries(updates).forEach(([key, val]) => {
@@ -148,25 +171,55 @@ export default function SortVisualizer() {
   useEffect(() => {
     if (!playing) return;
 
-    if (stepIndex >= steps.length && steps.length > 0) {
-      if (startTimeRef.current) {
-        setExecutionTime(performance.now() - startTimeRef.current);
-        startTimeRef.current = null;
-      }
+    const finished1 = steps.length > 0 && stepIndex >= steps.length;
+    const finished2 = isCompareMode
+      ? steps2.length > 0 && stepIndex2 >= steps2.length
+      : true;
+
+    if (finished1 && finished2) {
       setPlaying(false);
+      startTimeRef.current = null;
       return;
     }
 
     const timer = setTimeout(() => {
-      const step = steps[stepIndex];
-      if (step) {
+      // Advance algorithm 1
+      if (stepIndex < steps.length) {
+        const step = steps[stepIndex];
         setArray(step.array);
-        setStepIndex((i) => i + 1);
+        setStepIndex((prev) => {
+          const next = prev + 1;
+          if (next >= steps.length && startTimeRef.current) {
+            setExecutionTime(performance.now() - startTimeRef.current);
+          }
+          return next;
+        });
+      }
+
+      // Advance algorithm 2
+      if (isCompareMode && stepIndex2 < steps2.length) {
+        const step = steps2[stepIndex2];
+        setArray2(step.array);
+        setStepIndex2((prev) => {
+          const next = prev + 1;
+          if (next >= steps2.length && startTimeRef.current) {
+            setExecutionTime2(performance.now() - startTimeRef.current);
+          }
+          return next;
+        });
       }
     }, BASE_ANIMATION_SPEED / speedMultiplier);
 
     return () => clearTimeout(timer);
-  }, [playing, stepIndex, steps, speedMultiplier]);
+  }, [
+    playing,
+    stepIndex,
+    stepIndex2,
+    steps,
+    steps2,
+    speedMultiplier,
+    isCompareMode,
+  ]);
 
   const isSorted = useMemo(() => {
     for (let i = 0; i < array.length - 1; i++) {
@@ -243,6 +296,16 @@ export default function SortVisualizer() {
     setSteps(s);
     setStepIndex(0);
     setExecutionTime(null);
+
+    let s2: SortStep[] = [];
+    if (isCompareMode) {
+      s2 = getSteps(selectedAlgo2, array);
+      setSteps2(s2);
+      setStepIndex2(0);
+      setArray2([...array]);
+      setExecutionTime2(null);
+    }
+
     startTimeRef.current = performance.now();
     setPlaying(true);
     setTimeout(() => {
@@ -254,6 +317,8 @@ export default function SortVisualizer() {
     setPlaying(false);
     setSteps([]);
     setStepIndex(0);
+    setSteps2([]);
+    setStepIndex2(0);
     startTimeRef.current = null;
   };
 
@@ -262,8 +327,14 @@ export default function SortVisualizer() {
     setArray(newArray);
     setSteps([]);
     setStepIndex(0);
-    setPlaying(false);
     setExecutionTime(null);
+    if (isCompareMode) {
+      setArray2([...newArray]);
+      setSteps2([]);
+      setStepIndex2(0);
+      setExecutionTime2(null);
+    }
+    setPlaying(false);
     startTimeRef.current = null;
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -271,30 +342,39 @@ export default function SortVisualizer() {
   };
 
   const handleCustomArray = (numbers: number[]) => {
-    setArray(numbers.map((val) => ({ id: idCounter.current++, value: val })));
+    const newArr = numbers.map((val) => ({
+      id: idCounter.current++,
+      value: val,
+    }));
+    setArray(newArr);
+    if (isCompareMode) setArray2([...newArr]);
     setSteps([]);
     setStepIndex(0);
+    setSteps2([]);
+    setStepIndex2(0);
     setPlaying(false);
     setExecutionTime(null);
+    setExecutionTime2(null);
     updateUrlParams({ size: numbers.length });
-    // Use requestAnimationFrame or setTimeout to ensure it scrolls after render
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleRandomGenerate = (size: number, mode: GenerationMode) => {
-    setArray(generateArrayItems(size, mode));
+    const newArr = generateArrayItems(size, mode);
+    setArray(newArr);
+    if (isCompareMode) setArray2([...newArr]);
     setSteps([]);
     setStepIndex(0);
+    setSteps2([]);
+    setStepIndex2(0);
     setPlaying(false);
     setExecutionTime(null);
+    setExecutionTime2(null);
     updateUrlParams({ size });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const algoInfo = ALGORITHMS.find((a) => a.id === selectedAlgo);
-  const currentStep = steps[stepIndex];
 
   return (
     <div className="flex flex-col items-center w-full max-w-4xl">
@@ -362,8 +442,8 @@ export default function SortVisualizer() {
         </div>
       </div>
 
-      {/* Unified Single-Line Status Bar (Desktop Only) */}
-      <div className="hidden md:block w-full max-w-2xl mb-6 px-2">
+      {/* Unified Single-Line Status Bar */}
+      <div className="w-full max-w-2xl mb-6 px-2">
         <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-full px-3 py-2 md:px-6 md:py-2.5 shadow-2xl flex items-center justify-between gap-1 md:gap-4">
           {/* Group 1: Steps & Size */}
           <div className="flex items-center gap-2 md:gap-6 bg-white/5 md:bg-transparent px-2 py-1 md:p-0 rounded-xl border border-white/5 md:border-none">
@@ -372,7 +452,7 @@ export default function SortVisualizer() {
                 Steps
               </span>
               <span className="text-[10px] md:text-sm text-indigo-400 font-mono font-black">
-                {stepIndex}
+                {isCompareMode ? `${stepIndex} / ${stepIndex2}` : stepIndex}
               </span>
             </div>
 
@@ -397,7 +477,9 @@ export default function SortVisualizer() {
                 Algo
               </span>
               <span className="text-[9px] md:text-sm uppercase-algo text-pink-400 font-black tracking-tight truncate max-w-[60px] md:max-w-none">
-                {selectedAlgo}
+                {isCompareMode
+                  ? `${selectedAlgo} vs ${selectedAlgo2}`
+                  : selectedAlgo}
               </span>
             </div>
 
@@ -405,14 +487,26 @@ export default function SortVisualizer() {
 
             <div
               className={`flex items-center gap-1.5 md:gap-2 bg-amber-500/10 px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-full border border-amber-500/20 ${
-                executionTime === null ? "opacity-20" : ""
+                executionTime === null && executionTime2 === null
+                  ? "opacity-20"
+                  : ""
               }`}
             >
               <span className="text-[8px] md:text-xs font-bold text-amber-500/40 uppercase hidden sm:inline">
                 Time
               </span>
               <span className="text-[10px] md:text-sm text-amber-400 font-mono font-black">
-                {executionTime !== null
+                {isCompareMode
+                  ? `${
+                      executionTime !== null
+                        ? (executionTime / 1000).toFixed(2)
+                        : "---"
+                    }s / ${
+                      executionTime2 !== null
+                        ? (executionTime2 / 1000).toFixed(2)
+                        : "---"
+                    }s`
+                  : executionTime !== null
                   ? `${(executionTime / 1000).toFixed(2)}s`
                   : "0.0s"}
               </span>
@@ -421,11 +515,37 @@ export default function SortVisualizer() {
         </div>
       </div>
 
-      <ArrayBars
-        array={array}
-        compare={currentStep?.compare}
-        swap={currentStep?.swap}
-      />
+      <div
+        className={`w-full flex ${
+          isCompareMode ? "flex-col md:flex-row gap-8" : "flex-col"
+        } items-center`}
+      >
+        <div className="flex-1 w-full flex flex-col items-center">
+          {isCompareMode && (
+            <span className="text-xs font-bold text-white/20 mb-2 uppercase tracking-widest">
+              Algorithm 1: {selectedAlgo}
+            </span>
+          )}
+          <ArrayBars
+            array={array}
+            compare={steps[stepIndex]?.compare}
+            swap={steps[stepIndex]?.swap}
+          />
+        </div>
+
+        {isCompareMode && (
+          <div className="flex-1 w-full flex flex-col items-center">
+            <span className="text-xs font-bold text-white/20 mb-2 uppercase tracking-widest">
+              Algorithm 2: {selectedAlgo2}
+            </span>
+            <ArrayBars
+              array={array2}
+              compare={steps2[stepIndex2]?.compare}
+              swap={steps2[stepIndex2]?.swap}
+            />
+          </div>
+        )}
+      </div>
 
       <ControlPanel
         onStart={start}
@@ -444,16 +564,20 @@ export default function SortVisualizer() {
           setSelectedAlgo(id);
           updateUrlParams({ algo: id });
         }}
+        selectedAlgo2={selectedAlgo2}
+        setSelectedAlgo2={(id) => {
+          setSelectedAlgo2(id);
+          updateUrlParams({ algo2: id });
+        }}
+        isCompareMode={isCompareMode}
+        setIsCompareMode={(val) => {
+          setIsCompareMode(val);
+          updateUrlParams({ compare: val });
+        }}
         shellGaps={shellGaps}
-        setShellGaps={(v) => {
-          setShellGaps(v);
-          // Optional: gaps don't necessarily need to be in URL unless requested
-        }}
+        setShellGaps={setShellGaps}
         bucketCount={bucketCount}
-        setBucketCount={(v) => {
-          setBucketCount(v);
-          updateUrlParams({ buckets: v });
-        }}
+        setBucketCount={setBucketCount}
         arrayLength={array.length}
       />
 

@@ -148,6 +148,10 @@ type Props = {
   setSpeedMultiplier: (speed: number) => void;
   selectedAlgo: AlgorithmId;
   setSelectedAlgo: (id: AlgorithmId) => void;
+  selectedAlgo2: AlgorithmId;
+  setSelectedAlgo2: (id: AlgorithmId) => void;
+  isCompareMode: boolean;
+  setIsCompareMode: (val: boolean) => void;
   shellGaps: string;
   setShellGaps: (val: string) => void;
   bucketCount: number;
@@ -172,6 +176,10 @@ export default function ControlPanel({
   setSpeedMultiplier,
   selectedAlgo,
   setSelectedAlgo,
+  selectedAlgo2,
+  setSelectedAlgo2,
+  isCompareMode,
+  setIsCompareMode,
   shellGaps,
   setShellGaps,
   bucketCount,
@@ -185,6 +193,7 @@ export default function ControlPanel({
   const [genMode, setGenMode] = useState<GenerationMode>("unique");
   const [activeCategory, setActiveCategory] =
     useState<AlgorithmCategory>("standard");
+  const [activeCompareTab, setActiveCompareTab] = useState<1 | 2>(1);
 
   // Sync randomSize input with actual array length (from URL/State)
   useEffect(() => {
@@ -217,49 +226,125 @@ export default function ControlPanel({
 
   return (
     <div className="flex flex-col gap-6 mt-8 w-full max-w-4xl">
-      {/* Category Selection */}
-      <div className="flex gap-2 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 w-full md:w-fit self-center overflow-x-auto no-scrollbar">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id as AlgorithmCategory)}
-            className={`
-              px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap flex-1 md:flex-none
-              ${
-                activeCategory === cat.id
-                  ? "bg-indigo-600 text-white shadow-lg"
-                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
-              }
-            `}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
+      {/* Compare Mode Toggle & Algorithm Selection */}
+      <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-4 md:p-6 rounded-[2.5rem] shadow-2xl flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center border border-indigo-500/20">
+              <span className="text-xl">⚖️</span>
+            </div>
+            <div>
+              <h3 className="text-white font-bold">비교 모드</h3>
+              <p className="text-[10px] text-white/30 uppercase tracking-widest font-mono">
+                Compare Two Algorithms
+              </p>
+            </div>
+            <button
+              onClick={() => setIsCompareMode(!isCompareMode)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ml-4 ${
+                isCompareMode ? "bg-indigo-600" : "bg-white/10"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isCompareMode ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
 
-      {/* Algorithm Selection Gradient Backdrop */}
-      <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5 md:gap-2 bg-white/5 backdrop-blur-md p-2 md:p-4 rounded-3xl border border-white/10 shadow-xl min-h-[160px]">
-        {ALGORITHMS.filter((a) => a.category === activeCategory).map((algo) => (
-          <button
-            key={algo.id}
-            onClick={() => setSelectedAlgo(algo.id)}
-            disabled={playing}
-            className={`
-              px-2 py-3 md:px-3 md:py-4 rounded-xl text-[11px] md:text-sm font-bold transition-all border flex flex-col items-center justify-center gap-0.5 md:gap-1
-              ${
-                selectedAlgo === algo.id
-                  ? "bg-indigo-600/20 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.2)]"
-                  : "bg-white/5 border-white/10 text-white/40 hover:text-white/60 hover:bg-white/10"
+          {isCompareMode && (
+            <div className="flex gap-1 p-1 bg-black/20 rounded-xl">
+              <button
+                onClick={() => setActiveCompareTab(1)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  activeCompareTab === 1
+                    ? "bg-white/10 text-white shadow-lg"
+                    : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                알고리즘 1:{" "}
+                {ALGORITHMS.find((a) => a.id === selectedAlgo)?.name}
+              </button>
+              <button
+                onClick={() => setActiveCompareTab(2)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  activeCompareTab === 2
+                    ? "bg-white/10 text-white shadow-lg"
+                    : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                알고리즘 2:{" "}
+                {ALGORITHMS.find((a) => a.id === selectedAlgo2)?.name}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="h-px w-full bg-white/5" />
+
+        <div className="flex flex-col gap-6">
+          {/* Category Selection */}
+          <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/10 w-full md:w-fit self-center overflow-x-auto no-scrollbar">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id as AlgorithmCategory)}
+                className={`
+                  px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap flex-1 md:flex-none
+                  ${
+                    activeCategory === cat.id
+                      ? "bg-indigo-600 text-white shadow-lg"
+                      : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                  }
+                `}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Algorithm Grid */}
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5 md:gap-2 min-h-[160px]">
+            {ALGORITHMS.filter((a) => a.category === activeCategory).map(
+              (algo) => {
+                const isSelected =
+                  (isCompareMode && activeCompareTab === 1) || !isCompareMode
+                    ? selectedAlgo === algo.id
+                    : selectedAlgo2 === algo.id;
+                return (
+                  <button
+                    key={algo.id}
+                    onClick={() => {
+                      if (isCompareMode && activeCompareTab === 2) {
+                        setSelectedAlgo2(algo.id);
+                      } else {
+                        setSelectedAlgo(algo.id);
+                      }
+                    }}
+                    disabled={playing}
+                    className={`
+                      px-2 py-3 md:px-3 md:py-4 rounded-xl text-[11px] md:text-sm font-bold transition-all border flex flex-col items-center justify-center gap-0.5 md:gap-1
+                      ${
+                        isSelected
+                          ? "bg-indigo-600/20 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.2)]"
+                          : "bg-white/5 border-white/10 text-white/40 hover:text-white/60 hover:bg-white/10"
+                      }
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                    `}
+                  >
+                    <span className="text-center leading-tight">
+                      {algo.name}
+                    </span>
+                    <span className="text-[8px] md:text-[9px] opacity-40 font-normal text-center leading-tight hidden xs:block">
+                      {algo.desc.split(" ").slice(0, 2).join(" ")}
+                    </span>
+                  </button>
+                );
               }
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
-          >
-            <span className="text-center leading-tight">{algo.name}</span>
-            <span className="text-[8px] md:text-[9px] opacity-40 font-normal text-center leading-tight hidden xs:block">
-              {algo.desc.split(" ").slice(0, 2).join(" ")}
-            </span>
-          </button>
-        ))}
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Specific Algorithm Parameters */}
