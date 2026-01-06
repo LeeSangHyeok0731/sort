@@ -147,7 +147,12 @@ export default function SortVisualizer() {
 
   useEffect(() => {
     if (!playing) return;
-    if (stepIndex >= steps.length) {
+
+    if (stepIndex >= steps.length && steps.length > 0) {
+      if (startTimeRef.current) {
+        setExecutionTime(performance.now() - startTimeRef.current);
+        startTimeRef.current = null;
+      }
       setPlaying(false);
       return;
     }
@@ -157,13 +162,6 @@ export default function SortVisualizer() {
       if (step) {
         setArray(step.array);
         setStepIndex((i) => i + 1);
-      } else if (stepIndex >= steps.length && steps.length > 0) {
-        // Finishing sorting
-        if (startTimeRef.current) {
-          setExecutionTime(performance.now() - startTimeRef.current);
-          startTimeRef.current = null;
-        }
-        setPlaying(false);
       }
     }, BASE_ANIMATION_SPEED / speedMultiplier);
 
@@ -320,46 +318,61 @@ export default function SortVisualizer() {
         )}
       </div>
 
-      {/* Mobile Sticky Status Bar */}
-      <div className="md:hidden sticky top-4 z-40 w-full mb-4 px-2 pointer-events-none">
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center justify-between pointer-events-auto">
-          <div className="flex flex-col">
-            <span className="text-[10px] text-white/40 font-mono uppercase">
-              {selectedAlgo}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-indigo-400 font-bold">
-                {stepIndex} / {steps.length} steps
+      {/* Unified Single-Line Status Bar */}
+      <div className="w-full max-w-2xl mb-6 px-2">
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-full px-3 py-2 md:px-6 md:py-2.5 shadow-2xl flex items-center justify-between gap-1 md:gap-4">
+          {/* Group 1: Steps & Size */}
+          <div className="flex items-center gap-2 md:gap-6 bg-white/5 md:bg-transparent px-2 py-1 md:p-0 rounded-xl border border-white/5 md:border-none">
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <span className="text-[8px] md:text-xs font-bold text-white/30 uppercase tracking-tighter">
+                Steps
               </span>
-              {executionTime !== null && (
-                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                  {(executionTime / 1000).toFixed(2)}s
-                </span>
-              )}
+              <span className="text-[10px] md:text-sm text-indigo-400 font-mono font-black">
+                {stepIndex}
+              </span>
+            </div>
+
+            <div className="h-3 w-px bg-white/10"></div>
+
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <span className="text-[8px] md:text-xs font-bold text-white/30 uppercase tracking-tighter">
+                Size
+              </span>
+              <span className="text-[10px] md:text-sm text-purple-400 font-mono font-black">
+                {array.length}
+              </span>
             </div>
           </div>
-          <div className="flex gap-2">
-            {!playing ? (
-              <button
-                onClick={start}
-                className="w-8 h-8 flex items-center justify-center bg-indigo-600 rounded-lg text-white"
-              >
-                ▶
-              </button>
-            ) : (
-              <button
-                onClick={stop}
-                className="w-8 h-8 flex items-center justify-center bg-rose-600 rounded-lg text-white"
-              >
-                ■
-              </button>
-            )}
-            <button
-              onClick={reset}
-              className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-lg text-white"
+
+          <div className="hidden sm:block h-6 w-px bg-white/10 mx-1 md:mx-2"></div>
+
+          {/* Group 2: Algorithm & Time */}
+          <div className="flex items-center gap-2 md:gap-6 flex-1 justify-end">
+            <div className="flex items-center gap-1.5 md:gap-3 px-2 py-1 md:p-0 bg-pink-500/5 md:bg-transparent rounded-xl border border-pink-500/10 md:border-none">
+              <span className="text-[8px] md:text-xs font-bold text-white/30 uppercase tracking-tighter hidden md:inline">
+                Algo
+              </span>
+              <span className="text-[9px] md:text-sm uppercase-algo text-pink-400 font-black tracking-tight truncate max-w-[60px] md:max-w-none">
+                {selectedAlgo}
+              </span>
+            </div>
+
+            <div className="h-3 md:h-6 w-px bg-white/10"></div>
+
+            <div
+              className={`flex items-center gap-1.5 md:gap-2 bg-amber-500/10 px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-full border border-amber-500/20 ${
+                executionTime === null ? "opacity-20" : ""
+              }`}
             >
-              ↺
-            </button>
+              <span className="text-[8px] md:text-xs font-bold text-amber-500/40 uppercase hidden sm:inline">
+                Time
+              </span>
+              <span className="text-[10px] md:text-sm text-amber-400 font-mono font-black">
+                {executionTime !== null
+                  ? `${(executionTime / 1000).toFixed(2)}s`
+                  : "0.0s"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -400,38 +413,8 @@ export default function SortVisualizer() {
         arrayLength={array.length}
       />
 
-      <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-2xl px-2 md:px-0 gap-4">
-        <div className="hidden md:flex text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex-wrap justify-center gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto items-center">
-          <span className="whitespace-nowrap">
-            Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
-            {steps.length}
-          </span>
-          <span className="text-white/10">|</span>
-          <span className="whitespace-nowrap">
-            Size: <span className="text-purple-400">{array.length}</span>
-          </span>
-          <span className="text-white/10">|</span>
-          <span className="whitespace-nowrap uppercase-algo text-pink-400 font-bold">
-            {selectedAlgo}
-          </span>
-          {executionTime !== null && (
-            <>
-              <span className="text-white/10">|</span>
-              <motion.span
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="whitespace-nowrap bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
-              >
-                Time:{" "}
-                <span className="text-amber-400 font-bold shadow-amber-400/20 drop-shadow-sm">
-                  {(executionTime / 1000).toFixed(2)}s
-                </span>
-              </motion.span>
-            </>
-          )}
-        </div>
-
-        <div className="flex gap-2 w-full md:w-auto order-1 md:order-2">
+      <div className="mt-8 flex flex-col md:flex-row items-center justify-end w-full max-w-4xl px-2 md:px-0 gap-4">
+        <div className="flex gap-2 w-full md:w-auto">
           <button
             onClick={() => setShowCode(!showCode)}
             className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl border text-xs md:text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap ${
