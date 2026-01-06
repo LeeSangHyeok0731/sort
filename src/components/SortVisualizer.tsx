@@ -390,7 +390,9 @@ export default function SortVisualizer() {
               : algoInfo?.name}
           </p>
           <p className="text-indigo-200/50 font-medium text-xs md:text-base px-4">
-            {algoInfo?.desc}
+            {isCompareMode
+              ? `${algoInfo?.desc} vs ${algoInfo2?.desc}`
+              : algoInfo?.desc}
           </p>
         </div>
 
