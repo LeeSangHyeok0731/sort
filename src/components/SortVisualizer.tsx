@@ -34,10 +34,22 @@ import { bogoSortSteps } from "@/algorithms/bogoSort";
 import { introSortSteps } from "@/algorithms/introSort";
 import { treeSortSteps } from "@/algorithms/treeSort";
 
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+
 const BASE_ANIMATION_SPEED = 100;
 
 export default function SortVisualizer() {
-  const idCounter = useRef(Date.now());
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Use a ref for idCounter, initialized to null to satisfy purity checks
+  const idCounter = useRef<number>(0);
+
+  // Set initial idCounter on mount to avoid impurity during render
+  useEffect(() => {
+    idCounter.current = Date.now();
+  }, []);
 
   const generateArrayItems = (
     size: number,
@@ -70,11 +82,28 @@ export default function SortVisualizer() {
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
 
+  // Sync state with URL on mount
   useEffect(() => {
+    const algoFromUrl = searchParams.get("algo") as AlgorithmId;
+    if (algoFromUrl && ALGORITHMS.some((a) => a.id === algoFromUrl)) {
+      setSelectedAlgo(algoFromUrl);
+    }
+
     if (array.length === 0) {
       setArray(generateArrayItems(20, "unique"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync URL with state when algo changes
+  useEffect(() => {
+    const currentAlgo = searchParams.get("algo");
+    if (currentAlgo !== selectedAlgo) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("algo", selectedAlgo);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [selectedAlgo, pathname, router, searchParams]);
 
   useEffect(() => {
     if (!playing) return;

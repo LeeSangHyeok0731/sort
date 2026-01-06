@@ -24,7 +24,6 @@ export function bogoSortSteps(arr: ArrayItem[]): SortStep[] {
     shuffle(a);
     steps.push({
       array: [...a],
-      swap: Array.from({ length: a.length }, (_, i) => i),
     });
     iterations++;
   }

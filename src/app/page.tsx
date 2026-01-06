@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import SortVisualizer from "@/components/SortVisualizer";
 
 export default function Home() {
@@ -8,7 +9,15 @@ export default function Home() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
 
       <div className="z-10 w-full max-w-5xl">
-        <SortVisualizer />
+        <Suspense
+          fallback={
+            <div className="text-white/20 text-center animate-pulse">
+              Loading Visualizer...
+            </div>
+          }
+        >
+          <SortVisualizer />
+        </Suspense>
       </div>
     </main>
   );

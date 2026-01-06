@@ -6,9 +6,6 @@ export function mergeSortSteps(arr: ArrayItem[]): SortStep[] {
 
   function merge(l: number, m: number, r: number) {
     const temp = a.slice(l, r + 1);
-    let i = 0;
-    let j = m - l + 1;
-    let k = l;
 
     const n1 = m - l + 1;
     const n2 = r - l + 1;
