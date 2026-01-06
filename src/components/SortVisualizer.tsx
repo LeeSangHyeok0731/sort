@@ -85,6 +85,7 @@ export default function SortVisualizer() {
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [isSortedFeedback, setIsSortedFeedback] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const [activeCodeTab, setActiveCodeTab] = useState<1 | 2>(1);
 
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [executionTime2, setExecutionTime2] = useState<number | null>(null);
@@ -611,28 +612,70 @@ export default function SortVisualizer() {
             exit={{ opacity: 0, height: 0 }}
             className="w-full max-w-4xl mt-8 overflow-hidden"
           >
-            <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
+            <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-4 md:p-8 shadow-2xl">
+              {/* Code Tabs (Only in Compare Mode) */}
+              {isCompareMode && (
+                <div className="flex gap-2 mb-6 p-1 bg-black/20 rounded-2xl w-fit">
+                  <button
+                    onClick={() => setActiveCodeTab(1)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeCodeTab === 1
+                        ? "bg-indigo-600 text-white shadow-lg"
+                        : "text-white/40 hover:text-white/60"
+                    }`}
+                  >
+                    {algoInfo?.name}
+                  </button>
+                  <button
+                    onClick={() => setActiveCodeTab(2)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeCodeTab === 2
+                        ? "bg-pink-600 text-white shadow-lg"
+                        : "text-white/40 hover:text-white/60"
+                    }`}
+                  >
+                    {algoInfo2?.name}
+                  </button>
+                </div>
+              )}
+
+              {/* Code Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-rose-500" />
                   <div className="w-3 h-3 rounded-full bg-amber-500" />
                   <div className="w-3 h-3 rounded-full bg-emerald-500" />
                   <span className="ml-2 text-xs font-mono text-white/30 uppercase tracking-widest">
-                    {selectedAlgo}.js
+                    {activeCodeTab === 1 || !isCompareMode
+                      ? `${selectedAlgo}.js`
+                      : `${selectedAlgo2}.js`}
                   </span>
                 </div>
-                <div className="text-[10px] text-indigo-400 font-bold px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">
-                  {algoInfo?.name} 구현 코드
+                <div
+                  className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
+                    activeCodeTab === 1 || !isCompareMode
+                      ? "text-indigo-400 bg-indigo-500/10 border-indigo-500/20"
+                      : "text-pink-400 bg-pink-500/10 border-pink-500/20"
+                  }`}
+                >
+                  {(activeCodeTab === 1 || !isCompareMode
+                    ? algoInfo?.name
+                    : algoInfo2?.name) + " 구현 코드"}
                 </div>
               </div>
 
-              <div className="relative group">
-                <pre className="text-sm md:text-base font-mono leading-relaxed overflow-x-auto custom-scrollbar p-1">
+              {/* Code Block */}
+              <div className="relative group overflow-x-auto custom-scrollbar">
+                <pre className="text-sm md:text-base font-mono leading-relaxed p-1">
                   <code
                     className="language-javascript"
                     dangerouslySetInnerHTML={{
                       __html: Prism.highlight(
-                        ALGO_CODE[selectedAlgo],
+                        ALGO_CODE[
+                          activeCodeTab === 1 || !isCompareMode
+                            ? selectedAlgo
+                            : selectedAlgo2
+                        ] || "// Code not available",
                         Prism.languages.javascript,
                         "javascript"
                       )
@@ -641,7 +684,7 @@ export default function SortVisualizer() {
                           (line, i) =>
                             `<div class="flex gap-6"><span class="w-8 text-right text-white/10 select-none shrink-0">${
                               i + 1
-                            }</span><span>${line}</span></div>`
+                            }</span><span class="whitespace-pre">${line}</span></div>`
                         )
                         .join(""),
                     }}
