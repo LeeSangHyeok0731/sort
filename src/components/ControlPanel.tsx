@@ -30,6 +30,11 @@ type Props = {
   setSpeedMultiplier: (speed: number) => void;
   selectedAlgo: AlgorithmId;
   setSelectedAlgo: (id: AlgorithmId) => void;
+  // New props for specific algorithm parameters
+  shellGaps: string;
+  setShellGaps: (val: string) => void;
+  bucketCount: number;
+  setBucketCount: (val: number) => void;
 };
 
 export default function ControlPanel({
@@ -43,6 +48,10 @@ export default function ControlPanel({
   setSpeedMultiplier,
   selectedAlgo,
   setSelectedAlgo,
+  shellGaps,
+  setShellGaps,
+  bucketCount,
+  setBucketCount,
 }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [randomSize, setRandomSize] = useState(20);
@@ -82,6 +91,46 @@ export default function ControlPanel({
           </button>
         ))}
       </div>
+
+      {/* Specific Algorithm Parameters */}
+      {(selectedAlgo === "shell" || selectedAlgo === "bucket") && (
+        <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-xl flex flex-col gap-4">
+          <span className="text-xs font-bold text-white/40 px-1 uppercase tracking-wider">
+            {selectedAlgo === "shell" ? "Shell Sort Gaps" : "Bucket Sort Count"}
+          </span>
+          {selectedAlgo === "shell" ? (
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                value={shellGaps}
+                onChange={(e) => setShellGaps(e.target.value)}
+                placeholder="예: 701, 301, 132, 57, 23, 10, 4, 1 (빈칸이면 자동 지정)"
+                disabled={playing}
+                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors text-sm"
+              />
+              <p className="text-[10px] text-white/30 px-1">
+                셸 정렬에서 사용할 간격(Gap) 시퀀스를 쉼표나 공백으로 구분하여
+                입력하세요.
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={bucketCount}
+                onChange={(e) => setBucketCount(parseInt(e.target.value))}
+                disabled={playing}
+                className="flex-1 accent-indigo-500"
+              />
+              <span className="text-white font-mono bg-black/20 px-3 py-1 rounded-lg border border-white/10">
+                {bucketCount} Buckets
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Primary Actions & Speed */}
       <div className="flex flex-col md:flex-row items-center gap-6 bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-xl px-8">
@@ -152,7 +201,7 @@ export default function ControlPanel({
               onChange={(e) => setCustomInput(e.target.value)}
               placeholder="예: 10, 50, 20, 80..."
               disabled={playing}
-              className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-xs"
             />
             <button
               type="submit"
@@ -178,7 +227,7 @@ export default function ControlPanel({
                 )
               }
               disabled={playing}
-              className="w-20 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-24 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
             />
             <span className="text-white/40 text-sm italic whitespace-nowrap">
               개 생성 (최대 1000)

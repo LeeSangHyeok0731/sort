@@ -21,7 +21,6 @@ import { shellSortSteps } from "@/algorithms/shellSort";
 const BASE_ANIMATION_SPEED = 100;
 
 export default function SortVisualizer() {
-  // Use a ref to track a globally unique ID for each bar
   const idCounter = useRef(Date.now());
 
   const generateRandomArray = (size: number): ArrayItem[] =>
@@ -39,7 +38,10 @@ export default function SortVisualizer() {
   const [isSortedFeedback, setIsSortedFeedback] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Initialize array on mount if empty
+  // Algorithm specific parameters
+  const [shellGaps, setShellGaps] = useState("");
+  const [bucketCount, setBucketCount] = useState(5);
+
   useEffect(() => {
     if (array.length === 0) {
       setArray(generateRandomArray(20));
@@ -55,8 +57,10 @@ export default function SortVisualizer() {
 
     const timer = setTimeout(() => {
       const step = steps[stepIndex];
-      setArray(step.array);
-      setStepIndex((i) => i + 1);
+      if (step) {
+        setArray(step.array);
+        setStepIndex((i) => i + 1);
+      }
     }, BASE_ANIMATION_SPEED / speedMultiplier);
 
     return () => clearTimeout(timer);
@@ -88,9 +92,14 @@ export default function SortVisualizer() {
       case "radix":
         return radixSortSteps(arr);
       case "bucket":
-        return bucketSortSteps(arr);
-      case "shell":
-        return shellSortSteps(arr);
+        return bucketSortSteps(arr, bucketCount);
+      case "shell": {
+        const gaps = shellGaps
+          .split(/[, \s]+/)
+          .map((v) => parseInt(v.trim()))
+          .filter((v) => !isNaN(v));
+        return shellSortSteps(arr, gaps);
+      }
       default:
         return [];
     }
@@ -137,7 +146,6 @@ export default function SortVisualizer() {
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
-    // Auto-expand if > 100 as requested
     if (size > 100) {
       setIsExpanded(true);
     }
@@ -192,28 +200,31 @@ export default function SortVisualizer() {
         setSpeedMultiplier={setSpeedMultiplier}
         selectedAlgo={selectedAlgo}
         setSelectedAlgo={setSelectedAlgo}
+        shellGaps={shellGaps}
+        setShellGaps={setShellGaps}
+        bucketCount={bucketCount}
+        setBucketCount={setBucketCount}
       />
 
-      <div className="mt-8 flex items-center justify-between w-full max-w-2xl">
-        <div className="text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-4">
-          <span>
+      <div className="mt-8 flex items-center justify-between w-full max-w-2xl px-4 md:px-0">
+        <div className="text-white/40 text-[10px] md:text-sm font-mono bg-black/20 px-4 md:px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-2 md:gap-4 overflow-hidden">
+          <span className="truncate">
             Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
             {steps.length}
           </span>
           <span className="text-white/10">|</span>
-          <span>
+          <span className="truncate">
             Size: <span className="text-purple-400">{array.length}</span>
           </span>
           <span className="text-white/10">|</span>
-          <span>
-            Algo:{" "}
-            <span className="text-pink-400 uppercase">{selectedAlgo}</span>
+          <span className="truncate uppercase-algo text-pink-400 font-bold">
+            {selectedAlgo}
           </span>
         </div>
 
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-sm font-bold transition-all"
+          className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
         >
           {isExpanded ? "축소하기" : "확대해서 보기"}
         </button>
@@ -223,26 +234,24 @@ export default function SortVisualizer() {
 
   return (
     <>
-      {/* Container in the main page */}
       {!isExpanded && visualizerContent}
 
-      {/* Modal / Overlay for Expanded View */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-[#0f172a] p-10 flex flex-col items-center justify-center overflow-auto"
+            className="fixed inset-0 z-[100] bg-[#0f172a] p-4 md:p-10 flex flex-col items-center justify-center overflow-auto pointer-events-auto"
           >
-            <div className="w-full h-full flex flex-col items-center">
+            <div className="w-full h-full flex flex-col items-center py-10">
               {visualizerContent}
             </div>
 
-            {/* Close button for modal */}
             <button
               onClick={() => setIsExpanded(false)}
-              className="fixed top-8 right-8 text-white/40 hover:text-white text-3xl font-light transition-all"
+              className="fixed top-8 right-8 text-white/40 hover:text-white text-3xl font-light transition-all p-2 bg-white/5 rounded-full hover:bg-white/10 border border-white/10 z-[101]"
+              aria-label="Close Expanded View"
             >
               ✕
             </button>
