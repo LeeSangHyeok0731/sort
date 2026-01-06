@@ -174,14 +174,14 @@ export default function ControlPanel({
               value={randomSize}
               onChange={(e) =>
                 setRandomSize(
-                  Math.min(100, Math.max(2, parseInt(e.target.value) || 0))
+                  Math.min(1000, Math.max(2, parseInt(e.target.value) || 0))
                 )
               }
               disabled={playing}
               className="w-20 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
             />
             <span className="text-white/40 text-sm italic whitespace-nowrap">
-              개 생성 (최대 100)
+              개 생성 (최대 1000)
             </span>
             <button
               onClick={() => onRandomGenerate(randomSize)}

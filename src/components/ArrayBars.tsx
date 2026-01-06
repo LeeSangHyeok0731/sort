@@ -11,9 +11,15 @@ type Props = {
 
 export default function ArrayBars({ array, compare, swap }: Props) {
   const maxValue = Math.max(...array.map((i) => i.value));
+  const isLargeDataset = array.length > 100;
+  const isVeryLargeDataset = array.length > 500;
 
   return (
-    <div className="flex items-end gap-1 h-80 w-full bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden">
+    <div
+      className={`flex items-end ${
+        isLargeDataset ? "gap-0" : "gap-1"
+      } h-80 w-full bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden`}
+    >
       {array.map((item, index) => {
         const isCompare = compare?.includes(index);
         const isSwap = swap?.includes(index);
@@ -21,14 +27,20 @@ export default function ArrayBars({ array, compare, swap }: Props) {
         return (
           <motion.div
             key={item.id}
-            layout
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 40,
-            }}
+            layout={!isLargeDataset}
+            transition={
+              isLargeDataset
+                ? { duration: 0 }
+                : {
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 40,
+                  }
+            }
             className={`
-              flex-1 rounded-t-lg transition-colors duration-150 ease-out
+              flex-1 ${
+                isVeryLargeDataset ? "rounded-none" : "rounded-t-lg"
+              } transition-colors duration-150 ease-out
               ${
                 isSwap
                   ? "bg-linear-to-t from-emerald-500 to-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] z-10"
