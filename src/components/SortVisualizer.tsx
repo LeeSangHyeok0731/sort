@@ -58,29 +58,19 @@ export default function SortVisualizer() {
 
   const generateArrayItems = (
     size: number,
-    mode: GenerationMode,
-    min: number = 1,
-    max: number = 100
+    mode: GenerationMode
   ): ArrayItem[] => {
-    const range = Math.max(1, max - min + 1);
     if (mode === "unique") {
-      // If we need more unique numbers than the range allows, we expand the range or just cap it
-      const actualMax = Math.max(max, min + size - 1);
-      const fullRange = actualMax - min + 1;
-      const nums = Array.from({ length: fullRange }, (_, i) => i + min);
-
-      // Fisher-Yates shuffle
+      const nums = Array.from({ length: size }, (_, i) => i + 1);
       for (let i = nums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [nums[i], nums[j]] = [nums[j], nums[i]];
       }
-      return nums
-        .slice(0, size)
-        .map((val) => ({ id: idCounter.current++, value: val }));
+      return nums.map((val) => ({ id: idCounter.current++, value: val }));
     } else {
       return Array.from({ length: size }, () => ({
         id: idCounter.current++,
-        value: Math.floor(Math.random() * range) + min,
+        value: Math.floor(Math.random() * (size * 1.5)) + 1,
       }));
     }
   };
@@ -120,21 +110,13 @@ export default function SortVisualizer() {
     }
 
     const sizeFromUrl = searchParams.get("size");
-    const minFromUrl = searchParams.get("min");
-    const maxFromUrl = searchParams.get("max");
 
-    if (sizeFromUrl || minFromUrl || maxFromUrl) {
+    if (sizeFromUrl) {
       // Clamp size between 2 and 1000
-      const sizeParsed = Math.min(
-        1000,
-        Math.max(2, parseInt(sizeFromUrl || "20"))
-      );
-      const minParsed = parseInt(minFromUrl || "1");
-      const maxParsed = parseInt(maxFromUrl || (sizeParsed * 1.5).toString());
-
-      setArray(generateArrayItems(sizeParsed, "unique", minParsed, maxParsed));
+      const sizeParsed = Math.min(1000, Math.max(2, parseInt(sizeFromUrl)));
+      setArray(generateArrayItems(sizeParsed, "unique"));
     } else if (array.length === 0) {
-      setArray(generateArrayItems(20, "unique", 1, 30));
+      setArray(generateArrayItems(20, "unique"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -271,17 +253,12 @@ export default function SortVisualizer() {
     updateUrlParams({ size: numbers.length });
   };
 
-  const handleRandomGenerate = (
-    size: number,
-    mode: GenerationMode,
-    min: number,
-    max: number
-  ) => {
-    setArray(generateArrayItems(size, mode, min, max));
+  const handleRandomGenerate = (size: number, mode: GenerationMode) => {
+    setArray(generateArrayItems(size, mode));
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
-    updateUrlParams({ size, min, max });
+    updateUrlParams({ size });
     if (size > 100) {
       setIsExpanded(true);
     }

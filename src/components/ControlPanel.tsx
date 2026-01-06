@@ -142,12 +142,7 @@ type Props = {
   onReset: () => void;
   onStop: () => void;
   onCustomArray: (arr: number[]) => void;
-  onRandomGenerate: (
-    size: number,
-    mode: GenerationMode,
-    min: number,
-    max: number
-  ) => void;
+  onRandomGenerate: (size: number, mode: GenerationMode) => void;
   playing: boolean;
   speedMultiplier: number;
   setSpeedMultiplier: (speed: number) => void;
@@ -185,8 +180,6 @@ export default function ControlPanel({
 }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [randomSize, setRandomSize] = useState(20);
-  const [minVal, setMinVal] = useState(1);
-  const [maxVal, setMaxVal] = useState(30);
   const [genMode, setGenMode] = useState<GenerationMode>("unique");
   const [activeCategory, setActiveCategory] =
     useState<AlgorithmCategory>("standard");
@@ -402,33 +395,6 @@ export default function ControlPanel({
               </span>
             </div>
 
-            <div className="flex gap-4">
-              <div className="flex flex-col gap-1.5 flex-1">
-                <span className="text-[10px] font-bold text-white/30 uppercase tracking-tight px-1">
-                  Min Value
-                </span>
-                <input
-                  type="number"
-                  value={minVal}
-                  onChange={(e) => setMinVal(parseInt(e.target.value) || 0)}
-                  disabled={playing}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 flex-1">
-                <span className="text-[10px] font-bold text-white/30 uppercase tracking-tight px-1">
-                  Max Value
-                </span>
-                <input
-                  type="number"
-                  value={maxVal}
-                  onChange={(e) => setMaxVal(parseInt(e.target.value) || 0)}
-                  disabled={playing}
-                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-            </div>
-
             <div className="flex gap-2 p-1 bg-black/20 rounded-xl w-fit">
               <button
                 onClick={() => setGenMode("unique")}
@@ -453,9 +419,7 @@ export default function ControlPanel({
             </div>
 
             <button
-              onClick={() =>
-                onRandomGenerate(randomSize, genMode, minVal, maxVal)
-              }
+              onClick={() => onRandomGenerate(randomSize, genMode)}
               disabled={playing}
               className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(147,51,234,0.3)] active:scale-95 disabled:opacity-50"
             >
