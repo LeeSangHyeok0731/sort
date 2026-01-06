@@ -1,24 +1,28 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrayItem } from "@/types/sort";
 
 type Props = {
   array: ArrayItem[];
   compare?: [number, number];
   swap?: [number, number];
+  isExpanded?: boolean;
 };
 
-export default function ArrayBars({ array, compare, swap }: Props) {
-  const maxValue = Math.max(...array.map((i) => i.value));
+export default function ArrayBars({ array, compare, swap, isExpanded }: Props) {
+  const maxValue = Math.max(...array.map((i) => i.value), 1);
   const isLargeDataset = array.length > 100;
   const isVeryLargeDataset = array.length > 500;
 
   return (
     <div
-      className={`flex items-end ${
-        isLargeDataset ? "gap-0" : "gap-1"
-      } h-80 w-full bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden`}
+      className={`
+        flex items-end transition-all duration-500 ease-in-out
+        ${isLargeDataset ? "gap-0" : "gap-1"} 
+        ${isExpanded ? "h-[60vh]" : "h-80"} 
+        w-full bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden
+      `}
     >
       {array.map((item, index) => {
         const isCompare = compare?.includes(index);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ArrayBars from "./ArrayBars";
 import ControlPanel, { ALGORITHMS, AlgorithmId } from "./ControlPanel";
 import { SortStep, ArrayItem } from "@/types/sort";
@@ -20,22 +21,8 @@ import { shellSortSteps } from "@/algorithms/shellSort";
 const BASE_ANIMATION_SPEED = 100;
 
 export default function SortVisualizer() {
-  const [array, setArray] = useState<ArrayItem[]>([]);
-  const [steps, setSteps] = useState<SortStep[]>([]);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [speedMultiplier, setSpeedMultiplier] = useState(1);
-  const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmId>("bubble");
-  const [isSortedFeedback, setIsSortedFeedback] = useState(false);
-
   // Use a ref to track a globally unique ID for each bar
-  const idCounter = useRef(0);
-
-  const createArrayItems = (numbers: number[]): ArrayItem[] =>
-    numbers.map((val) => ({
-      id: idCounter.current++,
-      value: val,
-    }));
+  const idCounter = useRef(Date.now());
 
   const generateRandomArray = (size: number): ArrayItem[] =>
     Array.from({ length: size }, () => ({
@@ -43,9 +30,20 @@ export default function SortVisualizer() {
       value: Math.floor(Math.random() * 90) + 10,
     }));
 
-  // Initialize array on mount
+  const [array, setArray] = useState<ArrayItem[]>([]);
+  const [steps, setSteps] = useState<SortStep[]>([]);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
+  const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmId>("bubble");
+  const [isSortedFeedback, setIsSortedFeedback] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Initialize array on mount if empty
   useEffect(() => {
-    setArray(generateRandomArray(20));
+    if (array.length === 0) {
+      setArray(generateRandomArray(20));
+    }
   }, []);
 
   useEffect(() => {
@@ -128,7 +126,7 @@ export default function SortVisualizer() {
   };
 
   const handleCustomArray = (numbers: number[]) => {
-    setArray(createArrayItems(numbers));
+    setArray(numbers.map((val) => ({ id: idCounter.current++, value: val })));
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
@@ -139,15 +137,29 @@ export default function SortVisualizer() {
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
+    // Auto-expand if > 100 as requested
+    if (size > 100) {
+      setIsExpanded(true);
+    }
   };
 
   const currentStep = steps[stepIndex];
   const algoInfo = ALGORITHMS.find((a) => a.id === selectedAlgo);
 
-  return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
-      <div className="mb-12 text-center relative px-4">
-        <h1 className="text-5xl font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight">
+  const visualizerContent = (
+    <div
+      className={`flex flex-col items-center w-full ${
+        isExpanded ? "max-w-7xl" : "max-w-4xl"
+      }`}
+    >
+      <div
+        className={`text-center relative px-4 ${isExpanded ? "mb-8" : "mb-12"}`}
+      >
+        <h1
+          className={`${
+            isExpanded ? "text-4xl" : "text-5xl"
+          } font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight`}
+        >
           Sorting Visualizer
         </h1>
         <div className="flex flex-col items-center gap-2">
@@ -166,6 +178,7 @@ export default function SortVisualizer() {
         array={array}
         compare={currentStep?.compare}
         swap={currentStep?.swap}
+        isExpanded={isExpanded}
       />
 
       <ControlPanel
@@ -181,21 +194,61 @@ export default function SortVisualizer() {
         setSelectedAlgo={setSelectedAlgo}
       />
 
-      <div className="mt-8 text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-4">
-        <span>
-          Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
-          {steps.length}
-        </span>
-        <span className="text-white/10">|</span>
-        <span>
-          Size: <span className="text-purple-400">{array.length}</span>
-        </span>
-        <span className="text-white/10">|</span>
-        <span>
-          Algorithm:{" "}
-          <span className="text-pink-400 uppercase">{selectedAlgo}</span>
-        </span>
+      <div className="mt-8 flex items-center justify-between w-full max-w-2xl">
+        <div className="text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-4">
+          <span>
+            Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
+            {steps.length}
+          </span>
+          <span className="text-white/10">|</span>
+          <span>
+            Size: <span className="text-purple-400">{array.length}</span>
+          </span>
+          <span className="text-white/10">|</span>
+          <span>
+            Algo:{" "}
+            <span className="text-pink-400 uppercase">{selectedAlgo}</span>
+          </span>
+        </div>
+
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-sm font-bold transition-all"
+        >
+          {isExpanded ? "축소하기" : "확대해서 보기"}
+        </button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Container in the main page */}
+      {!isExpanded && visualizerContent}
+
+      {/* Modal / Overlay for Expanded View */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-[#0f172a] p-10 flex flex-col items-center justify-center overflow-auto"
+          >
+            <div className="w-full h-full flex flex-col items-center">
+              {visualizerContent}
+            </div>
+
+            {/* Close button for modal */}
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="fixed top-8 right-8 text-white/40 hover:text-white text-3xl font-light transition-all"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
