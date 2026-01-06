@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrayItem } from "@/types/sort";
 
 type Props = {
@@ -19,9 +19,11 @@ export default function ArrayBars({ array, compare, swap, isExpanded }: Props) {
     <div
       className={`
         flex items-end transition-all duration-500 ease-in-out
-        ${isLargeDataset ? "gap-0" : "gap-1"} 
+        ${
+          array.length > 200 ? "gap-0" : array.length > 50 ? "gap-px" : "gap-1"
+        } 
         ${isExpanded ? "h-[60vh]" : "h-80"} 
-        w-full bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden
+        w-full bg-white/5 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/10 shadow-2xl relative overflow-hidden
       `}
     >
       {array.map((item, index) => {

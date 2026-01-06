@@ -242,7 +242,7 @@ export default function SortVisualizer() {
 
   const visualizerContent = (
     <div
-      className={`flex flex-col items-center w-full mx-auto ${
+      className={`flex flex-col items-center w-full ${
         isExpanded ? "max-w-7xl" : "max-w-4xl"
       }`}
     >
@@ -254,7 +254,7 @@ export default function SortVisualizer() {
         <h1
           className={`${
             isExpanded ? "text-4xl" : "text-5xl"
-          } font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight text-center`}
+          } font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight`}
         >
           Sorting Visualizer
         </h1>
@@ -295,18 +295,18 @@ export default function SortVisualizer() {
         arrayLength={array.length}
       />
 
-      <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-4xl px-4 md:px-0 gap-4">
-        <div className="text-white/40 text-[10px] md:text-sm font-mono bg-black/20 px-4 md:px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-2 md:gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto">
-          <span className="truncate">
+      <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-2xl px-4 md:px-0 gap-4">
+        <div className="text-white/40 text-[10px] md:text-sm font-mono bg-black/20 px-4 md:px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex flex-wrap justify-center gap-2 md:gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto">
+          <span className="whitespace-nowrap">
             Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
             {steps.length}
           </span>
-          <span className="text-white/10">|</span>
-          <span className="truncate">
+          <span className="text-white/10 hidden md:inline">|</span>
+          <span className="whitespace-nowrap">
             Size: <span className="text-purple-400">{array.length}</span>
           </span>
-          <span className="text-white/10">|</span>
-          <span className="truncate uppercase-algo text-pink-400 font-bold">
+          <span className="text-white/10 hidden md:inline">|</span>
+          <span className="whitespace-nowrap uppercase-algo text-pink-400 font-bold">
             {selectedAlgo}
           </span>
         </div>
