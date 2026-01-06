@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const SPEEDS = [0.25, 0.5, 0.75, 1, 2, 4];
+const SPEEDS = [0.25, 0.5, 0.75, 1, 2, 4, 8, 16];
 
 export const ALGORITHMS = [
   { id: "bubble", name: "버블 정렬", desc: "인접한 두 항을 비교하여 정렬" },
