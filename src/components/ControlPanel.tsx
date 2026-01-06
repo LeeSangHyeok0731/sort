@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 2, 4, 8, 16];
 
@@ -179,10 +179,15 @@ export default function ControlPanel({
   arrayLength,
 }: Props) {
   const [customInput, setCustomInput] = useState("");
-  const [randomSize, setRandomSize] = useState(20);
+  const [randomSize, setRandomSize] = useState(arrayLength);
   const [genMode, setGenMode] = useState<GenerationMode>("unique");
   const [activeCategory, setActiveCategory] =
     useState<AlgorithmCategory>("standard");
+
+  // Sync randomSize input with actual array length (from URL/State)
+  useEffect(() => {
+    setRandomSize(arrayLength);
+  }, [arrayLength]);
 
   // Adjust activeCategory when selectedAlgo changes from parent/URL
   const [prevSelectedAlgo, setPrevSelectedAlgo] = useState(selectedAlgo);

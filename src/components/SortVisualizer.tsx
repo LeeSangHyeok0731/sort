@@ -85,6 +85,9 @@ export default function SortVisualizer() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
+  const [executionTime, setExecutionTime] = useState<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
 
@@ -148,6 +151,13 @@ export default function SortVisualizer() {
       if (step) {
         setArray(step.array);
         setStepIndex((i) => i + 1);
+      } else if (stepIndex >= steps.length && steps.length > 0) {
+        // Finishing sorting
+        if (startTimeRef.current) {
+          setExecutionTime(performance.now() - startTimeRef.current);
+          startTimeRef.current = null;
+        }
+        setPlaying(false);
       }
     }, BASE_ANIMATION_SPEED / speedMultiplier);
 
@@ -228,6 +238,8 @@ export default function SortVisualizer() {
     const s = getSteps(selectedAlgo, array);
     setSteps(s);
     setStepIndex(0);
+    setExecutionTime(null);
+    startTimeRef.current = performance.now();
     setPlaying(true);
   };
 
@@ -235,6 +247,7 @@ export default function SortVisualizer() {
     setPlaying(false);
     setSteps([]);
     setStepIndex(0);
+    startTimeRef.current = null;
   };
 
   const reset = () => {
@@ -243,6 +256,8 @@ export default function SortVisualizer() {
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
+    setExecutionTime(null);
+    startTimeRef.current = null;
   };
 
   const handleCustomArray = (numbers: number[]) => {
@@ -250,7 +265,9 @@ export default function SortVisualizer() {
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
+    setExecutionTime(null);
     updateUrlParams({ size: numbers.length });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleRandomGenerate = (size: number, mode: GenerationMode) => {
@@ -258,7 +275,9 @@ export default function SortVisualizer() {
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
+    setExecutionTime(null);
     updateUrlParams({ size });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     if (size > 100) {
       setIsExpanded(true);
     }
@@ -308,9 +327,16 @@ export default function SortVisualizer() {
             <span className="text-[10px] text-white/40 font-mono uppercase">
               {selectedAlgo}
             </span>
-            <span className="text-xs text-indigo-400 font-bold">
-              {stepIndex} / {steps.length} steps
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-indigo-400 font-bold">
+                {stepIndex} / {steps.length} steps
+              </span>
+              {executionTime !== null && (
+                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  {(executionTime / 1000).toFixed(2)}s
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             {!playing ? (
@@ -376,7 +402,7 @@ export default function SortVisualizer() {
       />
 
       <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-2xl px-2 md:px-0 gap-4">
-        <div className="hidden md:flex text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex-wrap justify-center gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto">
+        <div className="hidden md:flex text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex-wrap justify-center gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto items-center">
           <span className="whitespace-nowrap">
             Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
             {steps.length}
@@ -389,6 +415,21 @@ export default function SortVisualizer() {
           <span className="whitespace-nowrap uppercase-algo text-pink-400 font-bold">
             {selectedAlgo}
           </span>
+          {executionTime !== null && (
+            <>
+              <span className="text-white/10">|</span>
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="whitespace-nowrap bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+              >
+                Time:{" "}
+                <span className="text-amber-400 font-bold shadow-amber-400/20 drop-shadow-sm">
+                  {(executionTime / 1000).toFixed(2)}s
+                </span>
+              </motion.span>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2 w-full md:w-auto order-1 md:order-2">
