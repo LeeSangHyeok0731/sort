@@ -4,17 +4,134 @@ import { useState } from "react";
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 2, 4, 8, 16];
 
+export type AlgorithmCategory = "standard" | "linear" | "special";
+
 export const ALGORITHMS = [
-  { id: "bubble", name: "버블 정렬", desc: "인접한 두 항을 비교하여 정렬" },
-  { id: "selection", name: "선택 정렬", desc: "최솟값을 찾아 앞으로 이동" },
-  { id: "insertion", name: "삽입 정렬", desc: "정렬된 부분에 요소를 삽입" },
-  { id: "quick", name: "퀵 정렬", desc: "피벗을 기준으로 분할 정렬" },
-  { id: "merge", name: "병합 정렬", desc: "반으로 나누어 정렬 후 병합" },
-  { id: "heap", name: "힙 정렬", desc: "힙 자료구조를 이용한 정렬" },
-  { id: "counting", name: "계수 정렬", desc: "값의 개수를 세서 정렬" },
-  { id: "radix", name: "기수 정렬", desc: "자릿수 별로 정렬" },
-  { id: "bucket", name: "버킷 정렬", desc: "범위별 버킷에 담아 정렬" },
-  { id: "shell", name: "셸 정렬", desc: "간격을 조절하며 삽입 정렬" },
+  // Standard
+  {
+    id: "bubble",
+    name: "버블 정렬",
+    category: "standard",
+    desc: "인접한 두 항을 비교하며 정렬",
+  },
+  {
+    id: "selection",
+    name: "선택 정렬",
+    category: "standard",
+    desc: "최솟값을 찾아 앞으로 이동",
+  },
+  {
+    id: "insertion",
+    name: "삽입 정렬",
+    category: "standard",
+    desc: "정렬된 부분에 요소를 삽입",
+  },
+  {
+    id: "quick",
+    name: "퀵 정렬",
+    category: "standard",
+    desc: "피벗을 기준으로 분할 정렬",
+  },
+  {
+    id: "merge",
+    name: "병합 정렬",
+    category: "standard",
+    desc: "반으로 나누어 정렬 후 병합",
+  },
+  {
+    id: "heap",
+    name: "힙 정렬",
+    category: "standard",
+    desc: "힙 자료구조를 이용한 정렬",
+  },
+  {
+    id: "shell",
+    name: "셸 정렬",
+    category: "standard",
+    desc: "간격을 조절하며 삽입 정렬",
+  },
+
+  // Linear
+  {
+    id: "counting",
+    name: "계수 정렬",
+    category: "linear",
+    desc: "값의 개수를 세서 정렬",
+  },
+  {
+    id: "radix",
+    name: "기수 정렬",
+    category: "linear",
+    desc: "자릿수 별로 정렬",
+  },
+  {
+    id: "bucket",
+    name: "버킷 정렬",
+    category: "linear",
+    desc: "범위별 버킷에 담아 정렬",
+  },
+
+  // Special
+  {
+    id: "tim",
+    name: "팀 정렬",
+    category: "special",
+    desc: "삽입 + 병합 하이브리드",
+  },
+  {
+    id: "comb",
+    name: "콤 정렬",
+    category: "special",
+    desc: "간격을 둔 버블 정렬 개선판",
+  },
+  {
+    id: "cocktail",
+    name: "칵테일 정렬",
+    category: "special",
+    desc: "양방향 버블 정렬",
+  },
+  {
+    id: "gnome",
+    name: "그놈 정렬",
+    category: "special",
+    desc: "잘못된 위치면 뒤로 가며 정렬",
+  },
+  {
+    id: "oddEven",
+    name: "오드-이븐 정렬",
+    category: "special",
+    desc: "홀수/짝수 위치 교차 정렬",
+  },
+  {
+    id: "pancake",
+    name: "팬케이크 정렬",
+    category: "special",
+    desc: "뒤집기를 이용한 정렬",
+  },
+  {
+    id: "bitonic",
+    name: "비토닉 정렬",
+    category: "special",
+    desc: "병렬 처리에 적합한 수열 정렬",
+  },
+  {
+    id: "bogo",
+    name: "보고 정렬",
+    category: "special",
+    desc: "운이 좋을 때까지 무작위 섞기",
+  },
+  {
+    id: "intro",
+    name: "인트로 정렬",
+    category: "special",
+    desc: "퀵 + 힙 + 삽입 하이브리드",
+  },
+  {
+    id: "tree",
+    name: "트리 정렬",
+    category: "special",
+    desc: "이진 검색 트리를 이용한 정렬",
+  },
 ] as const;
 
 export type AlgorithmId = (typeof ALGORITHMS)[number]["id"];
@@ -38,6 +155,12 @@ type Props = {
   arrayLength: number;
 };
 
+const CATEGORIES = [
+  { id: "standard", name: "기본 정렬" },
+  { id: "linear", name: "고급 정렬" },
+  { id: "special", name: "특이한 정렬" },
+] as const;
+
 export default function ControlPanel({
   onStart,
   onReset,
@@ -58,6 +181,8 @@ export default function ControlPanel({
   const [customInput, setCustomInput] = useState("");
   const [randomSize, setRandomSize] = useState(20);
   const [genMode, setGenMode] = useState<GenerationMode>("unique");
+  const [activeCategory, setActiveCategory] =
+    useState<AlgorithmCategory>("standard");
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,15 +200,35 @@ export default function ControlPanel({
 
   return (
     <div className="flex flex-col gap-6 mt-8 w-full max-w-4xl">
-      {/* Algorithm Selection */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        {ALGORITHMS.map((algo) => (
+      {/* Category Selection */}
+      <div className="flex gap-2 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 w-fit self-center">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id as AlgorithmCategory)}
+            className={`
+              px-6 py-2 rounded-xl text-sm font-bold transition-all
+              ${
+                activeCategory === cat.id
+                  ? "bg-indigo-600 text-white shadow-lg"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/5"
+              }
+            `}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Algorithm Selection Gradient Backdrop */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 bg-white/5 backdrop-blur-md p-4 rounded-3xl border border-white/10 shadow-xl min-h-[160px]">
+        {ALGORITHMS.filter((a) => a.category === activeCategory).map((algo) => (
           <button
             key={algo.id}
             onClick={() => setSelectedAlgo(algo.id)}
             disabled={playing}
             className={`
-              px-3 py-3 rounded-xl text-sm font-bold transition-all border
+              px-3 py-4 rounded-xl text-sm font-bold transition-all border flex flex-col items-center justify-center gap-1
               ${
                 selectedAlgo === algo.id
                   ? "bg-indigo-600/20 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.2)]"
@@ -92,7 +237,10 @@ export default function ControlPanel({
               disabled:opacity-50 disabled:cursor-not-allowed
             `}
           >
-            {algo.name}
+            <span>{algo.name}</span>
+            <span className="text-[9px] opacity-40 font-normal text-center leading-tight">
+              {algo.desc.split(" ").slice(0, 2).join(" ")}
+            </span>
           </button>
         ))}
       </div>
@@ -144,14 +292,14 @@ export default function ControlPanel({
             <button
               onClick={onStart}
               disabled={isStartDisabled}
-              className={`flex-1 md:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
+              className={`flex-1 md:flex-none px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-95 disabled:opacity-50 disabled:shadow-none min-w-[140px]`}
             >
               정렬 시작
             </button>
           ) : (
             <button
               onClick={onStop}
-              className="flex-1 md:flex-none px-8 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(225,29,72,0.4)] active:scale-95"
+              className="flex-1 md:flex-none px-10 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(225,29,72,0.4)] active:scale-95 min-w-[140px]"
             >
               중단하기
             </button>

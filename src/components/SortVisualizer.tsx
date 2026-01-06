@@ -22,6 +22,18 @@ import { radixSortSteps } from "@/algorithms/radixSort";
 import { bucketSortSteps } from "@/algorithms/bucketSort";
 import { shellSortSteps } from "@/algorithms/shellSort";
 
+// New Special Algorithms
+import { timSortSteps } from "@/algorithms/timSort";
+import { combSortSteps } from "@/algorithms/combSort";
+import { cocktailSortSteps } from "@/algorithms/cocktailSort";
+import { gnomeSortSteps } from "@/algorithms/gnomeSort";
+import { oddEvenSortSteps } from "@/algorithms/oddEvenSort";
+import { pancakeSortSteps } from "@/algorithms/pancakeSort";
+import { bitonicSortSteps } from "@/algorithms/bitonicSort";
+import { bogoSortSteps } from "@/algorithms/bogoSort";
+import { introSortSteps } from "@/algorithms/introSort";
+import { treeSortSteps } from "@/algorithms/treeSort";
+
 const BASE_ANIMATION_SPEED = 100;
 
 export default function SortVisualizer() {
@@ -32,7 +44,6 @@ export default function SortVisualizer() {
     mode: GenerationMode
   ): ArrayItem[] => {
     if (mode === "unique") {
-      // Shuffled unique numbers (1 to size)
       const nums = Array.from({ length: size }, (_, i) => i + 1);
       for (let i = nums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -40,7 +51,6 @@ export default function SortVisualizer() {
       }
       return nums.map((val) => ({ id: idCounter.current++, value: val }));
     } else {
-      // Random numbers with possible duplicates
       return Array.from({ length: size }, () => ({
         id: idCounter.current++,
         value: Math.floor(Math.random() * (size * 1.5)) + 1,
@@ -57,7 +67,6 @@ export default function SortVisualizer() {
   const [isSortedFeedback, setIsSortedFeedback] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Algorithm specific parameters
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
 
@@ -119,6 +128,29 @@ export default function SortVisualizer() {
           .filter((v) => !isNaN(v));
         return shellSortSteps(arr, gaps);
       }
+
+      // Special
+      case "tim":
+        return timSortSteps(arr);
+      case "comb":
+        return combSortSteps(arr);
+      case "cocktail":
+        return cocktailSortSteps(arr);
+      case "gnome":
+        return gnomeSortSteps(arr);
+      case "oddEven":
+        return oddEvenSortSteps(arr);
+      case "pancake":
+        return pancakeSortSteps(arr);
+      case "bitonic":
+        return bitonicSortSteps(arr);
+      case "bogo":
+        return bogoSortSteps(arr);
+      case "intro":
+        return introSortSteps(arr);
+      case "tree":
+        return treeSortSteps(arr);
+
       default:
         return [];
     }
@@ -146,9 +178,6 @@ export default function SortVisualizer() {
   };
 
   const reset = () => {
-    // For reset, we don't know the exact previous mode,
-    // but we can generate a new one based on the current length.
-    // Let's just use "unique" as a default reset behavior or keep it simple.
     const newArray = generateArrayItems(array.length || 20, "unique");
     setArray(newArray);
     setSteps([]);
