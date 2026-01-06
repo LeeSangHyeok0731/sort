@@ -18,19 +18,19 @@ export const ALGORITHMS = [
 ] as const;
 
 export type AlgorithmId = (typeof ALGORITHMS)[number]["id"];
+export type GenerationMode = "random" | "unique";
 
 type Props = {
   onStart: () => void;
   onReset: () => void;
   onStop: () => void;
   onCustomArray: (arr: number[]) => void;
-  onRandomGenerate: (size: number) => void;
+  onRandomGenerate: (size: number, mode: GenerationMode) => void;
   playing: boolean;
   speedMultiplier: number;
   setSpeedMultiplier: (speed: number) => void;
   selectedAlgo: AlgorithmId;
   setSelectedAlgo: (id: AlgorithmId) => void;
-  // New props for specific algorithm parameters
   shellGaps: string;
   setShellGaps: (val: string) => void;
   bucketCount: number;
@@ -55,6 +55,7 @@ export default function ControlPanel({
 }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [randomSize, setRandomSize] = useState(20);
+  const [genMode, setGenMode] = useState<GenerationMode>("unique");
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +202,7 @@ export default function ControlPanel({
               onChange={(e) => setCustomInput(e.target.value)}
               placeholder="예: 10, 50, 20, 80..."
               disabled={playing}
-              className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-xs"
+              className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors text-sm"
             />
             <button
               type="submit"
@@ -217,27 +218,53 @@ export default function ControlPanel({
           <span className="text-xs font-bold text-white/40 px-1 uppercase tracking-wider">
             Random Generation
           </span>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              value={randomSize}
-              onChange={(e) =>
-                setRandomSize(
-                  Math.min(1000, Math.max(2, parseInt(e.target.value) || 0))
-                )
-              }
-              disabled={playing}
-              className="w-24 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
-            />
-            <span className="text-white/40 text-sm italic whitespace-nowrap">
-              개 생성 (최대 1000)
-            </span>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                value={randomSize}
+                onChange={(e) =>
+                  setRandomSize(
+                    Math.min(1000, Math.max(2, parseInt(e.target.value) || 0))
+                  )
+                }
+                disabled={playing}
+                className="w-24 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+              <span className="text-white/40 text-sm italic whitespace-nowrap">
+                개 생성 (최대 1000)
+              </span>
+            </div>
+
+            <div className="flex gap-2 p-1 bg-black/20 rounded-xl w-fit">
+              <button
+                onClick={() => setGenMode("unique")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  genMode === "unique"
+                    ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                    : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                중복 없음 (순열)
+              </button>
+              <button
+                onClick={() => setGenMode("random")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  genMode === "random"
+                    ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                    : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                중복 있음 (완전 랜덤)
+              </button>
+            </div>
+
             <button
-              onClick={() => onRandomGenerate(randomSize)}
+              onClick={() => onRandomGenerate(randomSize, genMode)}
               disabled={playing}
-              className="ml-auto px-4 py-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 rounded-xl font-bold border border-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(147,51,234,0.3)] active:scale-95 disabled:opacity-50"
             >
-              무작위 생성
+              무작위 생성 실행
             </button>
           </div>
         </div>

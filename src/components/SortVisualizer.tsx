@@ -3,7 +3,11 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrayBars from "./ArrayBars";
-import ControlPanel, { ALGORITHMS, AlgorithmId } from "./ControlPanel";
+import ControlPanel, {
+  ALGORITHMS,
+  AlgorithmId,
+  GenerationMode,
+} from "./ControlPanel";
 import { SortStep, ArrayItem } from "@/types/sort";
 
 // Algorithms
@@ -23,11 +27,26 @@ const BASE_ANIMATION_SPEED = 100;
 export default function SortVisualizer() {
   const idCounter = useRef(Date.now());
 
-  const generateRandomArray = (size: number): ArrayItem[] =>
-    Array.from({ length: size }, () => ({
-      id: idCounter.current++,
-      value: Math.floor(Math.random() * 90) + 10,
-    }));
+  const generateArrayItems = (
+    size: number,
+    mode: GenerationMode
+  ): ArrayItem[] => {
+    if (mode === "unique") {
+      // Shuffled unique numbers (1 to size)
+      const nums = Array.from({ length: size }, (_, i) => i + 1);
+      for (let i = nums.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nums[i], nums[j]] = [nums[j], nums[i]];
+      }
+      return nums.map((val) => ({ id: idCounter.current++, value: val }));
+    } else {
+      // Random numbers with possible duplicates
+      return Array.from({ length: size }, () => ({
+        id: idCounter.current++,
+        value: Math.floor(Math.random() * (size * 1.5)) + 1,
+      }));
+    }
+  };
 
   const [array, setArray] = useState<ArrayItem[]>([]);
   const [steps, setSteps] = useState<SortStep[]>([]);
@@ -44,7 +63,7 @@ export default function SortVisualizer() {
 
   useEffect(() => {
     if (array.length === 0) {
-      setArray(generateRandomArray(20));
+      setArray(generateArrayItems(20, "unique"));
     }
   }, []);
 
@@ -127,7 +146,10 @@ export default function SortVisualizer() {
   };
 
   const reset = () => {
-    const newArray = generateRandomArray(array.length || 20);
+    // For reset, we don't know the exact previous mode,
+    // but we can generate a new one based on the current length.
+    // Let's just use "unique" as a default reset behavior or keep it simple.
+    const newArray = generateArrayItems(array.length || 20, "unique");
     setArray(newArray);
     setSteps([]);
     setStepIndex(0);
@@ -141,8 +163,8 @@ export default function SortVisualizer() {
     setPlaying(false);
   };
 
-  const handleRandomGenerate = (size: number) => {
-    setArray(generateRandomArray(size));
+  const handleRandomGenerate = (size: number, mode: GenerationMode) => {
+    setArray(generateArrayItems(size, mode));
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
@@ -242,7 +264,7 @@ export default function SortVisualizer() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-[#0f172a] p-4 md:p-10 flex flex-col items-center justify-center overflow-auto pointer-events-auto"
+            className="fixed inset-0 z-100 bg-[#0f172a] p-4 md:p-10 flex flex-col items-center justify-center overflow-auto pointer-events-auto"
           >
             <div className="w-full h-full flex flex-col items-center py-10">
               {visualizerContent}
@@ -250,7 +272,7 @@ export default function SortVisualizer() {
 
             <button
               onClick={() => setIsExpanded(false)}
-              className="fixed top-8 right-8 text-white/40 hover:text-white text-3xl font-light transition-all p-2 bg-white/5 rounded-full hover:bg-white/10 border border-white/10 z-[101]"
+              className="fixed top-8 right-8 text-white/40 hover:text-white text-3xl font-light transition-all p-2 bg-white/5 rounded-full hover:bg-white/10 border border-white/10 z-101"
               aria-label="Close Expanded View"
             >
               ✕
