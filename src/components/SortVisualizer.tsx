@@ -91,35 +91,42 @@ export default function SortVisualizer() {
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
 
-  // 1. Sync state from URL (Handles initial load and browser back/forward navigation)
+  // 1. Sync state from URL and enforce defaults
   useEffect(() => {
-    const algoFromUrl = searchParams.get("algo") as AlgorithmId;
-    if (
-      algoFromUrl &&
-      algoFromUrl !== selectedAlgo &&
-      ALGORITHMS.some((a) => a.id === algoFromUrl)
-    ) {
-      setSelectedAlgo(algoFromUrl);
+    const algoParam = searchParams.get("algo");
+    const speedParam = searchParams.get("speed");
+    const sizeParam = searchParams.get("size");
+
+    // If any fundamental param is missing, redirect to a URL that has all defaults
+    if (!algoParam || !speedParam || !sizeParam) {
+      const params = new URLSearchParams(searchParams.toString());
+      if (!params.has("algo")) params.set("algo", "bubble");
+      if (!params.has("speed")) params.set("speed", "1");
+      if (!params.has("size")) params.set("size", "20");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      return;
     }
 
-    const speedFromUrl = searchParams.get("speed");
-    if (speedFromUrl) {
-      const speedParsed = parseFloat(speedFromUrl);
-      if (!isNaN(speedParsed)) {
-        // Clamp speed between 0.25 and 16 (matching SPEEDS constant)
-        const clampedSpeed = Math.min(16, Math.max(0.25, speedParsed));
-        if (clampedSpeed !== speedMultiplier) setSpeedMultiplier(clampedSpeed);
+    // sync algo
+    const algoFromUrl = algoParam as AlgorithmId;
+    if (ALGORITHMS.some((a) => a.id === algoFromUrl)) {
+      if (algoFromUrl !== selectedAlgo) setSelectedAlgo(algoFromUrl);
+    }
+
+    // sync speed
+    const speedParsed = parseFloat(speedParam);
+    if (!isNaN(speedParsed)) {
+      const clampedSpeed = Math.min(16, Math.max(0.25, speedParsed));
+      if (clampedSpeed !== speedMultiplier) setSpeedMultiplier(clampedSpeed);
+    }
+
+    // sync size
+    const sizeParsed = parseInt(sizeParam);
+    if (!isNaN(sizeParsed)) {
+      const clampedSize = Math.min(1000, Math.max(2, sizeParsed));
+      if (clampedSize !== array.length || array.length === 0) {
+        setArray(generateArrayItems(clampedSize, "unique"));
       }
-    }
-
-    const sizeFromUrl = searchParams.get("size");
-
-    if (sizeFromUrl) {
-      // Clamp size between 2 and 1000
-      const sizeParsed = Math.min(1000, Math.max(2, parseInt(sizeFromUrl)));
-      setArray(generateArrayItems(sizeParsed, "unique"));
-    } else if (array.length === 0) {
-      setArray(generateArrayItems(20, "unique"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
