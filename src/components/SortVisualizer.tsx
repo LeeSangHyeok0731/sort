@@ -318,8 +318,52 @@ export default function SortVisualizer() {
         )}
       </div>
 
-      {/* Unified Single-Line Status Bar */}
-      <div className="w-full max-w-2xl mb-6 px-2">
+      {/* Mobile Sticky Status Bar */}
+      <div className="md:hidden sticky top-4 z-40 w-full mb-6 px-2 pointer-events-none">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center justify-between pointer-events-auto">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-white/40 font-mono uppercase">
+              {selectedAlgo}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-indigo-400 font-bold">
+                {stepIndex} / {steps.length} steps
+              </span>
+              {executionTime !== null && (
+                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  {(executionTime / 1000).toFixed(2)}s
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {!playing ? (
+              <button
+                onClick={start}
+                className="w-8 h-8 flex items-center justify-center bg-indigo-600 rounded-lg text-white"
+              >
+                ▶
+              </button>
+            ) : (
+              <button
+                onClick={stop}
+                className="w-8 h-8 flex items-center justify-center bg-rose-600 rounded-lg text-white"
+              >
+                ■
+              </button>
+            )}
+            <button
+              onClick={reset}
+              className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-lg text-white"
+            >
+              ↺
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Unified Single-Line Status Bar (Desktop Only) */}
+      <div className="hidden md:block w-full max-w-2xl mb-6 px-2">
         <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-full px-3 py-2 md:px-6 md:py-2.5 shadow-2xl flex items-center justify-between gap-1 md:gap-4">
           {/* Group 1: Steps & Size */}
           <div className="flex items-center gap-2 md:gap-6 bg-white/5 md:bg-transparent px-2 py-1 md:p-0 rounded-xl border border-white/5 md:border-none">
