@@ -58,19 +58,29 @@ export default function SortVisualizer() {
 
   const generateArrayItems = (
     size: number,
-    mode: GenerationMode
+    mode: GenerationMode,
+    min: number = 1,
+    max: number = 100
   ): ArrayItem[] => {
+    const range = Math.max(1, max - min + 1);
     if (mode === "unique") {
-      const nums = Array.from({ length: size }, (_, i) => i + 1);
+      // If we need more unique numbers than the range allows, we expand the range or just cap it
+      const actualMax = Math.max(max, min + size - 1);
+      const fullRange = actualMax - min + 1;
+      const nums = Array.from({ length: fullRange }, (_, i) => i + min);
+
+      // Fisher-Yates shuffle
       for (let i = nums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [nums[i], nums[j]] = [nums[j], nums[i]];
       }
-      return nums.map((val) => ({ id: idCounter.current++, value: val }));
+      return nums
+        .slice(0, size)
+        .map((val) => ({ id: idCounter.current++, value: val }));
     } else {
       return Array.from({ length: size }, () => ({
         id: idCounter.current++,
-        value: Math.floor(Math.random() * (size * 1.5)) + 1,
+        value: Math.floor(Math.random() * range) + min,
       }));
     }
   };
@@ -88,28 +98,61 @@ export default function SortVisualizer() {
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
 
-  // Sync state with URL on mount
+  // 1. Sync state from URL (Handles initial load and browser back/forward navigation)
   useEffect(() => {
     const algoFromUrl = searchParams.get("algo") as AlgorithmId;
-    if (algoFromUrl && ALGORITHMS.some((a) => a.id === algoFromUrl)) {
+    if (
+      algoFromUrl &&
+      algoFromUrl !== selectedAlgo &&
+      ALGORITHMS.some((a) => a.id === algoFromUrl)
+    ) {
       setSelectedAlgo(algoFromUrl);
     }
 
-    if (array.length === 0) {
-      setArray(generateArrayItems(20, "unique"));
+    const speedFromUrl = searchParams.get("speed");
+    if (speedFromUrl) {
+      const speedParsed = parseFloat(speedFromUrl);
+      if (!isNaN(speedParsed)) {
+        // Clamp speed between 0.25 and 16 (matching SPEEDS constant)
+        const clampedSpeed = Math.min(16, Math.max(0.25, speedParsed));
+        if (clampedSpeed !== speedMultiplier) setSpeedMultiplier(clampedSpeed);
+      }
+    }
+
+    const sizeFromUrl = searchParams.get("size");
+    const minFromUrl = searchParams.get("min");
+    const maxFromUrl = searchParams.get("max");
+
+    if (sizeFromUrl || minFromUrl || maxFromUrl) {
+      // Clamp size between 2 and 1000
+      const sizeParsed = Math.min(
+        1000,
+        Math.max(2, parseInt(sizeFromUrl || "20"))
+      );
+      const minParsed = parseInt(minFromUrl || "1");
+      const maxParsed = parseInt(maxFromUrl || (sizeParsed * 1.5).toString());
+
+      setArray(generateArrayItems(sizeParsed, "unique", minParsed, maxParsed));
+    } else if (array.length === 0) {
+      setArray(generateArrayItems(20, "unique", 1, 30));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
-  // Sync URL with state when algo changes
-  useEffect(() => {
-    const currentAlgo = searchParams.get("algo");
-    if (currentAlgo !== selectedAlgo) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("algo", selectedAlgo);
+  // 2. Helper to update URL only when state changes from user UI actions
+  const updateUrlParams = (updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    let changed = false;
+    Object.entries(updates).forEach(([key, val]) => {
+      if (params.get(key) !== val.toString()) {
+        params.set(key, val.toString());
+        changed = true;
+      }
+    });
+    if (changed) {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
-  }, [selectedAlgo, pathname, router, searchParams]);
+  };
 
   useEffect(() => {
     if (!playing) return;
@@ -225,13 +268,20 @@ export default function SortVisualizer() {
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
+    updateUrlParams({ size: numbers.length });
   };
 
-  const handleRandomGenerate = (size: number, mode: GenerationMode) => {
-    setArray(generateArrayItems(size, mode));
+  const handleRandomGenerate = (
+    size: number,
+    mode: GenerationMode,
+    min: number,
+    max: number
+  ) => {
+    setArray(generateArrayItems(size, mode, min, max));
     setSteps([]);
     setStepIndex(0);
     setPlaying(false);
+    updateUrlParams({ size, min, max });
     if (size > 100) {
       setIsExpanded(true);
     }
@@ -285,13 +335,25 @@ export default function SortVisualizer() {
         onRandomGenerate={handleRandomGenerate}
         playing={playing}
         speedMultiplier={speedMultiplier}
-        setSpeedMultiplier={setSpeedMultiplier}
+        setSpeedMultiplier={(s) => {
+          setSpeedMultiplier(s);
+          updateUrlParams({ speed: s });
+        }}
         selectedAlgo={selectedAlgo}
-        setSelectedAlgo={setSelectedAlgo}
+        setSelectedAlgo={(id) => {
+          setSelectedAlgo(id);
+          updateUrlParams({ algo: id });
+        }}
         shellGaps={shellGaps}
-        setShellGaps={setShellGaps}
+        setShellGaps={(v) => {
+          setShellGaps(v);
+          // Optional: gaps don't necessarily need to be in URL unless requested
+        }}
         bucketCount={bucketCount}
-        setBucketCount={setBucketCount}
+        setBucketCount={(v) => {
+          setBucketCount(v);
+          updateUrlParams({ buckets: v });
+        }}
         arrayLength={array.length}
       />
 
