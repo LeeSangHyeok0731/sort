@@ -179,14 +179,16 @@ export default function ControlPanel({
   arrayLength,
 }: Props) {
   const [customInput, setCustomInput] = useState("");
-  const [randomSize, setRandomSize] = useState(arrayLength);
+  const [randomSizeInput, setRandomSizeInput] = useState(
+    arrayLength.toString()
+  );
   const [genMode, setGenMode] = useState<GenerationMode>("unique");
   const [activeCategory, setActiveCategory] =
     useState<AlgorithmCategory>("standard");
 
   // Sync randomSize input with actual array length (from URL/State)
   useEffect(() => {
-    setRandomSize(arrayLength);
+    setRandomSizeInput(arrayLength.toString());
   }, [arrayLength]);
 
   // Adjust activeCategory when selectedAlgo changes from parent/URL
@@ -385,13 +387,16 @@ export default function ControlPanel({
           <div className="flex flex-col gap-3">
             <div className="flex gap-2 items-center">
               <input
-                type="number"
-                value={randomSize}
-                onChange={(e) =>
-                  setRandomSize(
-                    Math.min(1000, Math.max(0, parseInt(e.target.value) || 0))
-                  )
-                }
+                type="text"
+                value={randomSizeInput}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  // Only update if the value is empty (to allow clearing) or purely numeric
+                  if (val === "" || /^\d+$/.test(val)) {
+                    setRandomSizeInput(val);
+                  }
+                }}
+                placeholder="20"
                 disabled={playing}
                 className="w-24 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
               />
@@ -424,7 +429,12 @@ export default function ControlPanel({
             </div>
 
             <button
-              onClick={() => onRandomGenerate(randomSize, genMode)}
+              onClick={() => {
+                const size = parseInt(randomSizeInput);
+                if (!isNaN(size)) {
+                  onRandomGenerate(Math.min(1000, Math.max(2, size)), genMode);
+                }
+              }}
               disabled={playing}
               className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(147,51,234,0.3)] active:scale-95 disabled:opacity-50"
             >

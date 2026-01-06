@@ -241,6 +241,9 @@ export default function SortVisualizer() {
     setExecutionTime(null);
     startTimeRef.current = performance.now();
     setPlaying(true);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 0);
   };
 
   const stop = () => {
@@ -258,6 +261,9 @@ export default function SortVisualizer() {
     setPlaying(false);
     setExecutionTime(null);
     startTimeRef.current = null;
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 0);
   };
 
   const handleCustomArray = (numbers: number[]) => {
@@ -267,7 +273,10 @@ export default function SortVisualizer() {
     setPlaying(false);
     setExecutionTime(null);
     updateUrlParams({ size: numbers.length });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Use requestAnimationFrame or setTimeout to ensure it scrolls after render
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 0);
   };
 
   const handleRandomGenerate = (size: number, mode: GenerationMode) => {
@@ -277,7 +286,9 @@ export default function SortVisualizer() {
     setPlaying(false);
     setExecutionTime(null);
     updateUrlParams({ size });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 0);
     if (size > 100) {
       setIsExpanded(true);
     }
