@@ -38,6 +38,11 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 const BASE_ANIMATION_SPEED = 100;
 
+import { ALGO_CODE } from "@/data/algoCode";
+import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css";
+import "prismjs/components/prism-javascript";
+
 export default function SortVisualizer() {
   const router = useRouter();
   const pathname = usePathname();
@@ -78,6 +83,7 @@ export default function SortVisualizer() {
   const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmId>("bubble");
   const [isSortedFeedback, setIsSortedFeedback] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   const [shellGaps, setShellGaps] = useState("");
   const [bucketCount, setBucketCount] = useState(5);
@@ -287,8 +293,8 @@ export default function SortVisualizer() {
         arrayLength={array.length}
       />
 
-      <div className="mt-8 flex items-center justify-between w-full max-w-2xl px-4 md:px-0">
-        <div className="text-white/40 text-[10px] md:text-sm font-mono bg-black/20 px-4 md:px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-2 md:gap-4 overflow-hidden">
+      <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-2xl px-4 md:px-0 gap-4">
+        <div className="text-white/40 text-[10px] md:text-sm font-mono bg-black/20 px-4 md:px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex gap-2 md:gap-4 overflow-hidden order-2 md:order-1">
           <span className="truncate">
             Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
             {steps.length}
@@ -303,13 +309,75 @@ export default function SortVisualizer() {
           </span>
         </div>
 
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
-        >
-          {isExpanded ? "축소하기" : "확대해서 보기"}
-        </button>
+        <div className="flex gap-2 order-1 md:order-2">
+          <button
+            onClick={() => setShowCode(!showCode)}
+            className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap ${
+              showCode
+                ? "bg-indigo-600 border-indigo-500 text-white"
+                : "text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border-white/10"
+            }`}
+          >
+            {showCode ? "코드 닫기" : "구현 코드 보기"}
+          </button>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
+          >
+            {isExpanded ? "축소하기" : "확대해서 보기"}
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {showCode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="w-full max-w-4xl mt-8 overflow-hidden"
+          >
+            <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-rose-500" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <span className="ml-2 text-xs font-mono text-white/30 uppercase tracking-widest">
+                    {selectedAlgo}.js
+                  </span>
+                </div>
+                <div className="text-[10px] text-indigo-400 font-bold px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                  {algoInfo?.name} 구현 코드
+                </div>
+              </div>
+
+              <div className="relative group">
+                <pre className="text-sm md:text-base font-mono leading-relaxed overflow-x-auto custom-scrollbar p-1">
+                  <code
+                    className="language-javascript"
+                    dangerouslySetInnerHTML={{
+                      __html: Prism.highlight(
+                        ALGO_CODE[selectedAlgo],
+                        Prism.languages.javascript,
+                        "javascript"
+                      )
+                        .split("\n")
+                        .map(
+                          (line, i) =>
+                            `<div class="flex gap-6"><span class="w-8 text-right text-white/10 select-none shrink-0">${
+                              i + 1
+                            }</span><span>${line}</span></div>`
+                        )
+                        .join(""),
+                    }}
+                  />
+                </pre>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
