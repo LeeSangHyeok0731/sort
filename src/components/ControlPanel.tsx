@@ -218,13 +218,13 @@ export default function ControlPanel({
   return (
     <div className="flex flex-col gap-6 mt-8 w-full max-w-4xl">
       {/* Category Selection */}
-      <div className="flex gap-2 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 w-fit self-center">
+      <div className="flex gap-2 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 w-full md:w-fit self-center overflow-x-auto no-scrollbar">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id as AlgorithmCategory)}
             className={`
-              px-6 py-2 rounded-xl text-sm font-bold transition-all
+              px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap flex-1 md:flex-none
               ${
                 activeCategory === cat.id
                   ? "bg-indigo-600 text-white shadow-lg"
@@ -238,14 +238,14 @@ export default function ControlPanel({
       </div>
 
       {/* Algorithm Selection Gradient Backdrop */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 bg-white/5 backdrop-blur-md p-4 rounded-3xl border border-white/10 shadow-xl min-h-[160px]">
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-1.5 md:gap-2 bg-white/5 backdrop-blur-md p-2 md:p-4 rounded-3xl border border-white/10 shadow-xl min-h-[160px]">
         {ALGORITHMS.filter((a) => a.category === activeCategory).map((algo) => (
           <button
             key={algo.id}
             onClick={() => setSelectedAlgo(algo.id)}
             disabled={playing}
             className={`
-              px-3 py-4 rounded-xl text-sm font-bold transition-all border flex flex-col items-center justify-center gap-1
+              px-2 py-3 md:px-3 md:py-4 rounded-xl text-[11px] md:text-sm font-bold transition-all border flex flex-col items-center justify-center gap-0.5 md:gap-1
               ${
                 selectedAlgo === algo.id
                   ? "bg-indigo-600/20 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.2)]"
@@ -254,8 +254,8 @@ export default function ControlPanel({
               disabled:opacity-50 disabled:cursor-not-allowed
             `}
           >
-            <span>{algo.name}</span>
-            <span className="text-[9px] opacity-40 font-normal text-center leading-tight">
+            <span className="text-center leading-tight">{algo.name}</span>
+            <span className="text-[8px] md:text-[9px] opacity-40 font-normal text-center leading-tight hidden xs:block">
               {algo.desc.split(" ").slice(0, 2).join(" ")}
             </span>
           </button>
@@ -264,8 +264,8 @@ export default function ControlPanel({
 
       {/* Specific Algorithm Parameters */}
       {(selectedAlgo === "shell" || selectedAlgo === "bucket") && (
-        <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-xl flex flex-col gap-4">
-          <span className="text-xs font-bold text-white/40 px-1 uppercase tracking-wider">
+        <div className="bg-white/5 backdrop-blur-md p-4 md:p-6 rounded-3xl border border-white/10 shadow-xl flex flex-col gap-4">
+          <span className="text-[10px] md:text-xs font-bold text-white/40 px-1 uppercase tracking-wider">
             {selectedAlgo === "shell" ? "Shell Sort Gaps" : "Bucket Sort Count"}
           </span>
           {selectedAlgo === "shell" ? (
@@ -274,14 +274,10 @@ export default function ControlPanel({
                 type="text"
                 value={shellGaps}
                 onChange={(e) => setShellGaps(e.target.value)}
-                placeholder="예: 701, 301, 132, 57, 23, 10, 4, 1 (빈칸이면 자동 지정)"
+                placeholder="예: 701, 301, 132, 57, 23, 10, 4, 1"
                 disabled={playing}
-                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors text-sm"
+                className="flex-1 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500 transition-colors text-xs md:text-sm"
               />
-              <p className="text-[10px] text-white/30 px-1">
-                셸 정렬에서 사용할 간격(Gap) 시퀀스를 쉼표나 공백으로 구분하여
-                입력하세요.
-              </p>
             </div>
           ) : (
             <div className="flex items-center gap-4">
@@ -294,7 +290,7 @@ export default function ControlPanel({
                 disabled={playing}
                 className="flex-1 accent-indigo-500"
               />
-              <span className="text-white font-mono bg-black/20 px-3 py-1 rounded-lg border border-white/10">
+              <span className="text-white font-mono bg-black/20 px-3 py-1 rounded-lg border border-white/10 text-xs">
                 {bucketCount} Buckets
               </span>
             </div>
@@ -332,16 +328,16 @@ export default function ControlPanel({
         <div className="h-px w-full md:w-px md:h-8 bg-white/10 mx-2" />
 
         <div className="flex flex-col gap-2 w-full md:w-auto">
-          <span className="text-xs font-bold text-white/40 px-1 uppercase tracking-wider">
+          <span className="text-[10px] md:text-xs font-bold text-white/40 px-1 uppercase tracking-wider">
             Speed
           </span>
-          <div className="flex gap-1 bg-black/20 p-1 rounded-lg">
+          <div className="flex gap-1 bg-black/20 p-1 rounded-lg overflow-x-auto no-scrollbar">
             {SPEEDS.map((s) => (
               <button
                 key={s}
                 onClick={() => setSpeedMultiplier(s)}
                 className={`
-                  px-3 py-1.5 rounded-md text-xs font-bold transition-all
+                  px-2.5 md:px-3 py-1.5 rounded-md text-[10px] md:text-xs font-bold transition-all flex-1 md:flex-none
                   ${
                     speedMultiplier === s
                       ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"

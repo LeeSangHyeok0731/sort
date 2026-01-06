@@ -297,27 +297,68 @@ export default function SortVisualizer() {
       }`}
     >
       <div
-        className={`text-center relative px-4 w-full ${
-          isExpanded ? "mb-8" : "mb-12"
+        className={`text-center relative px-2 w-full ${
+          isExpanded ? "mb-6" : "mb-8 md:mb-12"
         }`}
       >
         <h1
           className={`${
-            isExpanded ? "text-4xl" : "text-5xl"
-          } font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 tracking-tight`}
+            isExpanded ? "text-3xl md:text-4xl" : "text-3xl md:text-5xl"
+          } font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-3 md:mb-4 tracking-tight`}
         >
           Sorting Visualizer
         </h1>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <p className="text-white font-bold text-xl">{algoInfo?.name}</p>
-          <p className="text-indigo-200/50 font-medium">{algoInfo?.desc}</p>
+        <div className="flex flex-col items-center gap-1 md:gap-2 text-center">
+          <p className="text-white font-bold text-lg md:text-xl">
+            {algoInfo?.name}
+          </p>
+          <p className="text-indigo-200/50 font-medium text-xs md:text-base px-4">
+            {algoInfo?.desc}
+          </p>
         </div>
 
         {isSortedFeedback && (
-          <div className="absolute top-[-40px] left-1/2 -translate-x-1/2 bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl border border-emerald-500/30 font-bold animate-bounce ink-shadow">
+          <div className="absolute top-[-30px] md:top-[-40px] left-1/2 -translate-x-1/2 bg-emerald-500/20 text-emerald-400 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-emerald-500/30 text-xs md:text-sm font-bold animate-bounce shadow-lg backdrop-blur-md z-20">
             이미 정렬 완료된 상태입니다!
           </div>
         )}
+      </div>
+
+      {/* Mobile Sticky Status Bar */}
+      <div className="md:hidden sticky top-4 z-40 w-full mb-4 px-2 pointer-events-none">
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center justify-between pointer-events-auto">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-white/40 font-mono uppercase">
+              {selectedAlgo}
+            </span>
+            <span className="text-xs text-indigo-400 font-bold">
+              {stepIndex} / {steps.length} steps
+            </span>
+          </div>
+          <div className="flex gap-2">
+            {!playing ? (
+              <button
+                onClick={start}
+                className="w-8 h-8 flex items-center justify-center bg-indigo-600 rounded-lg text-white"
+              >
+                ▶
+              </button>
+            ) : (
+              <button
+                onClick={stop}
+                className="w-8 h-8 flex items-center justify-center bg-rose-600 rounded-lg text-white"
+              >
+                ■
+              </button>
+            )}
+            <button
+              onClick={reset}
+              className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-lg text-white"
+            >
+              ↺
+            </button>
+          </div>
+        </div>
       </div>
 
       <ArrayBars
@@ -357,26 +398,26 @@ export default function SortVisualizer() {
         arrayLength={array.length}
       />
 
-      <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-2xl px-4 md:px-0 gap-4">
-        <div className="text-white/40 text-[10px] md:text-sm font-mono bg-black/20 px-4 md:px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex flex-wrap justify-center gap-2 md:gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto">
+      <div className="mt-8 flex flex-col md:flex-row items-center justify-between w-full max-w-2xl px-2 md:px-0 gap-4">
+        <div className="hidden md:flex text-white/40 text-sm font-mono bg-black/20 px-6 py-2.5 rounded-full border border-white/10 shadow-inner flex-wrap justify-center gap-4 overflow-hidden order-2 md:order-1 self-center md:self-auto">
           <span className="whitespace-nowrap">
             Steps: <span className="text-indigo-400">{stepIndex}</span> /{" "}
             {steps.length}
           </span>
-          <span className="text-white/10 hidden md:inline">|</span>
+          <span className="text-white/10">|</span>
           <span className="whitespace-nowrap">
             Size: <span className="text-purple-400">{array.length}</span>
           </span>
-          <span className="text-white/10 hidden md:inline">|</span>
+          <span className="text-white/10">|</span>
           <span className="whitespace-nowrap uppercase-algo text-pink-400 font-bold">
             {selectedAlgo}
           </span>
         </div>
 
-        <div className="flex gap-2 order-1 md:order-2">
+        <div className="flex gap-2 w-full md:w-auto order-1 md:order-2">
           <button
             onClick={() => setShowCode(!showCode)}
-            className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap ${
+            className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl border text-xs md:text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap ${
               showCode
                 ? "bg-indigo-600 border-indigo-500 text-white"
                 : "text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border-white/10"
@@ -386,7 +427,7 @@ export default function SortVisualizer() {
           </button>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="flex-1 md:flex-none text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-xl border border-white/10 text-xs md:text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
           >
             {isExpanded ? "축소하기" : "확대해서 보기"}
           </button>
