@@ -82,7 +82,6 @@ export default function SortVisualizer() {
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [selectedAlgo, setSelectedAlgo] = useState<AlgorithmId>("bubble");
   const [isSortedFeedback, setIsSortedFeedback] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
   const [executionTime, setExecutionTime] = useState<number | null>(null);
@@ -293,33 +292,16 @@ export default function SortVisualizer() {
     setPlaying(false);
     setExecutionTime(null);
     updateUrlParams({ size });
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 0);
-    if (size > 100) {
-      setIsExpanded(true);
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const currentStep = steps[stepIndex];
   const algoInfo = ALGORITHMS.find((a) => a.id === selectedAlgo);
+  const currentStep = steps[stepIndex];
 
-  const visualizerContent = (
-    <div
-      className={`flex flex-col items-center w-full ${
-        isExpanded ? "max-w-7xl" : "max-w-4xl"
-      }`}
-    >
-      <div
-        className={`text-center relative px-2 w-full ${
-          isExpanded ? "mb-6" : "mb-8 md:mb-12"
-        }`}
-      >
-        <h1
-          className={`${
-            isExpanded ? "text-3xl md:text-4xl" : "text-3xl md:text-5xl"
-          } font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-3 md:mb-4 tracking-tight`}
-        >
+  return (
+    <div className="flex flex-col items-center w-full max-w-4xl">
+      <div className="text-center relative px-2 w-full mb-8 md:mb-12">
+        <h1 className="text-3xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400 mb-3 md:mb-4 tracking-tight">
           Sorting Visualizer
         </h1>
         <div className="flex flex-col items-center gap-1 md:gap-2 text-center">
@@ -386,7 +368,6 @@ export default function SortVisualizer() {
         array={array}
         compare={currentStep?.compare}
         swap={currentStep?.swap}
-        isExpanded={isExpanded}
       />
 
       <ControlPanel
@@ -461,12 +442,6 @@ export default function SortVisualizer() {
           >
             {showCode ? "코드 닫기" : "구현 코드 보기"}
           </button>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex-1 md:flex-none text-white/60 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2.5 rounded-xl border border-white/10 text-xs md:text-sm font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
-          >
-            {isExpanded ? "축소하기" : "확대해서 보기"}
-          </button>
         </div>
       </div>
 
@@ -520,34 +495,5 @@ export default function SortVisualizer() {
         )}
       </AnimatePresence>
     </div>
-  );
-
-  return (
-    <>
-      {!isExpanded && visualizerContent}
-
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-100 bg-[#0f172a] p-4 md:p-10 flex flex-col items-center overflow-auto pointer-events-auto"
-          >
-            <div className="w-full flex flex-col items-center py-10 min-h-full">
-              {visualizerContent}
-            </div>
-
-            <button
-              onClick={() => setIsExpanded(false)}
-              className="fixed top-8 right-8 text-white/40 hover:text-white text-3xl font-light transition-all p-2 bg-white/5 rounded-full hover:bg-white/10 border border-white/10 z-101"
-              aria-label="Close Expanded View"
-            >
-              ✕
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
   );
 }
