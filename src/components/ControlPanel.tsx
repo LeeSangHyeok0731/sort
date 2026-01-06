@@ -35,6 +35,7 @@ type Props = {
   setShellGaps: (val: string) => void;
   bucketCount: number;
   setBucketCount: (val: number) => void;
+  arrayLength: number;
 };
 
 export default function ControlPanel({
@@ -52,6 +53,7 @@ export default function ControlPanel({
   setShellGaps,
   bucketCount,
   setBucketCount,
+  arrayLength,
 }: Props) {
   const [customInput, setCustomInput] = useState("");
   const [randomSize, setRandomSize] = useState(20);
@@ -68,6 +70,8 @@ export default function ControlPanel({
       setCustomInput("");
     }
   };
+
+  const isStartDisabled = playing || arrayLength < 2;
 
   return (
     <div className="flex flex-col gap-6 mt-8 w-full max-w-4xl">
@@ -139,7 +143,8 @@ export default function ControlPanel({
           {!playing ? (
             <button
               onClick={onStart}
-              className="flex-1 md:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-95"
+              disabled={isStartDisabled}
+              className={`flex-1 md:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all duration-200 shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
             >
               정렬 시작
             </button>
@@ -225,7 +230,7 @@ export default function ControlPanel({
                 value={randomSize}
                 onChange={(e) =>
                   setRandomSize(
-                    Math.min(1000, Math.max(2, parseInt(e.target.value) || 0))
+                    Math.min(1000, Math.max(0, parseInt(e.target.value) || 0))
                   )
                 }
                 disabled={playing}

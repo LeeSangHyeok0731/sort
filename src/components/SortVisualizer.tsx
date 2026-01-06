@@ -226,6 +226,7 @@ export default function SortVisualizer() {
         setShellGaps={setShellGaps}
         bucketCount={bucketCount}
         setBucketCount={setBucketCount}
+        arrayLength={array.length}
       />
 
       <div className="mt-8 flex items-center justify-between w-full max-w-2xl px-4 md:px-0">
