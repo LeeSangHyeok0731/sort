@@ -443,7 +443,7 @@ export default function SortVisualizer() {
       </div>
 
       {/* Unified Single-Line Status Bar */}
-      <div className="w-full max-w-2xl mb-6 px-2">
+      <div className="w-full max-w-4xl mb-6 px-2">
         <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-full px-3 py-2 md:px-6 md:py-2.5 shadow-2xl flex items-center justify-between gap-1 md:gap-4">
           {/* Group 1: Steps & Size */}
           <div className="flex items-center gap-2 md:gap-6 bg-white/5 md:bg-transparent px-2 py-1 md:p-0 rounded-xl border border-white/5 md:border-none">
