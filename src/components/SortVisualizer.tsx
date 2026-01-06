@@ -375,6 +375,7 @@ export default function SortVisualizer() {
   };
 
   const algoInfo = ALGORITHMS.find((a) => a.id === selectedAlgo);
+  const algoInfo2 = ALGORITHMS.find((a) => a.id === selectedAlgo2);
 
   return (
     <div className="flex flex-col items-center w-full max-w-4xl">
@@ -384,7 +385,9 @@ export default function SortVisualizer() {
         </h1>
         <div className="flex flex-col items-center gap-1 md:gap-2 text-center">
           <p className="text-white font-bold text-lg md:text-xl">
-            {algoInfo?.name}
+            {isCompareMode
+              ? `${algoInfo?.name} vs ${algoInfo2?.name}`
+              : algoInfo?.name}
           </p>
           <p className="text-indigo-200/50 font-medium text-xs md:text-base px-4">
             {algoInfo?.desc}
@@ -403,7 +406,9 @@ export default function SortVisualizer() {
         <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center justify-between pointer-events-auto">
           <div className="flex flex-col">
             <span className="text-[10px] text-white/40 font-mono uppercase">
-              {selectedAlgo}
+              {isCompareMode
+                ? `${algoInfo?.name} vs ${algoInfo2?.name}`
+                : algoInfo?.name}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-xs text-indigo-400 font-bold">
@@ -476,10 +481,10 @@ export default function SortVisualizer() {
               <span className="text-[8px] md:text-xs font-bold text-white/30 uppercase tracking-tighter hidden md:inline">
                 Algo
               </span>
-              <span className="text-[9px] md:text-sm uppercase-algo text-pink-400 font-black tracking-tight truncate max-w-[60px] md:max-w-none">
+              <span className="text-[9px] md:text-sm uppercase-algo text-pink-400 font-black tracking-tight truncate max-w-[100px] md:max-w-none">
                 {isCompareMode
-                  ? `${selectedAlgo} vs ${selectedAlgo2}`
-                  : selectedAlgo}
+                  ? `${algoInfo?.name} vs ${algoInfo2?.name}`
+                  : algoInfo?.name}
               </span>
             </div>
 
