@@ -9,8 +9,11 @@ npm install
 npm run dev     # http://localhost:3000
 npm test        # Vitest
 npm run lint
+npm run typecheck
 npm run build
 ```
+
+PR을 올리거나 `main`에 push하면 GitHub Actions(`.github/workflows/ci.yml`)가 lint·타입 체크·테스트를 자동으로 실행합니다.
 
 ## 주요 기능
 
