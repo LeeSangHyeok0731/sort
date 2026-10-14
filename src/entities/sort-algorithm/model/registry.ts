@@ -1,6 +1,7 @@
 import { americanFlagSort } from "../algorithms/americanFlagSort";
 import { binaryInsertionSort } from "../algorithms/binaryInsertionSort";
 import { bitonicSort } from "../algorithms/bitonicSort";
+import { blockSort } from "../algorithms/blockSort";
 import { bogobogoSort } from "../algorithms/bogobogoSort";
 import { bogoSort } from "../algorithms/bogoSort";
 import { bottomUpHeapSort } from "../algorithms/bottomUpHeapSort";
@@ -8,6 +9,7 @@ import { bottomUpMergeSort } from "../algorithms/bottomUpMergeSort";
 import { bozoSort } from "../algorithms/bozoSort";
 import { bubbleSort } from "../algorithms/bubbleSort";
 import { bucketSort } from "../algorithms/bucketSort";
+import { cartesianTreeSort } from "../algorithms/cartesianTreeSort";
 import { circleSort } from "../algorithms/circleSort";
 import { cocktailSort } from "../algorithms/cocktailSort";
 import { combSort } from "../algorithms/combSort";
@@ -18,10 +20,12 @@ import { dualPivotQuickSort } from "../algorithms/dualPivotQuickSort";
 import { exchangeSort } from "../algorithms/exchangeSort";
 import { flashSort } from "../algorithms/flashSort";
 import { gnomeSort } from "../algorithms/gnomeSort";
+import { grailSort } from "../algorithms/grailSort";
 import { heapSort } from "../algorithms/heapSort";
 import { hoareQuickSort } from "../algorithms/hoareQuickSort";
 import { insertionSort } from "../algorithms/insertionSort";
 import { introSort } from "../algorithms/introSort";
+import { mergeInsertionSort } from "../algorithms/mergeInsertionSort";
 import { mergeSort } from "../algorithms/mergeSort";
 import { miracleSort } from "../algorithms/miracleSort";
 import { msdRadixSort } from "../algorithms/msdRadixSort";
@@ -42,6 +46,8 @@ import { selectionSort } from "../algorithms/selectionSort";
 import { shellSort } from "../algorithms/shellSort";
 import { slowSort } from "../algorithms/slowSort";
 import { smoothSort } from "../algorithms/smoothSort";
+import { splaySort } from "../algorithms/splaySort";
+import { spreadSort } from "../algorithms/spreadSort";
 import { stoogeSort } from "../algorithms/stoogeSort";
 import { strandSort } from "../algorithms/strandSort";
 import { ternaryHeapSort } from "../algorithms/ternaryHeapSort";
@@ -83,6 +89,7 @@ export const ALGORITHMS = [
   flashSort,
   americanFlagSort,
   radixExchangeSort,
+  spreadSort,
   // 특이한 정렬
   timSort,
   introSort,
@@ -101,6 +108,11 @@ export const ALGORITHMS = [
   strandSort,
   tournamentSort,
   pairwiseNetworkSort,
+  mergeInsertionSort,
+  blockSort,
+  grailSort,
+  splaySort,
+  cartesianTreeSort,
   // 재미있는 정렬
   bogoSort,
   bozoSort,

@@ -1283,4 +1283,446 @@ function shuffle(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }`,
+  block: `// 블록 정렬 (WikiSort의 핵심을 단순화한 버전)
+function blockSort(arr) {
+  const n = arr.length;
+  // 16개씩 삽입 정렬한 뒤, 이웃 구간을 블록 병합으로 합친다
+  for (let i = 0; i < n; i += 16) insertionSort(arr, i, Math.min(i + 16, n));
+  for (let width = 16; width < n; width *= 2) {
+    for (let lo = 0; lo + width < n; lo += 2 * width) {
+      const mid = lo + width, hi = Math.min(lo + 2 * width, n);
+      if (arr[mid - 1] <= arr[mid]) continue;           // 이미 순서가 맞음
+      if (arr[lo] > arr[hi - 1]) rotate(arr, lo, mid, hi); // A 전체 > B 전체
+      else blockMerge(arr, lo, mid, hi);
+    }
+  }
+  return arr;
+}
+
+// A=[lo,mid)를 √|A| 크기 블록으로 나눠 B=[mid,hi) 사이로 굴려 넣는다
+function blockMerge(arr, lo, mid, hi) {
+  const lenA = mid - lo;
+  const blockSize = Math.max(1, Math.floor(Math.sqrt(lenA)));
+  let size = lenA % blockSize || blockSize; // 첫 블록이 나머지를 가져간다
+  let aStart = lo, bStart = mid, lastA = null;
+  while (aStart < bStart) {
+    // B에서 현재 A 블록의 첫 값보다 작은 값들 [bStart, p)를
+    const p = lowerBound(arr, bStart, hi, arr[aStart]);
+    const taken = p - bStart;
+    // 남은 A 블록들 앞으로 회전 (블록 굴리기)
+    rotate(arr, aStart, bStart, p);
+    // 직전에 내려놓은 A 블록과 방금 들어온 B 값들을 국소 병합
+    if (lastA) mergeInPlace(arr, lastA[0], lastA[1], aStart + taken);
+    lastA = [aStart + taken, aStart + taken + size];
+    aStart = lastA[1];
+    bStart = p;
+    size = blockSize;
+  }
+  if (lastA) mergeInPlace(arr, lastA[0], lastA[1], hi);
+}
+
+// 보조 메모리 없는 안정 병합: 긴 쪽 가운데 기준으로 짧은 쪽을 이진 탐색해 회전 후 재귀
+function mergeInPlace(arr, lo, mid, hi) {
+  const len1 = mid - lo, len2 = hi - mid;
+  if (len1 === 0 || len2 === 0) return;
+  if (len1 + len2 === 2) {
+    if (arr[mid] < arr[lo]) [arr[lo], arr[mid]] = [arr[mid], arr[lo]];
+    return;
+  }
+  let cut1, cut2;
+  if (len1 > len2) {
+    cut1 = lo + (len1 >> 1);
+    cut2 = lowerBound(arr, mid, hi, arr[cut1]);
+  } else {
+    cut2 = mid + (len2 >> 1);
+    cut1 = upperBound(arr, lo, mid, arr[cut2]);
+  }
+  rotate(arr, cut1, mid, cut2);
+  const newMid = cut1 + (cut2 - mid);
+  mergeInPlace(arr, lo, cut1, newMid);
+  mergeInPlace(arr, newMid, cut2, hi);
+}
+
+// [lo,mid)와 [mid,hi)의 순서를 바꾼다 (세 번 뒤집기)
+function rotate(arr, lo, mid, hi) {
+  reverse(arr, lo, mid);
+  reverse(arr, mid, hi);
+  reverse(arr, lo, hi);
+}
+
+function reverse(arr, lo, hi) {
+  for (let i = lo, j = hi - 1; i < j; i++, j--) [arr[i], arr[j]] = [arr[j], arr[i]];
+}
+
+function lowerBound(arr, lo, hi, x) {
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (arr[mid] < x) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function upperBound(arr, lo, hi, x) {
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (arr[mid] <= x) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function insertionSort(arr, lo, hi) {
+  for (let i = lo + 1; i < hi; i++) {
+    for (let j = i; j > lo && arr[j - 1] > arr[j]; j--) [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
+  }
+}`,
+  grail: `// 그레일 정렬 (GrailSort의 핵심을 단순화한 버전)
+function grailSort(arr) {
+  const n = arr.length;
+  if (n < 2) return arr;
+  // 1) 키 모으기: 서로 다른 값의 첫 등장을 앞쪽으로 (정렬된 상태 유지)
+  const keys = collectKeys(arr, Math.max(1, Math.floor(Math.sqrt(n))));
+
+  // 2) 나머지를 상향식 병합. 왼쪽 런이 버퍼(키 영역)에 들어가면 버퍼 병합
+  for (let width = 1; keys + width < n; width *= 2) {
+    for (let lo = keys; lo + width < n; lo += 2 * width) {
+      const mid = lo + width, hi = Math.min(lo + 2 * width, n);
+      if (arr[mid - 1] <= arr[mid]) continue;
+      if (width <= keys) bufferedMerge(arr, lo, mid, hi);
+      else mergeInPlace(arr, lo, mid, hi); // 블록 정렬 코드의 mergeInPlace와 동일
+    }
+  }
+
+  // 3) 섞인 키를 정렬하고 나머지와 병합 (키는 첫 등장이라 앞에 와도 안정)
+  insertionSort(arr, 0, keys);
+  mergeInPlace(arr, 0, keys, n);
+  return arr;
+}
+
+function collectKeys(arr, wanted) {
+  let keys = 1;
+  for (let i = 1; i < arr.length && keys < wanted; i++) {
+    const pos = lowerBound(arr, 0, keys, arr[i]);
+    if (pos < keys && arr[pos] === arr[i]) continue; // 이미 있는 값
+    // arr[i]를 키 영역의 pos로 옮긴다 (사이 원소들은 한 칸씩 밀림)
+    const [x] = arr.splice(i, 1);
+    arr.splice(pos, 0, x);
+    keys++;
+  }
+  return keys;
+}
+
+// 버퍼를 빈자리로 쓰는 병합: A를 버퍼와 맞바꾼 뒤, 결과 자리와 교환하며 채운다
+function bufferedMerge(arr, lo, mid, hi) {
+  const lenA = mid - lo;
+  for (let k = 0; k < lenA; k++) [arr[k], arr[lo + k]] = [arr[lo + k], arr[k]];
+  let i = 0, j = mid, out = lo;
+  const swap = (a, b) => ([arr[a], arr[b]] = [arr[b], arr[a]]);
+  while (i < lenA && j < hi) {
+    if (arr[j] < arr[i]) swap(out++, j++); // 같으면 A 먼저 → 안정
+    else swap(out++, i++);
+  }
+  while (i < lenA) swap(out++, i++);
+  // 버퍼 값(키)은 순서만 섞인 채 버퍼 자리로 돌아와 있다
+}
+
+function mergeInPlace(arr, lo, mid, hi) {
+  const len1 = mid - lo, len2 = hi - mid;
+  if (len1 === 0 || len2 === 0) return;
+  if (len1 + len2 === 2) {
+    if (arr[mid] < arr[lo]) [arr[lo], arr[mid]] = [arr[mid], arr[lo]];
+    return;
+  }
+  let cut1, cut2;
+  if (len1 > len2) {
+    cut1 = lo + (len1 >> 1);
+    cut2 = lowerBound(arr, mid, hi, arr[cut1]);
+  } else {
+    cut2 = mid + (len2 >> 1);
+    cut1 = upperBound(arr, lo, mid, arr[cut2]);
+  }
+  rotate(arr, cut1, mid, cut2);
+  const newMid = cut1 + (cut2 - mid);
+  mergeInPlace(arr, lo, cut1, newMid);
+  mergeInPlace(arr, newMid, cut2, hi);
+}
+
+function rotate(arr, lo, mid, hi) {
+  const reverse = (a, b) => {
+    for (let i = a, j = b - 1; i < j; i++, j--) [arr[i], arr[j]] = [arr[j], arr[i]];
+  };
+  reverse(lo, mid);
+  reverse(mid, hi);
+  reverse(lo, hi);
+}
+
+function lowerBound(arr, lo, hi, x) {
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (arr[mid] < x) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function upperBound(arr, lo, hi, x) {
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (arr[mid] <= x) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function insertionSort(arr, lo, hi) {
+  for (let i = lo + 1; i < hi; i++) {
+    for (let j = i; j > lo && arr[j - 1] > arr[j]; j--) [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
+  }
+}`,
+  spread: `// 스프레드 정렬 (Boost 정수 spreadsort를 단순화)
+function spreadSort(arr, lo = 0, hi = arr.length - 1) {
+  const n = hi - lo + 1;
+  if (n < 2) return arr;
+  if (n < 16) return insertionSort(arr, lo, hi); // 작은 구간은 비교 정렬
+
+  let min = Infinity, max = -Infinity;
+  for (let i = lo; i <= hi; i++) {
+    min = Math.min(min, arr[i]);
+    max = Math.max(max, arr[i]);
+  }
+  const logRange = bitLength(max - min);
+  if (logRange === 0) return arr; // 모두 같은 값
+
+  // 값 범위의 비트 수와 원소 수로 칸 수(2^logBins)를 정한다
+  const logBins = Math.min(logRange, 8, Math.max(1, Math.floor(Math.log2(n)) - 1));
+  const shift = logRange - logBins;
+  const bin = (x) => (x - min) >> shift; // 상위 비트 = 칸 번호
+
+  // 칸별 개수 → 교환만으로 제 칸에 넣기 (아메리칸 플래그 정렬과 같은 방식)
+  const count = new Array(1 << logBins).fill(0);
+  for (let i = lo; i <= hi; i++) count[bin(arr[i])]++;
+  const next = [], end = [];
+  for (let b = 0, pos = lo; b < count.length; b++) {
+    next.push(pos);
+    pos += count[b];
+    end.push(pos);
+  }
+  for (let b = 0; b < count.length; b++) {
+    while (next[b] < end[b]) {
+      const target = bin(arr[next[b]]);
+      if (target === b) next[b]++;
+      else {
+        const j = next[target]++;
+        [arr[next[b]], arr[j]] = [arr[j], arr[next[b]]];
+      }
+    }
+  }
+  if (shift === 0) return arr;
+  // 칸마다 다시 (남은 하위 비트로)
+  for (let b = 0, start = lo; b < count.length; b++) {
+    spreadSort(arr, start, start + count[b] - 1);
+    start += count[b];
+  }
+  return arr;
+}
+
+function bitLength(x) {
+  return x <= 0 ? 0 : 32 - Math.clz32(x);
+}
+
+function insertionSort(arr, lo, hi) {
+  for (let i = lo + 1; i <= hi; i++) {
+    for (let j = i; j > lo && arr[j - 1] > arr[j]; j--) [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]];
+  }
+  return arr;
+}`,
+  splay: `function splaySort(arr) {
+  let root = null;
+  for (const value of arr) {
+    // 1) 일반 이진 검색 트리처럼 넣는다 (같은 값은 오른쪽 → 안정)
+    const node = { value, left: null, right: null, parent: null };
+    if (!root) {
+      root = node;
+      continue;
+    }
+    let cur = root;
+    for (;;) {
+      const side = value < cur.value ? "left" : "right";
+      if (!cur[side]) {
+        cur[side] = node;
+        node.parent = cur;
+        break;
+      }
+      cur = cur[side];
+    }
+    // 2) 방금 넣은 노드를 루트까지 끌어올린다 → 최근 값 근처는 탐색이 짧아진다
+    root = splay(node);
+  }
+  // 3) 중위 순회
+  const out = [];
+  const visit = (n) => {
+    if (!n) return;
+    visit(n.left);
+    out.push(n.value);
+    visit(n.right);
+  };
+  visit(root);
+  return out;
+}
+
+function splay(x) {
+  while (x.parent) {
+    const p = x.parent, g = p.parent;
+    if (!g) rotateUp(x);                                   // zig
+    else if ((g.left === p) === (p.left === x)) {          // zig-zig
+      rotateUp(p);
+      rotateUp(x);
+    } else {                                               // zig-zag
+      rotateUp(x);
+      rotateUp(x);
+    }
+  }
+  return x;
+}
+
+// x를 부모 자리로 회전 (중위 순서는 그대로)
+function rotateUp(x) {
+  const p = x.parent, g = p.parent;
+  if (p.left === x) {
+    p.left = x.right;
+    if (x.right) x.right.parent = p;
+    x.right = p;
+  } else {
+    p.right = x.left;
+    if (x.left) x.left.parent = p;
+    x.left = p;
+  }
+  p.parent = x;
+  x.parent = g;
+  if (g) {
+    if (g.left === p) g.left = x;
+    else g.right = x;
+  }
+}`,
+  cartesian: `function cartesianTreeSort(arr) {
+  const n = arr.length;
+  const left = new Array(n).fill(-1), right = new Array(n).fill(-1);
+
+  // 1) 카테시안 트리: 값으로는 최소 힙, 중위 순회는 원래 순서.
+  //    오른쪽 경로를 스택으로 유지하면 O(n)에 만들 수 있다
+  const stack = [];
+  for (let i = 0; i < n; i++) {
+    let last = -1;
+    while (stack.length && arr[stack[stack.length - 1]] > arr[i]) last = stack.pop();
+    left[i] = last;
+    if (stack.length) right[stack[stack.length - 1]] = i;
+    stack.push(i);
+  }
+
+  // 2) 루트부터 우선순위 큐에 넣고, 최솟값을 꺼낼 때마다 그 자식들을 넣는다.
+  //    이미 정렬된 구간은 트리가 한 줄이라 큐가 작다 → 거의 정렬된 입력에 빠름
+  const out = [];
+  const pq = new MinHeap((a, b) => arr[a] - arr[b] || a - b);
+  if (n) pq.push(stack[0]);
+  while (pq.size) {
+    const x = pq.pop();
+    out.push(arr[x]);
+    if (left[x] !== -1) pq.push(left[x]);
+    if (right[x] !== -1) pq.push(right[x]);
+  }
+  return out;
+}
+
+class MinHeap {
+  constructor(compare) {
+    this.a = [];
+    this.compare = compare;
+  }
+  get size() {
+    return this.a.length;
+  }
+  push(x) {
+    const a = this.a;
+    a.push(x);
+    for (let k = a.length - 1; k > 0; ) {
+      const p = (k - 1) >> 1;
+      if (this.compare(a[k], a[p]) >= 0) break;
+      [a[k], a[p]] = [a[p], a[k]];
+      k = p;
+    }
+  }
+  pop() {
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length) {
+      a[0] = last;
+      for (let k = 0; ; ) {
+        const l = 2 * k + 1, r = l + 1;
+        let m = k;
+        if (l < a.length && this.compare(a[l], a[m]) < 0) m = l;
+        if (r < a.length && this.compare(a[r], a[m]) < 0) m = r;
+        if (m === k) break;
+        [a[k], a[m]] = [a[m], a[k]];
+        k = m;
+      }
+    }
+    return top;
+  }
+}`,
+  mergeInsertion: `// Ford–Johnson 머지-삽입 정렬: 비교 횟수를 최소에 가깝게
+function mergeInsertionSort(arr) {
+  // 같은 값이 있어도 짝을 정확히 찾도록 값을 객체로 감싼다
+  return fordJohnson(arr.map((v) => ({ v }))).map((x) => x.v);
+}
+
+function fordJohnson(items) {
+  if (items.length <= 1) return items;
+
+  // 1) 둘씩 짝지어 비교: 큰 쪽과 작은 쪽
+  const partner = new Map();
+  const larger = [];
+  for (let k = 0; k + 1 < items.length; k += 2) {
+    const [x, y] = [items[k], items[k + 1]];
+    const [big, small] = x.v < y.v ? [y, x] : [x, y];
+    larger.push(big);
+    partner.set(big, small);
+  }
+  const straggler = items.length % 2 ? items[items.length - 1] : undefined;
+
+  // 2) 큰 쪽들을 재귀로 정렬 → 주 사슬
+  const sortedLarger = fordJohnson(larger);
+  const chain = [...sortedLarger];
+  const pend = sortedLarger.map((a) => partner.get(a));
+  if (straggler) pend.push(straggler);
+
+  // 3) 첫 대기 원소는 짝(사슬의 최솟값)보다 작으니 비교 없이 맨 앞
+  chain.unshift(pend[0]);
+
+  // 4) 나머지를 야콥스탈 순서(b3,b2, b5,b4, b11..b6, ...)로,
+  //    자기 짝보다 앞부분에만 이진 삽입 → 탐색 범위가 항상 2^k - 1 이하
+  for (const idx of jacobsthalOrder(pend.length)) {
+    const b = pend[idx];
+    let hi = idx < sortedLarger.length ? chain.indexOf(sortedLarger[idx]) : chain.length;
+    let lo = 0;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (b.v < chain[mid].v) hi = mid;
+      else lo = mid + 1;
+    }
+    chain.splice(lo, 0, b);
+  }
+  return chain;
+}
+
+// t_k = (2^(k+1) + (-1)^k) / 3 = 1, 3, 5, 11, 21, ... 묶음별로 큰 번호부터
+function jacobsthalOrder(count) {
+  const order = [];
+  let prev = 1;
+  for (let k = 2; prev < count; k++) {
+    const t = (2 ** (k + 1) + (k % 2 === 0 ? 1 : -1)) / 3;
+    for (let j = Math.min(t, count); j > prev; j--) order.push(j - 1);
+    prev = t;
+  }
+  return order;
+}`,
 };
