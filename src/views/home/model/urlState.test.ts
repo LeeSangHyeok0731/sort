@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_STATE, parseGaps, readState, writeState, type HomeState } from "./urlState";
+import { DEFAULT_SLOT_OPTIONS, DEFAULT_STATE, parseGaps, readState, writeState, type HomeState } from "./urlState";
 
 describe("readState", () => {
   it("빈 쿼리는 기본 상태", () => {
@@ -12,7 +12,7 @@ describe("readState", () => {
     expect(state.speed).toBe(2); // 가장 가까운 배속 (2와 4 중 2)
     expect(state.size).toBe(1000);
     expect(state.preset).toBe("shuffled");
-    expect(state.bucketCount).toBe(20);
+    expect(state.slotOptions[0].bucketCount).toBe(20);
   });
 
   it("size=1은 2로 보정한다 (기존 덮어쓰기 버그의 원인)", () => {
@@ -40,8 +40,10 @@ describe("writeState", () => {
       size: 3,
       preset: "custom",
       custom: [3, 1, 2],
-      shellGaps: "",
-      bucketCount: 8,
+      slotOptions: [
+        { shellGaps: "", bucketCount: 8 },
+        { shellGaps: "10, 4, 1", bucketCount: 3 },
+      ],
     };
     expect(readState(writeState(state))).toEqual(state);
   });
@@ -50,6 +52,50 @@ describe("writeState", () => {
     const query = writeState({ ...DEFAULT_STATE, algorithms: ["tim", "heap"] });
     expect(query).not.toContain("algo2");
     expect(query).toContain("algo=tim");
+  });
+});
+
+describe("슬롯별 알고리즘 옵션", () => {
+  it("1번은 gaps/buckets, 2번은 gaps2/buckets2로 따로 읽는다", () => {
+    const state = readState("?compare=true&algo=bucket&algo2=bucket&buckets=2&buckets2=15&gaps=5,1&gaps2=7,3,1");
+    expect(state.slotOptions).toEqual([
+      { shellGaps: "5,1", bucketCount: 2 },
+      { shellGaps: "7,3,1", bucketCount: 15 },
+    ]);
+  });
+
+  it("2번 슬롯 값이 없으면 1번 값을 따라가지 않고 기본값을 쓴다", () => {
+    const state = readState("?compare=true&buckets=12&gaps=5,1");
+    expect(state.slotOptions[1]).toEqual(DEFAULT_SLOT_OPTIONS);
+  });
+
+  it("2번 슬롯 버킷 수도 범위를 보정한다", () => {
+    expect(readState("?buckets2=0").slotOptions[1].bucketCount).toBe(1);
+    expect(readState("?buckets2=abc").slotOptions[1].bucketCount).toBe(DEFAULT_SLOT_OPTIONS.bucketCount);
+  });
+
+  it("쓸 때 슬롯마다 다른 키를 쓴다", () => {
+    const query = writeState({
+      ...DEFAULT_STATE,
+      compare: true,
+      algorithms: ["bucket", "bucket"],
+      slotOptions: [
+        { shellGaps: "", bucketCount: 2 },
+        { shellGaps: "", bucketCount: 15 },
+      ],
+    });
+    const params = new URLSearchParams(query);
+    expect(params.get("buckets")).toBe("2");
+    expect(params.get("buckets2")).toBe("15");
+  });
+
+  it("비교 모드가 아니면 2번 슬롯 옵션을 쓰지 않는다", () => {
+    const query = writeState({
+      ...DEFAULT_STATE,
+      slotOptions: [DEFAULT_SLOT_OPTIONS, { shellGaps: "3,1", bucketCount: 9 }],
+    });
+    expect(query).not.toContain("buckets2");
+    expect(query).not.toContain("gaps2");
   });
 });
 
