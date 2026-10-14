@@ -92,10 +92,10 @@ export function describeSortAlgorithm(
     it("빈 배열과 원소 1개는 연산 없이 그대로 둔다", () => {
       const empty = runSort(algorithm, [], options);
       expect(empty.final).toEqual([]);
-      expect(empty.ops).toEqual([]);
+      expect(empty.ops).toHaveLength(0);
       const single = runSort(algorithm, toItems([7]), options);
       expect(single.final).toEqual(toItems([7]));
-      expect(single.ops).toEqual([]);
+      expect(single.ops).toHaveLength(0);
     });
 
     for (const [title, values] of FIXED_CASES) {
@@ -115,7 +115,7 @@ export function describeSortAlgorithm(
 }
 
 /** 연산 로그에서 특정 종류의 연산 개수를 센다. */
-export function countOps(ops: number[], type: number) {
+export function countOps(ops: ArrayLike<number>, type: number) {
   let count = 0;
   for (let k = 0; k < ops.length; k += 3) if (ops[k] === type) count++;
   return count;

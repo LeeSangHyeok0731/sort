@@ -48,6 +48,11 @@ export default function AlgorithmInfoCard({ algorithm, accent = "indigo", classN
           </div>
         ))}
       </dl>
+      {algorithm.note && (
+        <p className="text-[11px] leading-relaxed text-amber-200/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+          ⚠️ {algorithm.note}
+        </p>
+      )}
     </div>
   );
 }

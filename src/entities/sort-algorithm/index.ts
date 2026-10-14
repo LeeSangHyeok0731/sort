@@ -8,6 +8,7 @@ export {
 } from "./model/registry";
 export { applyOp, opCount, OpType, OP_STRIDE, revertOp, type OpLog } from "./model/op";
 export { runSort } from "./model/run";
+export { searchAlgorithms } from "./model/search";
 export type {
   AlgorithmCategory,
   Complexity,

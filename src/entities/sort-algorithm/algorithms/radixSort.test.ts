@@ -16,6 +16,6 @@ describe("radixSort", () => {
 
   it("모든 값이 0이면 연산이 없다", () => {
     const { ops } = runSort(radixSort, toItems([0, 0, 0]));
-    expect(ops).toEqual([]);
+    expect(ops).toHaveLength(0);
   });
 });

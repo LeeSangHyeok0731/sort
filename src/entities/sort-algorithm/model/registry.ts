@@ -1,47 +1,127 @@
+import { americanFlagSort } from "../algorithms/americanFlagSort";
+import { binaryInsertionSort } from "../algorithms/binaryInsertionSort";
 import { bitonicSort } from "../algorithms/bitonicSort";
+import { blockSort } from "../algorithms/blockSort";
+import { bogobogoSort } from "../algorithms/bogobogoSort";
 import { bogoSort } from "../algorithms/bogoSort";
+import { bottomUpHeapSort } from "../algorithms/bottomUpHeapSort";
+import { bottomUpMergeSort } from "../algorithms/bottomUpMergeSort";
+import { bozoSort } from "../algorithms/bozoSort";
 import { bubbleSort } from "../algorithms/bubbleSort";
 import { bucketSort } from "../algorithms/bucketSort";
+import { cartesianTreeSort } from "../algorithms/cartesianTreeSort";
+import { circleSort } from "../algorithms/circleSort";
 import { cocktailSort } from "../algorithms/cocktailSort";
 import { combSort } from "../algorithms/combSort";
 import { countingSort } from "../algorithms/countingSort";
+import { cycleSort } from "../algorithms/cycleSort";
+import { doubleSelectionSort } from "../algorithms/doubleSelectionSort";
+import { dualPivotQuickSort } from "../algorithms/dualPivotQuickSort";
+import { exchangeSort } from "../algorithms/exchangeSort";
+import { flashSort } from "../algorithms/flashSort";
 import { gnomeSort } from "../algorithms/gnomeSort";
+import { grailSort } from "../algorithms/grailSort";
 import { heapSort } from "../algorithms/heapSort";
+import { hoareQuickSort } from "../algorithms/hoareQuickSort";
 import { insertionSort } from "../algorithms/insertionSort";
 import { introSort } from "../algorithms/introSort";
+import { mergeInsertionSort } from "../algorithms/mergeInsertionSort";
 import { mergeSort } from "../algorithms/mergeSort";
+import { miracleSort } from "../algorithms/miracleSort";
+import { msdRadixSort } from "../algorithms/msdRadixSort";
+import { naturalMergeSort } from "../algorithms/naturalMergeSort";
+import { oddEvenMergeSort } from "../algorithms/oddEvenMergeSort";
 import { oddEvenSort } from "../algorithms/oddEvenSort";
+import { pairwiseNetworkSort } from "../algorithms/pairwiseNetworkSort";
 import { pancakeSort } from "../algorithms/pancakeSort";
+import { patienceSort } from "../algorithms/patienceSort";
+import { pdqSort } from "../algorithms/pdqSort";
+import { permutationSort } from "../algorithms/permutationSort";
+import { pigeonholeSort } from "../algorithms/pigeonholeSort";
+import { quantumBogoSort } from "../algorithms/quantumBogoSort";
 import { quickSort } from "../algorithms/quickSort";
+import { radixExchangeSort } from "../algorithms/radixExchangeSort";
 import { radixSort } from "../algorithms/radixSort";
 import { selectionSort } from "../algorithms/selectionSort";
 import { shellSort } from "../algorithms/shellSort";
+import { slowSort } from "../algorithms/slowSort";
+import { smoothSort } from "../algorithms/smoothSort";
+import { splaySort } from "../algorithms/splaySort";
+import { spreadSort } from "../algorithms/spreadSort";
+import { stoogeSort } from "../algorithms/stoogeSort";
+import { strandSort } from "../algorithms/strandSort";
+import { ternaryHeapSort } from "../algorithms/ternaryHeapSort";
+import { threeWayQuickSort } from "../algorithms/threeWayQuickSort";
 import { timSort } from "../algorithms/timSort";
+import { tournamentSort } from "../algorithms/tournamentSort";
 import { treeSort } from "../algorithms/treeSort";
+import { weakHeapSort } from "../algorithms/weakHeapSort";
 import type { AlgorithmCategory, SortAlgorithm } from "./types";
 
-/** 새 알고리즘은 여기 한 곳에만 추가하면 된다. */
+/** 새 알고리즘은 여기 한 곳에만 추가하면 된다. 분류 안에서는 이 순서대로 표시된다. */
 export const ALGORITHMS = [
+  // 기본 정렬
   bubbleSort,
   selectionSort,
   insertionSort,
+  binaryInsertionSort,
   quickSort,
+  threeWayQuickSort,
+  dualPivotQuickSort,
   mergeSort,
   heapSort,
   shellSort,
+  cycleSort,
+  doubleSelectionSort,
+  exchangeSort,
+  bottomUpMergeSort,
+  naturalMergeSort,
+  hoareQuickSort,
+  ternaryHeapSort,
+  bottomUpHeapSort,
+  weakHeapSort,
+  // 비교 없는 정렬
   countingSort,
   radixSort,
+  msdRadixSort,
   bucketSort,
+  pigeonholeSort,
+  flashSort,
+  americanFlagSort,
+  radixExchangeSort,
+  spreadSort,
+  // 특이한 정렬
   timSort,
+  introSort,
+  smoothSort,
   combSort,
   cocktailSort,
   gnomeSort,
   oddEvenSort,
   pancakeSort,
   bitonicSort,
-  bogoSort,
-  introSort,
+  oddEvenMergeSort,
+  circleSort,
   treeSort,
+  pdqSort,
+  patienceSort,
+  strandSort,
+  tournamentSort,
+  pairwiseNetworkSort,
+  mergeInsertionSort,
+  blockSort,
+  grailSort,
+  splaySort,
+  cartesianTreeSort,
+  // 재미있는 정렬
+  bogoSort,
+  bozoSort,
+  stoogeSort,
+  slowSort,
+  miracleSort,
+  permutationSort,
+  quantumBogoSort,
+  bogobogoSort,
 ] as const satisfies readonly SortAlgorithm[];
 
 export type AlgorithmId = (typeof ALGORITHMS)[number]["id"];
@@ -52,6 +132,7 @@ export const CATEGORIES: ReadonlyArray<{ id: AlgorithmCategory; name: string }> 
   { id: "standard", name: "기본 정렬" },
   { id: "linear", name: "비교 없는 정렬" },
   { id: "special", name: "특이한 정렬" },
+  { id: "fun", name: "재미있는 정렬" },
 ];
 
 const byId = new Map<string, SortAlgorithm>(ALGORITHMS.map((a) => [a.id, a]));

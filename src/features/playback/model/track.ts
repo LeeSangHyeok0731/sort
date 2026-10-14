@@ -27,7 +27,7 @@ export class Track {
   readonly truncated: boolean;
   readonly array: ArrayItem[];
   readonly stats: TrackStats = emptyStats();
-  private readonly ops: number[];
+  private readonly ops: ArrayLike<number>;
   private _cursor = 0;
 
   constructor(initial: readonly ArrayItem[], result: Pick<SortResult, "ops" | "truncated">) {
