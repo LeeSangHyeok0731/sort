@@ -6,7 +6,8 @@ import { Track } from "./track";
 const input: ArrayItem[] = [5, 3, 8, 1, 9, 2, 7, 3].map((value, id) => ({ id, value }));
 
 describe("Track", () => {
-  it.each(ALGORITHMS.filter((a) => a.id !== "bogo").map((a) => [a.id, a] as const))(
+  // 재미있는 정렬은 무작위·수백만 연산이라 제외 (각자의 테스트에서 검증)
+  it.each(ALGORITHMS.filter((a) => a.category !== "fun").map((a) => [a.id, a] as const))(
     "%s: 끝까지 재생하면 정렬 결과와 같고, 처음으로 되감으면 입력과 같다",
     (_, algorithm) => {
       const result = runSort(algorithm, input);
@@ -52,6 +53,41 @@ describe("Track", () => {
     track.seek(-5);
     expect(track.cursor).toBe(0);
     expect(track.forward()).toBe(true);
+  });
+
+  describe("코드 줄", () => {
+    const bubble = ALGORITHMS.find((a) => a.id === "bubble")!;
+    const cmpLine = [...bubble.codeLabels!].find(([, label]) => label === "cmp")![0];
+    const swapLine = [...bubble.codeLabels!].find(([, label]) => label === "swap")![0];
+
+    it("현재 줄은 마지막으로 적용된 연산의 줄이다", () => {
+      const track = new Track(input, runSort(bubble, input));
+      expect(track.line).toBe(0);
+      track.forward(); // 5와 3 비교
+      expect(track.line).toBe(cmpLine);
+      track.forward(); // 교환
+      expect(track.line).toBe(swapLine);
+      track.backward();
+      expect(track.line).toBe(cmpLine);
+    });
+
+    it("줄별 실행 횟수는 통계와 일치하고, 되감으면 0으로 돌아간다", () => {
+      const track = new Track(input, runSort(bubble, input));
+      track.seek(track.total);
+      expect(track.lineHits[cmpLine]).toBe(track.stats.compares);
+      expect(track.lineHits[swapLine]).toBe(track.stats.swaps);
+      track.seek(Math.floor(track.total / 2));
+      track.seek(0);
+      expect(track.lineHits.every((h) => !h)).toBe(true);
+    });
+
+    it("줄 정보가 없는 알고리즘은 줄 0으로 남는다", () => {
+      const tim = ALGORITHMS.find((a) => a.id === "tim")!;
+      const track = new Track(input, runSort(tim, input));
+      track.seek(track.total);
+      expect(track.line).toBe(0);
+      expect(track.lineHits.filter(Boolean)).toHaveLength(0);
+    });
   });
 
   it("입력 배열을 변경하지 않는다", () => {

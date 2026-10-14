@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OpType } from "../model/op";
+import { OP_STRIDE, OpType } from "../model/op";
 import { runSort } from "../model/run";
 import { describeSortAlgorithm, countOps, expectSortsCorrectly, randomValues, toItems } from "../testing/sortSuite";
 import { jacobsthalInsertionOrder, mergeInsertionSort } from "./mergeInsertionSort";
@@ -37,7 +37,7 @@ describe("mergeInsertionSort", () => {
     const { ops } = runSort(mergeInsertionSort, toItems(randomValues(50, 9999, 66)));
     let lastCompare = -1;
     let firstMove = Infinity;
-    for (let k = 0; k < ops.length; k += 3) {
+    for (let k = 0; k < ops.length; k += OP_STRIDE) {
       if (ops[k] === OpType.Compare) lastCompare = k;
       if (ops[k] === OpType.Move) firstMove = Math.min(firstMove, k);
     }

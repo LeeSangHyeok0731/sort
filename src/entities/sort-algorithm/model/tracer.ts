@@ -33,9 +33,9 @@ export class Tracer {
   }
 
   /** 연산을 기록한다. 한도를 넘으면 배열을 바꾸기 전에 중단한다. */
-  private record(type: OpType, a: number, b: number) {
+  private record(type: OpType, a: number, b: number, line: number) {
     if (this.ops.length >= this.maxOps * OP_STRIDE) throw new OpBudgetExceeded();
-    this.ops.push(type, a, b);
+    this.ops.push(type, a, b, line);
   }
 
   get length() {
@@ -52,28 +52,28 @@ export class Tracer {
     return this.a[i];
   }
 
-  /** a[i] - a[j] 를 반환하며 비교를 기록한다. */
-  cmp(i: number, j: number): number {
-    this.record(OpType.Compare, i, j);
+  /** a[i] - a[j] 를 반환하며 비교를 기록한다. line: 설명 코드의 줄 번호 (선택) */
+  cmp(i: number, j: number, line = 0): number {
+    this.record(OpType.Compare, i, j, line);
     return this.a[i].value - this.a[j].value;
   }
 
-  swap(i: number, j: number) {
+  swap(i: number, j: number, line = 0) {
     if (i === j) return;
-    this.record(OpType.Swap, i, j);
+    this.record(OpType.Swap, i, j, line);
     applyOp(this.a, OpType.Swap, i, j);
   }
 
   /** from 위치의 요소를 to 위치로 옮긴다. */
-  move(from: number, to: number) {
+  move(from: number, to: number, line = 0) {
     if (from === to) return;
-    this.record(OpType.Move, from, to);
+    this.record(OpType.Move, from, to, line);
     applyOp(this.a, OpType.Move, from, to);
   }
 
   /** 값 읽기를 기록한다 (하이라이트용). */
-  mark(i: number) {
-    this.record(OpType.Mark, i, i);
+  mark(i: number, line = 0) {
+    this.record(OpType.Mark, i, i, line);
   }
 
   /**
