@@ -19,7 +19,8 @@ export type OpType = (typeof OpType)[keyof typeof OpType];
 
 export const OP_STRIDE = 3;
 
-export type OpLog = number[];
+/** 기록이 끝난 연산 로그 (Int32Array로 압축) — 읽기 전용으로 다룬다 */
+export type OpLog = ArrayLike<number>;
 
 export type Op = { type: OpType; a: number; b: number };
 

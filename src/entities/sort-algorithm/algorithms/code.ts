@@ -338,4 +338,243 @@ function insert(node, val) {
   else node.right = insert(node.right, val);
   return node;
 }`,
+  stooge: `function stoogeSort(arr, i = 0, j = arr.length - 1) {
+  // 양 끝이 뒤집혀 있으면 교환
+  if (arr[i] > arr[j]) {
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  if (j - i + 1 > 2) {
+    const third = Math.floor((j - i + 1) / 3);
+    stoogeSort(arr, i, j - third); // 앞 2/3 정렬
+    stoogeSort(arr, i + third, j); // 뒤 2/3 정렬
+    stoogeSort(arr, i, j - third); // 앞 2/3 다시 정렬
+  }
+  return arr;
+}`,
+  slow: `// "곱하고 항복하라(multiply and surrender)" 원칙의 패러디 정렬
+function slowSort(arr, i = 0, j = arr.length - 1) {
+  if (i >= j) return arr;
+  const m = Math.floor((i + j) / 2);
+  slowSort(arr, i, m);     // 앞 절반 정렬 → 최댓값이 m에
+  slowSort(arr, m + 1, j); // 뒤 절반 정렬 → 최댓값이 j에
+  // 둘 중 큰 값을 맨 끝으로
+  if (arr[m] > arr[j]) {
+    [arr[m], arr[j]] = [arr[j], arr[m]];
+  }
+  // 최댓값을 뺀 나머지를 처음부터 다시 정렬
+  slowSort(arr, i, j - 1);
+  return arr;
+}`,
+  bozo: `function isSorted(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (arr[i] > arr[i + 1]) return false;
+  }
+  return true;
+}
+
+function bozoSort(arr) {
+  while (!isSorted(arr)) {
+    // 아무 두 위치나 골라서 바꿔 본다
+    const i = Math.floor(Math.random() * arr.length);
+    const j = Math.floor(Math.random() * arr.length);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}`,
+  miracle: `function isSorted(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (arr[i] > arr[i + 1]) return false;
+  }
+  return true;
+}
+
+function miracleSort(arr) {
+  // 우주선이 메모리 비트를 뒤집어
+  // 배열을 정렬해 주기를 기다린다
+  while (!isSorted(arr)) {
+    // 기도한다 🙏
+  }
+  return arr;
+}`,
+  circle: `function circleSort(arr) {
+  // 한 바퀴 돌았는데 교환이 없을 때까지 반복
+  while (circle(arr, 0, arr.length - 1));
+  return arr;
+}
+
+function circle(arr, lo, hi) {
+  if (lo >= hi) return false;
+  let swapped = false;
+  let l = lo, h = hi;
+  // 양 끝에서 안쪽으로 좁혀 가며 비교
+  while (l < h) {
+    if (arr[l] > arr[h]) {
+      [arr[l], arr[h]] = [arr[h], arr[l]];
+      swapped = true;
+    }
+    l++;
+    h--;
+  }
+  // 길이가 홀수면 가운데와 그 오른쪽을 비교
+  if (l === h && arr[l] > arr[h + 1]) {
+    [arr[l], arr[h + 1]] = [arr[h + 1], arr[l]];
+    swapped = true;
+  }
+  const mid = Math.floor((lo + hi) / 2);
+  const left = circle(arr, lo, mid);
+  const right = circle(arr, mid + 1, hi);
+  return swapped || left || right;
+}`,
+  msdRadix: `function msdRadixSort(arr) {
+  const max = Math.max(...arr);
+  let exp = 1;
+  while (Math.floor(max / exp) >= 10) exp *= 10;
+  return msd(arr, exp);
+}
+
+function msd(arr, exp) {
+  if (arr.length <= 1 || exp < 1) return arr;
+  // 현재 자릿수(0~9)로 10개 묶음에 나눈다
+  const groups = Array.from({ length: 10 }, () => []);
+  for (const x of arr) {
+    groups[Math.floor(x / exp) % 10].push(x);
+  }
+  // 각 묶음을 다음(더 작은) 자릿수로 재귀 정렬해 이어 붙인다
+  return groups.flatMap((g) => msd(g, exp / 10));
+}`,
+  oddEvenMerge: `// Batcher의 홀짝 병합 정렬 네트워크 (반복 버전)
+// 어떤 위치끼리 비교할지가 입력과 무관하게 미리 정해져 있다
+function oddEvenMergeSort(arr) {
+  const n = arr.length;
+  for (let p = 1; p < n; p *= 2) {
+    for (let k = p; k >= 1; k = Math.floor(k / 2)) {
+      for (let j = k % p; j + k < n; j += 2 * k) {
+        for (let i = 0; i < k && i + j + k < n; i++) {
+          // 같은 2p 크기 블록 안에 있는 쌍만 비교-교환
+          const a = i + j, b = i + j + k;
+          if (Math.floor(a / (2 * p)) === Math.floor(b / (2 * p)) && arr[a] > arr[b]) {
+            [arr[a], arr[b]] = [arr[b], arr[a]];
+          }
+        }
+      }
+    }
+  }
+  return arr;
+}`,
+  smooth: `// Dijkstra의 스무스 정렬 (요약)
+// 레오나르도 수: 1, 1, 3, 5, 9, 15, 25, ... (L(k) = L(k-1) + L(k-2) + 1)
+//
+// 1단계: 원소를 하나씩 추가하며 "레오나르도 힙"의 숲을 만든다.
+//   - 마지막 두 힙의 차수가 연속(k+1, k)이면 새 원소를 루트로 합쳐 차수 k+2 힙을 만든다.
+//   - 아니면 새 원소 하나로 크기 1짜리 힙을 만든다.
+//   - 새 루트는 왼쪽 힙 루트들과 비교해 "루트들이 오름차순"이 되도록 옮긴다(trinkle),
+//     그다음 자기 힙 안에서 아래로 내린다(sift).
+//
+// 2단계: 가장 오른쪽 루트가 전체 최댓값이므로 그대로 둔다(이미 제자리).
+//   - 그 힙을 두 자식 힙으로 쪼개고, 두 자식 루트를 다시 trinkle 한다.
+//   - 숲이 비워질 때까지 반복.
+//
+// 이미 거의 정렬된 배열이면 trinkle/sift가 거의 일어나지 않아 O(n)에 가깝다.
+function sift(arr, head, order, L) {
+  while (order > 1) {
+    const right = head - 1;
+    const left = head - 1 - L[order - 2];
+    if (arr[head] >= arr[left] && arr[head] >= arr[right]) break;
+    if (arr[left] >= arr[right]) {
+      [arr[head], arr[left]] = [arr[left], arr[head]];
+      head = left;
+      order -= 1;
+    } else {
+      [arr[head], arr[right]] = [arr[right], arr[head]];
+      head = right;
+      order -= 2;
+    }
+  }
+}`,
+  quick3: `function quickSort3Way(arr, lo = 0, hi = arr.length - 1) {
+  if (lo >= hi) return arr;
+  const pivot = arr[lo];
+  let lt = lo, gt = hi, i = lo + 1;
+  // [lo, lt) < pivot,  [lt, i) == pivot,  (gt, hi] > pivot
+  while (i <= gt) {
+    if (arr[i] < pivot) {
+      [arr[lt], arr[i]] = [arr[i], arr[lt]];
+      lt++; i++;
+    } else if (arr[i] > pivot) {
+      [arr[i], arr[gt]] = [arr[gt], arr[i]];
+      gt--;
+    } else {
+      i++; // 피벗과 같은 값은 가운데에 모인다
+    }
+  }
+  // 피벗과 같은 구역은 이미 제자리 → 양쪽만 재귀
+  quickSort3Way(arr, lo, lt - 1);
+  quickSort3Way(arr, gt + 1, hi);
+  return arr;
+}`,
+  dualPivot: `function dualPivotQuickSort(arr, lo = 0, hi = arr.length - 1) {
+  if (hi <= lo) return arr;
+  if (arr[lo] > arr[hi]) [arr[lo], arr[hi]] = [arr[hi], arr[lo]];
+  const p = arr[lo], q = arr[hi]; // 피벗 두 개 (p <= q)
+
+  let lt = lo + 1, gt = hi - 1, i = lo + 1;
+  while (i <= gt) {
+    if (arr[i] < p) {
+      [arr[i], arr[lt]] = [arr[lt], arr[i]];
+      lt++; i++;
+    } else if (arr[i] > q) {
+      [arr[i], arr[gt]] = [arr[gt], arr[i]];
+      gt--;
+    } else {
+      i++;
+    }
+  }
+  lt--; gt++;
+  // 피벗을 경계 위치로
+  [arr[lo], arr[lt]] = [arr[lt], arr[lo]];
+  [arr[hi], arr[gt]] = [arr[gt], arr[hi]];
+
+  dualPivotQuickSort(arr, lo, lt - 1);   // < p
+  dualPivotQuickSort(arr, lt + 1, gt - 1); // p ~ q
+  dualPivotQuickSort(arr, gt + 1, hi);   // > q
+  return arr;
+}`,
+  binaryInsertion: `function binaryInsertionSort(arr) {
+  for (let i = 1; i < arr.length; i++) {
+    const key = arr[i];
+    // 이진 탐색으로 key보다 큰 첫 위치를 찾는다 (비교 O(log n))
+    let lo = 0, hi = i;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (arr[mid] > key) hi = mid;
+      else lo = mid + 1;
+    }
+    // 하지만 밀어내기(이동)는 여전히 O(n)
+    for (let j = i; j > lo; j--) arr[j] = arr[j - 1];
+    arr[lo] = key;
+  }
+  return arr;
+}`,
+  cycle: `function cycleSort(arr) {
+  const n = arr.length;
+  for (let start = 0; start < n - 1; start++) {
+    let item = arr[start];
+    // item보다 작은 원소 수 = item의 최종 위치
+    let pos = start;
+    for (let i = start + 1; i < n; i++) if (arr[i] < item) pos++;
+    if (pos === start) continue; // 이미 제자리
+
+    while (item === arr[pos]) pos++; // 같은 값 건너뛰기
+    [arr[pos], item] = [item, arr[pos]]; // 제자리에 쓰고, 밀려난 값을 든다
+
+    // 밀려난 값으로 사이클이 시작 위치로 돌아올 때까지 반복
+    while (pos !== start) {
+      pos = start;
+      for (let i = start + 1; i < n; i++) if (arr[i] < item) pos++;
+      while (item === arr[pos]) pos++;
+      [arr[pos], item] = [item, arr[pos]];
+    }
+  }
+  return arr;
+}`,
 };

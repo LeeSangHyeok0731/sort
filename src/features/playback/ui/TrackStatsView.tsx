@@ -31,7 +31,7 @@ export default function TrackStatsView({ view, winner }: Props) {
       <div className="ml-auto flex items-center gap-2">
         {truncated && done && (
           <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
-            시도 한도 도달 · 미완료
+            한도 도달 · 미완료
           </span>
         )}
         {winner && (
