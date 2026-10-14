@@ -81,9 +81,14 @@ describe("Track", () => {
       expect(track.lineHits.every((h) => !h)).toBe(true);
     });
 
-    it("줄 정보가 없는 알고리즘은 줄 0으로 남는다", () => {
-      const tim = ALGORITHMS.find((a) => a.id === "tim")!;
-      const track = new Track(input, runSort(tim, input));
+    it("줄 정보 없이 기록된 연산은 줄 0으로 남는다", () => {
+      const noLines = {
+        sort(t: Parameters<(typeof ALGORITHMS)[number]["sort"]>[0]) {
+          t.cmp(0, 1);
+          t.swap(0, 1);
+        },
+      };
+      const track = new Track(input, runSort(noLines, input));
       track.seek(track.total);
       expect(track.line).toBe(0);
       expect(track.lineHits.filter(Boolean)).toHaveLength(0);

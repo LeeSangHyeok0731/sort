@@ -48,25 +48,22 @@ function formatHits(n: number) {
 type LineProps = {
   html: string;
   lineNo: number;
-  traced: boolean;
   hitsText: string;
   heat: number;
   activeClass: string | null;
 };
 
 /** 한 줄. props가 같으면 다시 그리지 않는다 */
-const CodeLine = memo(function CodeLine({ html, lineNo, traced, hitsText, heat, activeClass }: LineProps) {
+const CodeLine = memo(function CodeLine({ html, lineNo, hitsText, heat, activeClass }: LineProps) {
   return (
     <div
       className={cn("flex border-l-2 pr-3", activeClass ?? "border-transparent")}
       style={{ minHeight: ROW_HEIGHT, ...(activeClass ? undefined : HEAT_STYLE[heat]) }}
     >
       <span className="w-8 shrink-0 text-right pr-2 text-white/15 select-none">{lineNo}</span>
-      {traced && (
-        <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-indigo-300/70 select-none">
-          {hitsText}
-        </span>
-      )}
+      <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-indigo-300/70 select-none">
+        {hitsText}
+      </span>
       {/* 패널보다 긴 줄은 가로 스크롤 대신 줄바꿈 (들여쓰기는 유지) */}
       <span
         className="min-w-0 flex-1 whitespace-pre-wrap break-words"
@@ -83,7 +80,6 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
   /** 스크롤 위치·높이와 줄 위치를 캐시해 매 프레임 레이아웃을 강제로 계산하지 않는다 */
   const viewport = useRef({ top: 0, height: 0 });
   const rowBoxes = useRef<Array<{ top: number; height: number }>>([]);
-  const traced = algorithm.codeLabels !== undefined;
 
   const lines = useMemo(
     () => Prism.highlight(algorithm.code, Prism.languages.javascript, "javascript").split("\n"),
@@ -92,7 +88,7 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
 
   let maxHits = 1;
   for (const h of lineHits ?? []) if (h > maxHits) maxHits = h;
-  const activeLabel = algorithm.codeLabels?.get(activeLine);
+  const activeLabel = algorithm.codeLabels.get(activeLine);
   const activeType = activeLabel ? opTypeOfLabel(activeLabel) : undefined;
 
   useEffect(() => {
@@ -148,11 +144,6 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/5">
         <span className="text-[11px] font-mono text-white/40 truncate">{algorithm.id}Sort.js</span>
         <div className="flex items-center gap-2 shrink-0">
-          {!traced && (
-            <span className="text-[10px] text-white/30" title="이 알고리즘은 아직 실행 중인 줄을 표시하지 않아요">
-              줄 하이라이트 준비 중
-            </span>
-          )}
           <button
             type="button"
             onClick={copy}
@@ -178,7 +169,6 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
                   key={i}
                   html={html}
                   lineNo={lineNo}
-                  traced={traced}
                   hitsText={hits > 0 ? formatHits(hits) : ""}
                   heat={hits > 0 ? Math.max(1, Math.round((HEAT_LEVELS * hits) / maxHits)) : 0}
                   activeClass={lineNo === activeLine && activeType !== undefined ? ACTIVE_CLASS[activeType] : null}

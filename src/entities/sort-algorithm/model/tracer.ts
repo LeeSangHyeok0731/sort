@@ -80,12 +80,12 @@ export class Tracer {
    * 요소들을 target 순서(id 기준)대로 [start, start + target.length) 구간에 배치한다.
    * 앞에서부터 move로 끌어오므로 아직 배치되지 않은 요소들의 상대 순서가 유지된다.
    */
-  arrange(start: number, target: readonly ArrayItem[]) {
+  arrange(start: number, target: readonly ArrayItem[], line = 0) {
     for (let k = 0; k < target.length; k++) {
       const dest = start + k;
       let from = dest;
       while (this.a[from].id !== target[k].id) from++;
-      this.move(from, dest);
+      this.move(from, dest, line);
     }
   }
 
