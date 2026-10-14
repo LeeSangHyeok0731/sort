@@ -7,6 +7,7 @@ import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayIt
 import { AlgorithmInfoCard, getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
 import { ArrayConfigurator } from "@/features/configure-array";
 import { PlaybackBar, useSortPlayer } from "@/features/playback";
+import { SlotMuteButton, SoundToggle, useSortSound } from "@/features/sort-sound";
 import {
   AlgorithmOptions,
   AlgorithmPicker,
@@ -52,6 +53,7 @@ export default function HomeView() {
   );
 
   const player = useSortPlayer({ input, slots, speed: state.speed });
+  const sound = useSortSound(player.views);
 
   const generate = (size: number, preset: PresetId) => {
     setInput(generateArray(size, preset));
@@ -90,6 +92,7 @@ export default function HomeView() {
     onStepForward: () => canPlay && player.stepForward(),
     onStepBackward: () => canPlay && player.stepBackward(),
     onShuffle: shuffle,
+    onToggleSound: sound.toggle,
   });
 
   return (
@@ -110,10 +113,25 @@ export default function HomeView() {
           onSpeedChange={(speed) => update({ speed })}
           onShuffle={shuffle}
           disabled={!canPlay}
+          extraControls={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />}
         />
       </div>
 
-      <VisualizerStage views={player.views} algorithms={algorithms} speed={state.speed} />
+      <VisualizerStage
+        views={player.views}
+        algorithms={algorithms}
+        speed={state.speed}
+        renderSlotControls={(slot) =>
+          sound.enabled && (
+            <SlotMuteButton
+              slot={slot}
+              name={algorithms[slot].name}
+              muted={sound.isSlotMuted(slot)}
+              onToggle={() => sound.toggleSlot(slot)}
+            />
+          )
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr] items-start">
         <Card className="flex flex-col gap-5">
@@ -152,7 +170,8 @@ export default function HomeView() {
 
       <footer className="text-center text-xs text-white/30 pb-4">
         단축키 · <kbd className="font-mono text-white/50">Space</kbd> 재생/일시정지 ·{" "}
-        <kbd className="font-mono text-white/50">← →</kbd> 한 단계 · <kbd className="font-mono text-white/50">R</kbd> 새 배열
+        <kbd className="font-mono text-white/50">← →</kbd> 한 단계 · <kbd className="font-mono text-white/50">R</kbd> 새 배열 ·{" "}
+        <kbd className="font-mono text-white/50">M</kbd> 소리
       </footer>
     </div>
   );

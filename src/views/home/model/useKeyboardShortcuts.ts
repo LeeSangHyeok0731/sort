@@ -7,6 +7,7 @@ type Handlers = {
   onStepForward: () => void;
   onStepBackward: () => void;
   onShuffle: () => void;
+  onToggleSound: () => void;
 };
 
 function isTypingTarget(target: EventTarget | null) {
@@ -14,7 +15,7 @@ function isTypingTarget(target: EventTarget | null) {
   return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
-/** Space: 재생/일시정지, ←/→: 한 단계, R: 새 배열 */
+/** Space: 재생/일시정지, ←/→: 한 단계, R: 새 배열, M: 소리 켜기/끄기 */
 export function useKeyboardShortcuts(handlers: Handlers) {
   const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target)) return;
@@ -35,6 +36,10 @@ export function useKeyboardShortcuts(handlers: Handlers) {
       case "r":
       case "R":
         handlers.onShuffle();
+        break;
+      case "m":
+      case "M":
+        handlers.onToggleSound();
         break;
     }
   });
