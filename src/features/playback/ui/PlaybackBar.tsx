@@ -2,7 +2,7 @@
 
 import { cn } from "@/shared/lib";
 import { SPEEDS, type SortPlayer } from "../model/useSortPlayer";
-import { PauseIcon, PlayIcon, RewindIcon, ShuffleIcon, StepBackIcon, StepForwardIcon } from "./icons";
+import { PauseIcon, PlayIcon, RewindIcon, ShuffleIcon, SpinnerIcon, StepBackIcon, StepForwardIcon } from "./icons";
 
 type Props = {
   player: SortPlayer;
@@ -52,32 +52,57 @@ function IconButton({
 export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, disabled }: Props) {
   const { status, cursor, total } = player;
   const playing = status === "playing";
+  const computing = status === "computing";
   const speedIndex = Math.max(0, SPEEDS.indexOf(speed as (typeof SPEEDS)[number]));
   const progress = total ? cursor / total : status === "done" ? 1 : 0;
+
+  let mainLabel = "재생";
+  if (playing) mainLabel = "일시정지";
+  else if (computing) mainLabel = "계산 취소";
+  else if (status === "done") mainLabel = "다시 재생";
+
+  const statusText = {
+    idle: "준비됨",
+    computing: "계산 중…",
+    playing: "재생 중",
+    paused: "일시정지",
+    done: "완료",
+  }[status];
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-5">
       <div className="flex items-center justify-center gap-1">
-        <IconButton label="처음으로" onClick={() => player.seek(0)} disabled={disabled || cursor === 0}>
+        <IconButton label="처음으로" onClick={() => player.seek(0)} disabled={disabled || computing || cursor === 0}>
           <RewindIcon />
         </IconButton>
-        <IconButton label="한 단계 뒤로" shortcut="←" onClick={player.stepBackward} disabled={disabled || cursor === 0}>
+        <IconButton
+          label="한 단계 뒤로"
+          shortcut="←"
+          onClick={player.stepBackward}
+          disabled={disabled || computing || cursor === 0}
+        >
           <StepBackIcon />
         </IconButton>
         <IconButton
-          label={playing ? "일시정지" : status === "done" ? "다시 재생" : "재생"}
+          label={mainLabel}
           shortcut="Space"
           onClick={player.toggle}
           disabled={disabled}
           variant={playing ? "danger" : "primary"}
         >
-          {playing ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5 translate-x-px" />}
+          {computing ? (
+            <SpinnerIcon className="w-5 h-5" />
+          ) : playing ? (
+            <PauseIcon className="w-5 h-5" />
+          ) : (
+            <PlayIcon className="w-5 h-5 translate-x-px" />
+          )}
         </IconButton>
         <IconButton
           label="한 단계 앞으로"
           shortcut="→"
           onClick={player.stepForward}
-          disabled={disabled || status === "done"}
+          disabled={disabled || computing || status === "done"}
         >
           <StepForwardIcon />
         </IconButton>
@@ -88,8 +113,8 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
 
       <div className="flex-1 flex flex-col gap-1 min-w-0">
         <div className="flex justify-between gap-3 whitespace-nowrap text-[11px] font-mono text-white/40">
-          <span>
-            {status === "idle" ? "준비됨" : status === "done" ? "완료" : playing ? "재생 중" : "일시정지"}
+          <span className={cn(computing && "text-indigo-300 animate-pulse")} aria-live="polite">
+            {statusText}
           </span>
           <span>
             <span className="text-indigo-300">{cursor.toLocaleString()}</span>
@@ -110,7 +135,7 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
             min={0}
             max={total ?? 0}
             value={cursor}
-            disabled={disabled || !total}
+            disabled={disabled || computing || !total}
             onChange={(e) => player.seek(Number(e.target.value))}
             className="scrubber absolute inset-x-0 w-full"
           />

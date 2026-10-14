@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArrayItem } from "@/shared/model";
 import type { BarHighlight } from "@/entities/array";
-import { runSort, type SortAlgorithm, type SortOptions } from "@/entities/sort-algorithm";
+import type { SortAlgorithm, SortOptions } from "@/entities/sort-algorithm";
+import { runSortsInBackground, SortCancelled, type BackgroundSort } from "./runInBackground";
 import { Track, type TrackStats } from "./track";
 
 /** 1배속 = 초당 10개 연산 */
@@ -15,7 +16,7 @@ const MAX_OPS_PER_FRAME = 20_000;
 
 export type PlayerSlot = { algorithm: SortAlgorithm; options: SortOptions };
 
-export type PlayerStatus = "idle" | "playing" | "paused" | "done";
+export type PlayerStatus = "idle" | "computing" | "playing" | "paused" | "done";
 
 export type TrackView = {
   items: readonly ArrayItem[];
@@ -31,6 +32,12 @@ export type TrackView = {
   /** 줄별 실행 횟수 (인덱스 = 줄 번호) */
   lineHits: readonly number[];
 };
+
+/** 계산이 끝난 뒤 이어서 할 동작 */
+type Action = { type: "play" } | { type: "step"; delta: 1 | -1 } | { type: "seek"; cursor: number };
+
+/** 트랙이 어떤 입력·구성으로 만들어졌는지 */
+type Config = { input: readonly ArrayItem[]; key: string };
 
 const ZERO_STATS: TrackStats = { compares: 0, swaps: 0, moves: 0, reads: 0 };
 const NO_HITS: readonly number[] = [];
@@ -54,6 +61,10 @@ function slotsKey(slots: readonly PlayerSlot[]) {
   return slots.map((s) => `${s.algorithm.id}:${JSON.stringify(s.options)}`).join("|");
 }
 
+function matches(config: Config | null, input: readonly ArrayItem[], key: string) {
+  return config !== null && config.input === input && config.key === key;
+}
+
 type Params = {
   input: readonly ArrayItem[];
   slots: readonly PlayerSlot[];
@@ -62,57 +73,108 @@ type Params = {
 
 /**
  * 정렬 연산 로그를 재생한다.
+ * 연산 로그는 Web Worker에서 계산하므로, 수백만 연산을 만드는 알고리즘도 화면을 멈추지 않는다.
  * 입력 배열(참조)이나 알고리즘 구성이 바뀌면 자동으로 idle 상태로 돌아간다.
  */
 export function useSortPlayer({ input, slots, speed }: Params) {
   const key = slotsKey(slots);
   const tracksRef = useRef<Track[]>([]);
-  const [session, setSession] = useState<{ input: readonly ArrayItem[]; key: string } | null>(null);
+  const [session, setSession] = useState<Config | null>(null);
+  const [computing, setComputing] = useState<Config | null>(null);
   const [views, setViews] = useState<TrackView[]>([]);
   const [playing, setPlaying] = useState(false);
 
-  const ready = session !== null && session.input === input && session.key === key;
+  const jobRef = useRef<BackgroundSort | null>(null);
+  const pendingRef = useRef<Action | null>(null);
+  /** 계산이 끝났을 때 그 사이 설정이 바뀌었는지 확인하기 위한 최신 구성 */
+  const latestRef = useRef<Config>({ input, key });
+  useEffect(() => {
+    latestRef.current = { input, key };
+  }, [input, key]);
+
+  // 화면을 떠나면 진행 중인 계산을 멈춘다
+  useEffect(() => () => jobRef.current?.cancel(), []);
+
+  const ready = matches(session, input, key);
+  const isComputing = matches(computing, input, key);
 
   const publish = useCallback(() => {
     setViews(tracksRef.current.map(toView));
   }, []);
 
-  /** 현재 구성에 맞는 트랙을 준비한다 (이미 준비됐으면 재사용). */
-  const ensureTracks = () => {
-    if (ready) return tracksRef.current;
-    const tracks = slots.map((s) => new Track(input, runSort(s.algorithm, input, s.options)));
-    tracksRef.current = tracks;
-    setSession({ input, key });
-    // 구성이 바뀌어 남아 있던 재생 상태가 새 트랙을 자동 재생하지 않도록 (play()는 이후 다시 true로 설정)
+  const apply = (tracks: Track[], action: Action) => {
+    if (action.type === "play") {
+      if (tracks.every((t) => t.done)) tracks.forEach((t) => t.seek(0));
+      publish();
+      setPlaying(true);
+      return;
+    }
     setPlaying(false);
-    return tracks;
-  };
-
-  const play = () => {
-    const tracks = ensureTracks();
-    if (tracks.every((t) => t.done)) tracks.forEach((t) => t.seek(0));
-    publish();
-    setPlaying(true);
-  };
-
-  const pause = () => setPlaying(false);
-
-  const step = (delta: 1 | -1) => {
-    const tracks = ensureTracks();
-    setPlaying(false);
-    tracks.forEach((t) => (delta > 0 ? t.forward() : t.backward()));
+    if (action.type === "step") tracks.forEach((t) => (action.delta > 0 ? t.forward() : t.backward()));
+    else tracks.forEach((t) => t.seek(action.cursor));
     publish();
   };
 
-  /** 모든 트랙을 같은 연산 위치로 이동 (트랙마다 끝을 넘지 않음) */
-  const seek = (cursor: number) => {
-    const tracks = ensureTracks();
+  const cancelComputing = () => {
+    jobRef.current?.cancel();
+    jobRef.current = null;
+    pendingRef.current = null;
+    setComputing(null);
+  };
+
+  /** 트랙이 준비돼 있으면 바로, 아니면 백그라운드 계산이 끝난 뒤 동작을 실행한다 */
+  const run = (action: Action) => {
+    if (ready) {
+      apply(tracksRef.current, action);
+      return;
+    }
+    // 같은 구성으로 이미 계산 중이면 마지막 동작만 기억해 둔다
+    pendingRef.current = action;
+    if (isComputing) return;
+
+    jobRef.current?.cancel();
+    const config: Config = { input, key };
+    const job = runSortsInBackground(
+      slots.map((s) => ({ algorithmId: s.algorithm.id, input, options: s.options }))
+    );
+    jobRef.current = job;
+    setComputing(config);
     setPlaying(false);
-    tracks.forEach((t) => t.seek(cursor));
-    publish();
+
+    job.promise.then(
+      (results) => {
+        if (jobRef.current !== job) return; // 더 새로운 계산이 시작됐다
+        jobRef.current = null;
+        setComputing(null);
+        const latest = latestRef.current;
+        if (latest.input !== config.input || latest.key !== config.key) return; // 계산 중 설정이 바뀌었다
+
+        const tracks = results.map((result) => new Track(config.input, result));
+        tracksRef.current = tracks;
+        setSession(config);
+        const next = pendingRef.current;
+        pendingRef.current = null;
+        if (next) apply(tracks, next);
+      },
+      (error: unknown) => {
+        if (jobRef.current === job) {
+          jobRef.current = null;
+          setComputing(null);
+        }
+        if (!(error instanceof SortCancelled)) console.error(error);
+      }
+    );
+  };
+
+  const play = () => run({ type: "play" });
+
+  const pause = () => {
+    if (isComputing) cancelComputing();
+    setPlaying(false);
   };
 
   const reset = () => {
+    cancelComputing();
     setPlaying(false);
     setSession(null);
     tracksRef.current = [];
@@ -169,7 +231,10 @@ export function useSortPlayer({ input, slots, speed }: Params) {
 
   const shown = ready ? views : idleViews;
   const allDone = ready && shown.every((v) => v.done);
-  const status: PlayerStatus = !ready ? "idle" : active ? "playing" : allDone ? "done" : "paused";
+  let status: PlayerStatus;
+  if (!ready) status = isComputing ? "computing" : "idle";
+  else if (active) status = "playing";
+  else status = allDone ? "done" : "paused";
 
   return {
     status,
@@ -178,10 +243,12 @@ export function useSortPlayer({ input, slots, speed }: Params) {
     total: ready ? Math.max(0, ...shown.map((v) => v.total ?? 0)) : null,
     play,
     pause,
-    toggle: () => (active ? pause() : play()),
-    stepForward: () => step(1),
-    stepBackward: () => step(-1),
-    seek,
+    /** 재생 중이면 일시정지, 계산 중이면 계산 취소, 그 외에는 재생 */
+    toggle: () => (active || isComputing ? pause() : play()),
+    stepForward: () => run({ type: "step", delta: 1 }),
+    stepBackward: () => run({ type: "step", delta: -1 }),
+    /** 모든 트랙을 같은 연산 위치로 이동 (트랙마다 끝을 넘지 않음) */
+    seek: (cursor: number) => run({ type: "seek", cursor }),
     reset,
   };
 }
