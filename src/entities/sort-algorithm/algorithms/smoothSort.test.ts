@@ -8,6 +8,19 @@ import { smoothSort } from "./smoothSort";
 describeSortAlgorithm(smoothSort);
 
 describe("smoothSort", () => {
+  it("화면에 보여주는 설명용 코드도 그대로 실행하면 정렬된다", () => {
+    const displayed = new Function(`${smoothSort.code}\nreturn smoothSort;`)() as (a: number[]) => number[];
+    for (let n = 0; n <= 120; n++) {
+      for (const max of [3, 1000]) {
+        const values = randomValues(n, max, n * 7 + max);
+        expect(displayed([...values])).toEqual([...values].sort((a, b) => a - b));
+      }
+    }
+    expect(displayed(Array.from({ length: 1000 }, (_, i) => 1000 - i))).toEqual(
+      Array.from({ length: 1000 }, (_, i) => i + 1)
+    );
+  });
+
   it("길이 1~80을 모두 정렬한다 (레오나르도 힙 경계 케이스)", () => {
     for (let n = 1; n <= 80; n++) {
       expectSortsCorrectly(smoothSort, randomValues(n, 1000, n + 300));
