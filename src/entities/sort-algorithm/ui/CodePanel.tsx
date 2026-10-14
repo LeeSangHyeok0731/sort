@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-tomorrow.css";
@@ -75,11 +75,6 @@ const CodeLine = memo(function CodeLine({ html, lineNo, hitsText, heat, activeCl
 
 export default function CodePanel({ algorithm, activeLine = 0, lineHits, className }: Props) {
   const [copied, setCopied] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const codeRef = useRef<HTMLElement>(null);
-  /** 스크롤 위치·높이와 줄 위치를 캐시해 매 프레임 레이아웃을 강제로 계산하지 않는다 */
-  const viewport = useRef({ top: 0, height: 0 });
-  const rowBoxes = useRef<Array<{ top: number; height: number }>>([]);
 
   const lines = useMemo(
     () => Prism.highlight(algorithm.code, Prism.languages.javascript, "javascript").split("\n"),
@@ -90,44 +85,6 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
   for (const h of lineHits ?? []) if (h > maxHits) maxHits = h;
   const activeLabel = algorithm.codeLabels.get(activeLine);
   const activeType = activeLabel ? opTypeOfLabel(activeLabel) : undefined;
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    const code = codeRef.current;
-    if (!container || !code) return;
-    const update = () => {
-      viewport.current = { top: container.scrollTop, height: container.clientHeight };
-    };
-    // 줄 위치는 패널 폭이 바뀌어 줄바꿈이 달라질 때만 다시 잰다
-    const measureRows = () => {
-      rowBoxes.current = Array.from(code.children, (row) => {
-        const el = row as HTMLElement;
-        return { top: el.offsetTop, height: el.offsetHeight };
-      });
-      update();
-    };
-    update();
-    const observer = new ResizeObserver(measureRows);
-    observer.observe(container);
-    observer.observe(code);
-    container.addEventListener("scroll", update, { passive: true });
-    return () => {
-      observer.disconnect();
-      container.removeEventListener("scroll", update);
-    };
-  }, []);
-
-  // 현재 줄이 보이는 영역 밖이면 그 줄이 가운데 오도록 패널 안에서만 스크롤
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || activeLine === 0) return;
-    const row = rowBoxes.current[activeLine - 1];
-    if (!row) return;
-    const { top, height } = viewport.current;
-    if (row.top < top || row.top + row.height > top + height) {
-      container.scrollTop = Math.max(0, row.top - height / 2 + row.height / 2);
-    }
-  }, [activeLine]);
 
   const copy = async () => {
     try {
@@ -155,12 +112,11 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
       </div>
 
       <div
-        ref={scrollRef}
         className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/0.15)_transparent]"
       >
         <pre className="text-[12px] font-mono" style={{ lineHeight: `${ROW_HEIGHT}px`, paddingTop: PADDING_Y, paddingBottom: PADDING_Y }}>
           {/* language-* 클래스를 붙이면 Prism 자동 하이라이트가 React가 그린 줄 구조를 덮어쓴다 */}
-          <code ref={codeRef} className="block">
+          <code className="block">
             {lines.map((html, i) => {
               const lineNo = i + 1;
               const hits = lineHits?.[lineNo] ?? 0;
