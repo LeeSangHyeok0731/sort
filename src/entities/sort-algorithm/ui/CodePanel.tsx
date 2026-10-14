@@ -35,9 +35,9 @@ const HEAT_STYLE = Array.from({ length: HEAT_LEVELS + 1 }, (_, level) =>
   level === 0 ? undefined : { backgroundColor: `rgba(99, 102, 241, ${0.05 + (0.25 * level) / HEAT_LEVELS})` }
 );
 
-/** 줄 높이(px)와 위쪽 여백: 스크롤 위치를 DOM 측정 없이 계산하기 위해 고정 */
+/** 한 줄의 최소 높이(px). 긴 줄은 줄바꿈되어 더 높아질 수 있다 */
 const ROW_HEIGHT = 20;
-const PADDING_TOP = 8;
+const PADDING_Y = 8;
 
 function formatHits(n: number) {
   if (n < 1000) return String(n);
@@ -59,15 +59,19 @@ const CodeLine = memo(function CodeLine({ html, lineNo, traced, hitsText, heat, 
   return (
     <div
       className={cn("flex border-l-2 pr-3", activeClass ?? "border-transparent")}
-      style={{ height: ROW_HEIGHT, ...(activeClass ? undefined : HEAT_STYLE[heat]) }}
+      style={{ minHeight: ROW_HEIGHT, ...(activeClass ? undefined : HEAT_STYLE[heat]) }}
     >
       <span className="w-8 shrink-0 text-right pr-2 text-white/15 select-none">{lineNo}</span>
       {traced && (
-        <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-indigo-300/70 select-none self-center">
+        <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-indigo-300/70 select-none">
           {hitsText}
         </span>
       )}
-      <span className="whitespace-pre" dangerouslySetInnerHTML={{ __html: html || " " }} />
+      {/* 패널보다 긴 줄은 가로 스크롤 대신 줄바꿈 (들여쓰기는 유지) */}
+      <span
+        className="min-w-0 flex-1 whitespace-pre-wrap break-words"
+        dangerouslySetInnerHTML={{ __html: html || " " }}
+      />
     </div>
   );
 });
@@ -75,8 +79,10 @@ const CodeLine = memo(function CodeLine({ html, lineNo, traced, hitsText, heat, 
 export default function CodePanel({ algorithm, activeLine = 0, lineHits, className }: Props) {
   const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  /** 스크롤 위치·높이를 캐시해 매 프레임 레이아웃을 강제로 계산하지 않는다 */
+  const codeRef = useRef<HTMLElement>(null);
+  /** 스크롤 위치·높이와 줄 위치를 캐시해 매 프레임 레이아웃을 강제로 계산하지 않는다 */
   const viewport = useRef({ top: 0, height: 0 });
+  const rowBoxes = useRef<Array<{ top: number; height: number }>>([]);
   const traced = algorithm.codeLabels !== undefined;
 
   const lines = useMemo(
@@ -91,13 +97,23 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
 
   useEffect(() => {
     const container = scrollRef.current;
-    if (!container) return;
+    const code = codeRef.current;
+    if (!container || !code) return;
     const update = () => {
       viewport.current = { top: container.scrollTop, height: container.clientHeight };
     };
+    // 줄 위치는 패널 폭이 바뀌어 줄바꿈이 달라질 때만 다시 잰다
+    const measureRows = () => {
+      rowBoxes.current = Array.from(code.children, (row) => {
+        const el = row as HTMLElement;
+        return { top: el.offsetTop, height: el.offsetHeight };
+      });
+      update();
+    };
     update();
-    const observer = new ResizeObserver(update);
+    const observer = new ResizeObserver(measureRows);
     observer.observe(container);
+    observer.observe(code);
     container.addEventListener("scroll", update, { passive: true });
     return () => {
       observer.disconnect();
@@ -109,10 +125,11 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
   useEffect(() => {
     const container = scrollRef.current;
     if (!container || activeLine === 0) return;
+    const row = rowBoxes.current[activeLine - 1];
+    if (!row) return;
     const { top, height } = viewport.current;
-    const rowTop = PADDING_TOP + (activeLine - 1) * ROW_HEIGHT;
-    if (rowTop < top || rowTop + ROW_HEIGHT > top + height) {
-      container.scrollTop = Math.max(0, rowTop - height / 2 + ROW_HEIGHT / 2);
+    if (row.top < top || row.top + row.height > top + height) {
+      container.scrollTop = Math.max(0, row.top - height / 2 + row.height / 2);
     }
   }, [activeLine]);
 
@@ -146,10 +163,13 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
         </div>
       </div>
 
-      <div ref={scrollRef} className="relative flex-1 min-h-0 overflow-auto custom-scrollbar">
-        <pre className="text-[12px] font-mono" style={{ lineHeight: `${ROW_HEIGHT}px`, paddingTop: PADDING_TOP, paddingBottom: PADDING_TOP }}>
+      <div
+        ref={scrollRef}
+        className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/0.15)_transparent]"
+      >
+        <pre className="text-[12px] font-mono" style={{ lineHeight: `${ROW_HEIGHT}px`, paddingTop: PADDING_Y, paddingBottom: PADDING_Y }}>
           {/* language-* 클래스를 붙이면 Prism 자동 하이라이트가 React가 그린 줄 구조를 덮어쓴다 */}
-          <code className="block min-w-max">
+          <code ref={codeRef} className="block">
             {lines.map((html, i) => {
               const lineNo = i + 1;
               const hits = lineHits?.[lineNo] ?? 0;
