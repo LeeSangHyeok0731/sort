@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "vitest";
 import { describeSortAlgorithm, expectSortsCorrectly, randomValues } from "../testing/sortSuite";
 import { grailSort } from "./grailSort";
 
