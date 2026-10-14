@@ -1,6 +1,6 @@
-import { AlgorithmId } from "@/components/ControlPanel";
+/** 화면에 보여줄 설명용 코드 (시각화는 같은 알고리즘을 Tracer 연산으로 구현한 버전으로 동작한다) */
 
-export const ALGO_CODE: Record<AlgorithmId, string> = {
+export const ALGO_CODE: Record<string, string> = {
   bubble: `function bubbleSort(arr) {
   const n = arr.length;
   for (let i = 0; i < n; i++) {

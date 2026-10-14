@@ -16,3 +16,59 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* 가로 스크롤 영역의 스크롤바 숨김 */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.15) transparent;
+}
+
+/* 진행 바: 트랙은 투명(아래 div가 그림), 손잡이만 보이게 */
+.scrubber {
+  appearance: none;
+  background: transparent;
+  height: 1.25rem;
+  cursor: pointer;
+}
+.scrubber:disabled {
+  cursor: default;
+}
+.scrubber::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(99 102 241 / 0.5);
+}
+.scrubber::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(99 102 241 / 0.5);
+}
+.scrubber:disabled::-webkit-slider-thumb {
+  opacity: 0;
+}
+.scrubber:disabled::-moz-range-thumb {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
