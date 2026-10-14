@@ -21,6 +21,7 @@ PR을 올리거나 `main`에 push하면 GitHub Actions(`.github/workflows/ci.yml
 - **비교 모드**: 두 알고리즘의 비교·교환·이동 횟수 비교, 먼저 끝난 쪽 표시
 - **데이터**: 크기 2~1000, 프리셋(무작위 순열/중복 있음/거의 정렬됨/역순/중복 많음), 직접 입력(0~9999)
 - **학습용 정보**: 시간·공간 복잡도, 안정성, 설명용 구현 코드
+- **코드 줄 하이라이트**: 재생 중 지금 실행 중인 코드 줄을 강조하고 줄별 실행 횟수를 히트맵으로 표시 (58종 전체)
 - **공유**: 현재 설정(알고리즘, 속도, 크기, 커스텀 배열 등)이 URL에 반영됨
 - **단축키**: `Space` 재생/일시정지 · `←` `→` 한 단계 · `R` 새 배열
 
@@ -49,8 +50,12 @@ src/
 
 ### 알고리즘 추가하기
 
-1. `src/entities/sort-algorithm/algorithms/xxxSort.ts`에 `SortAlgorithm` 객체를 작성합니다. 설명용 코드는 `algorithms/code.ts`에 넣습니다.
+1. `src/entities/sort-algorithm/algorithms/xxxSort.ts`에 `SortAlgorithm` 객체를 작성합니다.
+   - 설명 코드는 `defineCode()`로 만들고, 연산이 일어나는 줄 끝에 `//@cmp`, `//@swap-root` 같은 표식을 붙입니다. 표식 이름은 `cmp*`(비교), `swap*`(교환), `move*`(이동), `read*`(읽기) 중 하나로 시작해야 합니다.
+   - 구현에서 연산을 기록할 때 그 줄 번호를 함께 넘깁니다. 예: `t.cmp(i, j, CODE.line("cmp"))`
+   - 설명 코드는 실제 기록 방식과 똑같이 동작하는 실행 가능한 JS여야 합니다.
 2. `model/registry.ts`의 `ALGORITHMS`에 추가합니다.
 3. `xxxSort.test.ts`에서 `describeSortAlgorithm(xxxSort)`를 호출합니다. 정렬 결과, id 보존, 연산 재생 일치를 확인하고, `stable: true`이면 안정성도 확인합니다.
+   - `model/traced-code.test.ts`는 모든 연산에 줄이 붙어 있는지, 줄의 표식 종류가 연산 종류와 맞는지, 모든 표식이 실행되는지를 자동으로 검사합니다.
 
 개발 과정의 문제와 해결 기록은 [DEVELOPMENT_LOG.md](./DEVELOPMENT_LOG.md)에 있습니다.

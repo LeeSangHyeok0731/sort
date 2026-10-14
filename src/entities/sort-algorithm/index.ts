@@ -17,4 +17,4 @@ export type {
   SortResult,
 } from "./model/types";
 export { default as AlgorithmInfoCard } from "./ui/AlgorithmInfoCard";
-export { default as CodeViewer } from "./ui/CodeViewer";
+export { default as CodePanel } from "./ui/CodePanel";

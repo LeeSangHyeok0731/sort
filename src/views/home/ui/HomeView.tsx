@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/shared/ui";
 import type { ArrayItem } from "@/shared/model";
 import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayItems, type PresetId } from "@/entities/array";
-import { AlgorithmInfoCard, CodeViewer, getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
+import { AlgorithmInfoCard, getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
 import { ArrayConfigurator } from "@/features/configure-array";
 import { PlaybackBar, useSortPlayer } from "@/features/playback";
 import {
@@ -27,7 +27,6 @@ export default function HomeView() {
   // 클라이언트 전용으로 렌더링되므로(HomePage 참고) 초기값에서 바로 URL과 난수를 쓸 수 있다
   const [state, setState] = useState<HomeState>(() => readState(window.location.search));
   const [input, setInput] = useState<ArrayItem[]>(() => initialInput(state));
-  const [showCode, setShowCode] = useState(false);
 
   const update = (patch: Partial<HomeState>) => setState((s) => ({ ...s, ...patch }));
 
@@ -150,23 +149,6 @@ export default function HomeView() {
           </Card>
         </div>
       </div>
-
-      <Card>
-        <button
-          type="button"
-          onClick={() => setShowCode((v) => !v)}
-          aria-expanded={showCode}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <span className="text-white font-bold text-lg">구현 코드</span>
-          <span className="text-sm text-white/50">{showCode ? "접기 ▲" : "펼치기 ▼"}</span>
-        </button>
-        {showCode && (
-          <div className="mt-5">
-            <CodeViewer key={slotIds.join("|")} algorithms={algorithms} />
-          </div>
-        )}
-      </Card>
 
       <footer className="text-center text-xs text-white/30 pb-4">
         단축키 · <kbd className="font-mono text-white/50">Space</kbd> 재생/일시정지 ·{" "}

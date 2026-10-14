@@ -34,8 +34,13 @@ export type SortAlgorithm = {
   stable: boolean;
   /** 정보 카드에 강조해 보여줄 주의 사항 (예: 큰 배열에서 끝나지 않음) */
   note?: string;
-  /** 화면에 보여줄 설명용 코드 */
+  /** 화면에 보여줄 설명 코드 (defineCode로 만든다. 실제 기록 방식과 1:1로 같아야 한다) */
   code: string;
+  /**
+   * 설명 코드의 줄 번호 → 표식 이름.
+   * 이 알고리즘이 기록하는 모든 연산에 그 연산을 만든 줄 번호가 붙는다 (줄 하이라이트).
+   */
+  codeLabels: ReadonlyMap<number, string>;
   /** 기록할 연산을 tracer에 남긴다. 한도 초과로 중단하면 true 반환. */
   sort: (t: Tracer, options: SortOptions) => boolean | void;
 };

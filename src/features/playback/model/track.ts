@@ -27,6 +27,8 @@ export class Track {
   readonly truncated: boolean;
   readonly array: ArrayItem[];
   readonly stats: TrackStats = emptyStats();
+  /** 설명 코드 줄별 실행 횟수 (인덱스 = 줄 번호, 줄 정보 없는 연산은 세지 않음) */
+  readonly lineHits: number[] = [];
   private readonly ops: ArrayLike<number>;
   private _cursor = 0;
 
@@ -51,6 +53,8 @@ export class Track {
     const type = this.ops[base];
     applyOp(this.array, type as OpType, this.ops[base + 1], this.ops[base + 2]);
     this.stats[STAT_KEY[type]]++;
+    const line = this.ops[base + 3];
+    if (line > 0) this.lineHits[line] = (this.lineHits[line] ?? 0) + 1;
     this._cursor++;
     return true;
   }
@@ -62,7 +66,15 @@ export class Track {
     const type = this.ops[base];
     revertOp(this.array, type as OpType, this.ops[base + 1], this.ops[base + 2]);
     this.stats[STAT_KEY[type]]--;
+    const line = this.ops[base + 3];
+    if (line > 0) this.lineHits[line]--;
     return true;
+  }
+
+  /** 마지막으로 적용된 연산을 만든 설명 코드 줄 (없으면 0) */
+  get line(): number {
+    if (this._cursor === 0) return 0;
+    return this.ops[(this._cursor - 1) * OP_STRIDE + 3];
   }
 
   /** target 위치로 이동한다 (범위를 벗어나면 끝으로 보정). */

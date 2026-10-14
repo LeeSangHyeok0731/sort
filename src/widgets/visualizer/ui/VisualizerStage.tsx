@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/shared/lib";
 import { ArrayBars, BAR_TONE_CLASS } from "@/entities/array";
-import type { SortAlgorithm } from "@/entities/sort-algorithm";
+import { CodePanel, type SortAlgorithm } from "@/entities/sort-algorithm";
 import { BASE_OPS_PER_SECOND, TrackStatsView, type TrackView } from "@/features/playback";
 
 type Props = {
@@ -39,6 +40,8 @@ export default function VisualizerStage({ views, algorithms, speed }: Props) {
   const compare = views.length > 1;
   const animate = speed * BASE_OPS_PER_SECOND <= MAX_ANIMATED_OPS_PER_SECOND;
   const winner = findWinner(views);
+  // 코드 패널: 사용자가 정하기 전에는 단일 모드에서 열고 비교 모드에서 닫는다
+  const [codeOpen, setCodeOpen] = useState<[boolean | null, boolean | null]>([null, null]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -47,6 +50,38 @@ export default function VisualizerStage({ views, algorithms, speed }: Props) {
           const algorithm = algorithms[i];
           // 보고 정렬이 한도에 걸려 끝난 경우는 '완료' 색을 칠하지 않는다
           const sortedDone = view.done && !view.truncated;
+          const showCode = codeOpen[i] ?? !compare;
+          const toggleCode = () =>
+            setCodeOpen((prev) => {
+              const next: [boolean | null, boolean | null] = [...prev];
+              next[i] = !showCode;
+              return next;
+            });
+
+          const bars = (
+            <>
+              <ArrayBars
+                items={view.items}
+                highlight={view.highlight}
+                done={sortedDone}
+                animate={animate}
+                className={cn(compare && "md:h-72")}
+              />
+              <div className="px-4 py-3 md:px-5 border-t border-white/5 bg-black/10">
+                <TrackStatsView view={view} winner={winner === i} />
+              </div>
+            </>
+          );
+          const code = (
+            <CodePanel
+              key={algorithm.id}
+              algorithm={algorithm}
+              activeLine={view.line}
+              lineHits={view.lineHits}
+              className="bg-black/20"
+            />
+          );
+
           return (
             <section
               key={i}
@@ -67,19 +102,37 @@ export default function VisualizerStage({ views, algorithms, speed }: Props) {
                     {i + 1}
                   </span>
                 )}
-                <h2 className="font-bold text-white">{algorithm.name}</h2>
+                <h2 className="font-bold text-white shrink-0">{algorithm.name}</h2>
                 <span className="text-xs text-white/35 truncate">{algorithm.desc}</span>
+                <button
+                  type="button"
+                  onClick={toggleCode}
+                  aria-expanded={showCode}
+                  className={cn(
+                    "ml-auto shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono border transition-all",
+                    showCode
+                      ? "border-indigo-400/50 bg-indigo-500/15 text-indigo-200"
+                      : "border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+                  )}
+                >
+                  {"</>"} 코드
+                </button>
               </header>
-              <ArrayBars
-                items={view.items}
-                highlight={view.highlight}
-                done={sortedDone}
-                animate={animate}
-                className={cn(compare && "md:h-72")}
-              />
-              <div className="px-4 py-3 md:px-5 border-t border-white/5 bg-black/10">
-                <TrackStatsView view={view} winner={winner === i} />
-              </div>
+
+              {showCode && !compare ? (
+                // 단일 모드: 넓은 화면에서 막대 | 코드, 좁은 화면에서는 위아래
+                <div className="grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+                  <div className="flex flex-col min-w-0">{bars}</div>
+                  <div className="relative border-t lg:border-t-0 lg:border-l border-white/5 h-72 lg:h-auto">
+                    <div className="lg:absolute lg:inset-0 h-full flex flex-col">{code}</div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {bars}
+                  {showCode && <div className="border-t border-white/5 h-72 flex flex-col">{code}</div>}
+                </>
+              )}
             </section>
           );
         })}

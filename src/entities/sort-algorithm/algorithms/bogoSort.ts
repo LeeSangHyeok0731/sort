@@ -1,13 +1,34 @@
+import { defineCode } from "../model/code-lines";
 import type { SortAlgorithm } from "../model/types";
 import type { Tracer } from "../model/tracer";
-import { ALGO_CODE } from "./code";
 
 /** 무한 루프를 막기 위한 안전 한도 */
 export const BOGO_MAX_SHUFFLES = 5000;
 
+const CODE = defineCode(`function bogoSort(arr) {
+  // 정렬될 때까지 통째로 섞는다 (최대 5,000번)
+  for (let shuffles = 0; !isSorted(arr); shuffles++) {
+    if (shuffles >= 5000) return arr; // 포기
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]]; //@swap
+    }
+  }
+  return arr;
+}
+
+function isSorted(arr) {
+  for (let i = 0; i < arr.length - 1; i++) {
+    if (arr[i] > arr[i + 1]) return false; //@cmp
+  }
+  return true;
+}`);
+
+const L = { swap: CODE.line("swap"), cmp: CODE.line("cmp") };
+
 function isSorted(t: Tracer) {
   for (let i = 0; i < t.length - 1; i++) {
-    if (t.cmp(i, i + 1) > 0) return false;
+    if (t.cmp(i, i + 1, L.cmp) > 0) return false;
   }
   return true;
 }
@@ -20,14 +41,13 @@ export const bogoSort: SortAlgorithm = {
   complexity: { best: "O(n)", average: "O(n·n!)", worst: "∞", space: "O(1)" },
   stable: false,
   note: "섞기를 최대 5,000번까지만 시도해요. 원소가 7개부터 미완료가 나오기 시작하고, 8개 이상이면 대부분 미완료로 끝납니다.",
-  code: ALGO_CODE.bogo,
+  code: CODE.code,
+  codeLabels: CODE.labels,
   sort(t) {
     for (let shuffles = 0; !isSorted(t); shuffles++) {
-      if (shuffles >= BOGO_MAX_SHUFFLES) {
-        return true;
-      }
+      if (shuffles >= BOGO_MAX_SHUFFLES) return true;
       for (let i = t.length - 1; i > 0; i--) {
-        t.swap(i, Math.floor(Math.random() * (i + 1)));
+        t.swap(i, Math.floor(Math.random() * (i + 1)), L.swap);
       }
     }
   },

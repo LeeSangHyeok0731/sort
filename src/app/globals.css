@@ -25,11 +25,6 @@ body {
   display: none;
 }
 
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.15) transparent;
-}
-
 /* 진행 바: 트랙은 투명(아래 div가 그림), 손잡이만 보이게 */
 .scrubber {
   appearance: none;

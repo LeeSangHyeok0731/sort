@@ -2,7 +2,8 @@ import type { ArrayItem } from "@/shared/model";
 
 /**
  * 정렬 과정은 배열 스냅샷이 아니라 연산 로그로 기록한다.
- * 로그는 [type, a, b, type, a, b, ...] 형태의 평탄한 number 배열이다.
+ * 로그는 [type, a, b, line, type, a, b, line, ...] 형태의 평탄한 number 배열이다.
+ * line은 그 연산을 만든 설명 코드의 줄 번호(1부터)이며, 0이면 줄 정보가 없다.
  */
 export const OpType = {
   /** a, b 위치의 값을 비교 (배열 변화 없음) */
@@ -17,12 +18,12 @@ export const OpType = {
 
 export type OpType = (typeof OpType)[keyof typeof OpType];
 
-export const OP_STRIDE = 3;
+export const OP_STRIDE = 4;
 
 /** 기록이 끝난 연산 로그 (Int32Array로 압축) — 읽기 전용으로 다룬다 */
 export type OpLog = ArrayLike<number>;
 
-export type Op = { type: OpType; a: number; b: number };
+export type Op = { type: OpType; a: number; b: number; line: number };
 
 export function opCount(log: OpLog): number {
   return log.length / OP_STRIDE;
@@ -30,7 +31,7 @@ export function opCount(log: OpLog): number {
 
 export function readOp(log: OpLog, index: number): Op {
   const base = index * OP_STRIDE;
-  return { type: log[base] as OpType, a: log[base + 1], b: log[base + 2] };
+  return { type: log[base] as OpType, a: log[base + 1], b: log[base + 2], line: log[base + 3] };
 }
 
 function moveItem(arr: ArrayItem[], from: number, to: number) {

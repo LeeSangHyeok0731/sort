@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ArrayItem } from "@/shared/model";
-import { applyOp, opCount, readOp } from "../model/op";
+import { applyOp, opCount, OP_STRIDE, readOp } from "../model/op";
 import { runSort } from "../model/run";
 import type { SortAlgorithm, SortOptions } from "../model/types";
 
@@ -117,6 +117,6 @@ export function describeSortAlgorithm(
 /** 연산 로그에서 특정 종류의 연산 개수를 센다. */
 export function countOps(ops: ArrayLike<number>, type: number) {
   let count = 0;
-  for (let k = 0; k < ops.length; k += 3) if (ops[k] === type) count++;
+  for (let k = 0; k < ops.length; k += OP_STRIDE) if (ops[k] === type) count++;
   return count;
 }

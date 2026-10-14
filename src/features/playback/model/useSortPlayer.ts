@@ -26,9 +26,14 @@ export type TrackView = {
   total: number | null;
   done: boolean;
   truncated: boolean;
+  /** 현재 연산을 만든 설명 코드 줄 (없으면 0) */
+  line: number;
+  /** 줄별 실행 횟수 (인덱스 = 줄 번호) */
+  lineHits: readonly number[];
 };
 
 const ZERO_STATS: TrackStats = { compares: 0, swaps: 0, moves: 0, reads: 0 };
+const NO_HITS: readonly number[] = [];
 
 function toView(track: Track): TrackView {
   return {
@@ -40,6 +45,8 @@ function toView(track: Track): TrackView {
     total: track.total,
     done: track.done,
     truncated: track.truncated,
+    line: track.done ? 0 : track.line,
+    lineHits: [...track.lineHits],
   };
 }
 
@@ -154,6 +161,8 @@ export function useSortPlayer({ input, slots, speed }: Params) {
         total: null,
         done: false,
         truncated: false,
+        line: 0,
+        lineHits: NO_HITS,
       })),
     [input, slots]
   );
