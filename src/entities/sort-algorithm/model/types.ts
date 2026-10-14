@@ -1,5 +1,4 @@
 import type { ArrayItem } from "@/shared/model";
-import type { OpLog } from "./op";
 import type { Tracer } from "./tracer";
 
 export type AlgorithmCategory = "standard" | "linear" | "special" | "fun";
@@ -12,7 +11,8 @@ export type SortOptions = {
 };
 
 export type SortResult = {
-  ops: OpLog;
+  /** 연산 로그 [type, a, b, line, ...] (워커에서 복사 없이 넘길 수 있도록 Int32Array) */
+  ops: Int32Array;
   final: ArrayItem[];
   /** 안전 한도 때문에 정렬을 끝내지 못했는지 (보고 정렬) */
   truncated: boolean;
