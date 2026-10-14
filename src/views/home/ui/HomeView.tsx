@@ -7,7 +7,7 @@ import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayIt
 import { AlgorithmInfoCard, getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
 import { ArrayConfigurator } from "@/features/configure-array";
 import { PlaybackBar, useSortPlayer } from "@/features/playback";
-import { SoundToggle, useSortSound } from "@/features/sort-sound";
+import { SlotMuteButton, SoundToggle, useSortSound } from "@/features/sort-sound";
 import {
   AlgorithmOptions,
   AlgorithmPicker,
@@ -117,7 +117,21 @@ export default function HomeView() {
         />
       </div>
 
-      <VisualizerStage views={player.views} algorithms={algorithms} speed={state.speed} />
+      <VisualizerStage
+        views={player.views}
+        algorithms={algorithms}
+        speed={state.speed}
+        renderSlotControls={(slot) =>
+          sound.enabled && (
+            <SlotMuteButton
+              slot={slot}
+              name={algorithms[slot].name}
+              muted={sound.isSlotMuted(slot)}
+              onToggle={() => sound.toggleSlot(slot)}
+            />
+          )
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr] items-start">
         <Card className="flex flex-col gap-5">

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ArrayItem } from "@/shared/model";
 import type { BarHighlight } from "@/entities/array";
 import { sweepFrequencies, valueToFrequency } from "./pitch";
+import { isSlotAudible, NO_MUTES, slotPan, toggleSlotMute, type SlotMutes } from "./slots";
 import { SortSynth } from "./synth";
 
 /** 소리에 필요한 재생 화면 정보 (재생 기능의 TrackView와 같은 모양) */
@@ -43,10 +44,11 @@ function maxValue(items: readonly ArrayItem[]) {
 /**
  * 재생 화면이 바뀔 때마다(최대 프레임당 한 번) 강조된 막대의 값을 음으로 들려준다.
  * 정렬이 끝나면 낮은 음부터 높은 음까지 올라가는 완료 효과를 낸다.
- * 비교 모드에서는 1번 슬롯을 왼쪽, 2번 슬롯을 오른쪽에서 들려준다.
+ * 비교 모드에서는 1번 슬롯을 왼쪽, 2번 슬롯을 오른쪽에서 들려주고, 슬롯마다 따로 음소거할 수 있다.
  */
 export function useSortSound(views: readonly SoundView[]) {
   const [enabled, setEnabled] = useState(readPreference);
+  const [mutes, setMutes] = useState<SlotMutes>(NO_MUTES);
   const [synth] = useState(() => new SortSynth());
   const prevDone = useRef<boolean[]>([]);
 
@@ -70,7 +72,8 @@ export function useSortSound(views: readonly SoundView[]) {
     if (!enabled || !synth.ready) return;
 
     views.forEach((view, slot) => {
-      const pan = views.length > 1 ? (slot === 0 ? -0.6 : 0.6) : 0;
+      if (!isSlotAudible(mutes, slot, views.length)) return;
+      const pan = slotPan(slot, views.length);
       const max = maxValue(view.items);
 
       // 방금 끝났고 실제로 정렬됐다면 완료 효과 (한도에 걸린 미완료는 제외)
@@ -88,7 +91,7 @@ export function useSortSound(views: readonly SoundView[]) {
         if (item) synth.blip(valueToFrequency(item.value, max), view.highlight.tone, { pan });
       }
     });
-  }, [views, enabled, synth]);
+  }, [views, enabled, mutes, synth]);
 
   const toggle = () => {
     const next = !enabled;
@@ -98,5 +101,13 @@ export function useSortSound(views: readonly SoundView[]) {
     savePreference(next);
   };
 
-  return { enabled, toggle };
+  return {
+    enabled,
+    toggle,
+    /** 비교 모드에서 이 슬롯이 음소거됐는지 */
+    isSlotMuted: (slot: 0 | 1) => mutes[slot],
+    toggleSlot: (slot: 0 | 1) => setMutes((m) => toggleSlotMute(m, slot)),
+  };
 }
+
+export type SortSound = ReturnType<typeof useSortSound>;

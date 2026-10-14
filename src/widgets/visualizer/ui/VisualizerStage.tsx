@@ -10,6 +10,8 @@ type Props = {
   views: readonly TrackView[];
   algorithms: readonly SortAlgorithm[];
   speed: number;
+  /** 비교 모드에서 패널 제목 옆에 붙일 슬롯별 버튼 (예: 슬롯 음소거) */
+  renderSlotControls?: (slot: 0 | 1) => React.ReactNode;
 };
 
 /** 초당 연산이 이보다 많으면 막대 이동 애니메이션이 따라가지 못하므로 끈다 */
@@ -36,7 +38,7 @@ function findWinner(views: readonly TrackView[]): number | null {
   return views[winner].done ? winner : null;
 }
 
-export default function VisualizerStage({ views, algorithms, speed }: Props) {
+export default function VisualizerStage({ views, algorithms, speed, renderSlotControls }: Props) {
   const compare = views.length > 1;
   const animate = speed * BASE_OPS_PER_SECOND <= MAX_ANIMATED_OPS_PER_SECOND;
   const winner = findWinner(views);
@@ -104,6 +106,7 @@ export default function VisualizerStage({ views, algorithms, speed }: Props) {
                 )}
                 <h2 className="font-bold text-white shrink-0">{algorithm.name}</h2>
                 <span className="text-xs text-white/35 truncate">{algorithm.desc}</span>
+                {compare && renderSlotControls?.(i as 0 | 1)}
                 <button
                   type="button"
                   onClick={toggleCode}
