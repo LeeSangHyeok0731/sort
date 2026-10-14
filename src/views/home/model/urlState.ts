@@ -8,7 +8,12 @@ import {
 } from "@/entities/array";
 import { DEFAULT_ALGORITHM_ID, isAlgorithmId, type AlgorithmId } from "@/entities/sort-algorithm";
 import { DEFAULT_SPEED, SPEEDS } from "@/features/playback";
-import { MAX_BUCKETS, MIN_BUCKETS } from "@/features/select-algorithm";
+import {
+  DEFAULT_OPTION_VALUES,
+  MAX_BUCKETS,
+  MIN_BUCKETS,
+  type AlgorithmOptionValues,
+} from "@/features/select-algorithm";
 
 export type HomeState = {
   algorithms: [AlgorithmId, AlgorithmId];
@@ -18,11 +23,37 @@ export type HomeState = {
   preset: PresetId | "custom";
   /** preset이 custom일 때의 값 (공유 링크용) */
   custom: number[] | null;
-  shellGaps: string;
-  bucketCount: number;
+  /** 슬롯별 알고리즘 고유 옵션 (셸 간격, 버킷 수) */
+  slotOptions: [AlgorithmOptionValues, AlgorithmOptionValues];
 };
 
-export const DEFAULT_BUCKET_COUNT = 5;
+export const DEFAULT_SLOT_OPTIONS = DEFAULT_OPTION_VALUES;
+
+/** 슬롯별 URL 키: 1번은 기존 링크 호환을 위해 접미사 없음 */
+const OPTION_KEYS = [
+  { gaps: "gaps", buckets: "buckets" },
+  { gaps: "gaps2", buckets: "buckets2" },
+] as const;
+
+function readSlotOptions(params: URLSearchParams, slot: 0 | 1): AlgorithmOptionValues {
+  const keys = OPTION_KEYS[slot];
+  const buckets = Number(params.get(keys.buckets));
+  return {
+    shellGaps: params.get(keys.gaps) ?? DEFAULT_SLOT_OPTIONS.shellGaps,
+    bucketCount:
+      params.has(keys.buckets) && Number.isInteger(buckets)
+        ? Math.min(MAX_BUCKETS, Math.max(MIN_BUCKETS, buckets))
+        : DEFAULT_SLOT_OPTIONS.bucketCount,
+  };
+}
+
+function writeSlotOptions(params: URLSearchParams, slot: 0 | 1, values: AlgorithmOptionValues) {
+  const keys = OPTION_KEYS[slot];
+  if (values.shellGaps.trim()) params.set(keys.gaps, values.shellGaps.trim());
+  if (values.bucketCount !== DEFAULT_SLOT_OPTIONS.bucketCount) {
+    params.set(keys.buckets, String(values.bucketCount));
+  }
+}
 
 export const DEFAULT_STATE: HomeState = {
   algorithms: [DEFAULT_ALGORITHM_ID, "quick"],
@@ -31,8 +62,7 @@ export const DEFAULT_STATE: HomeState = {
   size: DEFAULT_ARRAY_SIZE,
   preset: DEFAULT_PRESET,
   custom: null,
-  shellGaps: "",
-  bucketCount: DEFAULT_BUCKET_COUNT,
+  slotOptions: [DEFAULT_SLOT_OPTIONS, DEFAULT_SLOT_OPTIONS],
 };
 
 function nearestSpeed(value: number) {
@@ -46,7 +76,6 @@ export function readState(search: string): HomeState {
   const algo2 = params.get("algo2");
   const speed = Number(params.get("speed"));
   const size = Number(params.get("size"));
-  const buckets = Number(params.get("buckets"));
 
   const state: HomeState = {
     algorithms: [
@@ -58,11 +87,7 @@ export function readState(search: string): HomeState {
     size: params.has("size") && Number.isFinite(size) ? clampSize(size) : DEFAULT_ARRAY_SIZE,
     preset: DEFAULT_PRESET,
     custom: null,
-    shellGaps: params.get("gaps") ?? "",
-    bucketCount:
-      params.has("buckets") && Number.isInteger(buckets)
-        ? Math.min(MAX_BUCKETS, Math.max(MIN_BUCKETS, buckets))
-        : DEFAULT_BUCKET_COUNT,
+    slotOptions: [readSlotOptions(params, 0), readSlotOptions(params, 1)],
   };
 
   const data = params.get("data");
@@ -93,8 +118,8 @@ export function writeState(state: HomeState): string {
   } else if (state.preset !== DEFAULT_PRESET) {
     params.set("preset", state.preset);
   }
-  if (state.shellGaps.trim()) params.set("gaps", state.shellGaps.trim());
-  if (state.bucketCount !== DEFAULT_BUCKET_COUNT) params.set("buckets", String(state.bucketCount));
+  writeSlotOptions(params, 0, state.slotOptions[0]);
+  if (state.compare) writeSlotOptions(params, 1, state.slotOptions[1]);
   return params.toString();
 }
 

@@ -6,10 +6,16 @@ import type { ArrayItem } from "@/shared/model";
 import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayItems, type PresetId } from "@/entities/array";
 import { AlgorithmInfoCard, CodeViewer, getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
 import { ArrayConfigurator } from "@/features/configure-array";
-import { PlaybackBar, useSortPlayer, type PlayerSlot } from "@/features/playback";
-import { AlgorithmOptions, AlgorithmPicker, type Slot } from "@/features/select-algorithm";
+import { PlaybackBar, useSortPlayer } from "@/features/playback";
+import {
+  AlgorithmOptions,
+  AlgorithmPicker,
+  type AlgorithmOptionValues,
+  type Slot,
+} from "@/features/select-algorithm";
 import { VisualizerStage } from "@/widgets/visualizer";
-import { parseGaps, readState, writeState, type HomeState } from "../model/urlState";
+import { activeAlgorithmIds, buildPlayerSlots } from "../model/slots";
+import { readState, writeState, type HomeState } from "../model/urlState";
 import { useKeyboardShortcuts } from "../model/useKeyboardShortcuts";
 
 function initialInput(state: HomeState): ArrayItem[] {
@@ -30,16 +36,21 @@ export default function HomeView() {
     window.history.replaceState(null, "", `?${writeState(state)}`);
   }, [state]);
 
-  const slotIds = useMemo<AlgorithmId[]>(
-    () => (state.compare ? [...state.algorithms] : [state.algorithms[0]]),
+  const slotIds = useMemo(
+    () => activeAlgorithmIds({ compare: state.compare, algorithms: state.algorithms }),
     [state.compare, state.algorithms]
   );
   const algorithms = useMemo(() => slotIds.map(getAlgorithm), [slotIds]);
 
-  const slots = useMemo<PlayerSlot[]>(() => {
-    const options = { shellGaps: parseGaps(state.shellGaps), bucketCount: state.bucketCount };
-    return algorithms.map((algorithm) => ({ algorithm, options }));
-  }, [algorithms, state.shellGaps, state.bucketCount]);
+  const slots = useMemo(
+    () =>
+      buildPlayerSlots({
+        compare: state.compare,
+        algorithms: state.algorithms,
+        slotOptions: state.slotOptions,
+      }),
+    [state.compare, state.algorithms, state.slotOptions]
+  );
 
   const player = useSortPlayer({ input, slots, speed: state.speed });
 
@@ -63,6 +74,14 @@ export default function HomeView() {
     const next: [AlgorithmId, AlgorithmId] = [...state.algorithms];
     next[slot] = id;
     update({ algorithms: next });
+  };
+
+  const changeSlotOptions = (slot: Slot, patch: Partial<AlgorithmOptionValues>) => {
+    setState((s) => {
+      const next: HomeState["slotOptions"] = [...s.slotOptions];
+      next[slot] = { ...next[slot], ...patch };
+      return { ...s, slotOptions: next };
+    });
   };
 
   const canPlay = input.length >= MIN_ARRAY_SIZE;
@@ -106,11 +125,12 @@ export default function HomeView() {
             onSelect={selectAlgorithm}
           />
           <AlgorithmOptions
-            selected={slotIds}
-            shellGaps={state.shellGaps}
-            onShellGapsChange={(shellGaps) => update({ shellGaps })}
-            bucketCount={state.bucketCount}
-            onBucketCountChange={(bucketCount) => update({ bucketCount })}
+            entries={slotIds.map((algorithmId, i) => ({
+              slot: i as Slot,
+              algorithmId,
+              values: state.slotOptions[i],
+            }))}
+            onChange={changeSlotOptions}
           />
         </Card>
 
