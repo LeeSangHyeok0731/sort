@@ -7,6 +7,7 @@ import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayIt
 import { AlgorithmInfoCard, getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
 import { ArrayConfigurator } from "@/features/configure-array";
 import { PlaybackBar, useSortPlayer } from "@/features/playback";
+import { SoundToggle, useSortSound } from "@/features/sort-sound";
 import {
   AlgorithmOptions,
   AlgorithmPicker,
@@ -52,6 +53,7 @@ export default function HomeView() {
   );
 
   const player = useSortPlayer({ input, slots, speed: state.speed });
+  const sound = useSortSound(player.views);
 
   const generate = (size: number, preset: PresetId) => {
     setInput(generateArray(size, preset));
@@ -90,6 +92,7 @@ export default function HomeView() {
     onStepForward: () => canPlay && player.stepForward(),
     onStepBackward: () => canPlay && player.stepBackward(),
     onShuffle: shuffle,
+    onToggleSound: sound.toggle,
   });
 
   return (
@@ -110,6 +113,7 @@ export default function HomeView() {
           onSpeedChange={(speed) => update({ speed })}
           onShuffle={shuffle}
           disabled={!canPlay}
+          extraControls={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />}
         />
       </div>
 
@@ -152,7 +156,8 @@ export default function HomeView() {
 
       <footer className="text-center text-xs text-white/30 pb-4">
         단축키 · <kbd className="font-mono text-white/50">Space</kbd> 재생/일시정지 ·{" "}
-        <kbd className="font-mono text-white/50">← →</kbd> 한 단계 · <kbd className="font-mono text-white/50">R</kbd> 새 배열
+        <kbd className="font-mono text-white/50">← →</kbd> 한 단계 · <kbd className="font-mono text-white/50">R</kbd> 새 배열 ·{" "}
+        <kbd className="font-mono text-white/50">M</kbd> 소리
       </footer>
     </div>
   );

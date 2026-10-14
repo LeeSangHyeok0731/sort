@@ -11,6 +11,8 @@ type Props = {
   onShuffle: () => void;
   /** 배열이 너무 작아 재생할 수 없음 */
   disabled?: boolean;
+  /** 컨트롤 버튼 줄 끝에 붙일 추가 버튼 (예: 소리 켜기) */
+  extraControls?: React.ReactNode;
 };
 
 function IconButton({
@@ -49,7 +51,7 @@ function IconButton({
   );
 }
 
-export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, disabled }: Props) {
+export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, disabled, extraControls }: Props) {
   const { status, cursor, total } = player;
   const playing = status === "playing";
   const computing = status === "computing";
@@ -109,6 +111,7 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
         <IconButton label="새 배열" shortcut="R" onClick={onShuffle}>
           <ShuffleIcon />
         </IconButton>
+        {extraControls}
       </div>
 
       <div className="flex-1 flex flex-col gap-1 min-w-0">
