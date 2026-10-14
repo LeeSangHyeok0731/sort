@@ -1,37 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sorting Visualizer
 
-## Getting Started
+정렬 알고리즘 20종을 막대 애니메이션으로 보여주는 웹앱입니다. 두 알고리즘을 같은 배열로 나란히 비교할 수 있습니다.
 
-First, run the development server:
+## 실행
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm test        # Vitest
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 주요 기능
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **재생 제어**: 재생/일시정지, 한 단계 앞·뒤, 진행바 드래그, 속도 ×0.25 ~ ×1024
+- **비교 모드**: 두 알고리즘의 비교·교환·이동 횟수 비교, 먼저 끝난 쪽 표시
+- **데이터**: 크기 2~1000, 프리셋(무작위 순열/중복 있음/거의 정렬됨/역순/중복 많음), 직접 입력(0~9999)
+- **학습용 정보**: 시간·공간 복잡도, 안정성, 설명용 구현 코드
+- **공유**: 현재 설정(알고리즘, 속도, 크기, 커스텀 배열 등)이 URL에 반영됨
+- **단축키**: `Space` 재생/일시정지 · `←` `→` 한 단계 · `R` 새 배열
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 구조 (Feature-Sliced Design)
 
-## Learn More
+```
+src/
+├─ app/                     Next.js 라우팅 + 전역 스타일 (FSD app 레이어)
+├─ views/home/              페이지 조립, URL 상태, 단축키 (FSD pages 레이어 — Next의 pages/와 충돌하지 않게 views로 명명)
+├─ widgets/visualizer/      막대 패널 + 지표 + 범례
+├─ features/
+│  ├─ playback/             재생 엔진(Track, useSortPlayer) + 재생바 UI
+│  ├─ select-algorithm/     알고리즘 선택, 셸/버킷 옵션
+│  └─ configure-array/      크기·프리셋·직접 입력
+├─ entities/
+│  ├─ sort-algorithm/       Op 로그, Tracer, 알고리즘 20종(+테스트), 레지스트리, 정보 카드, 코드 뷰어
+│  └─ array/                배열 생성·파싱·검증, 막대 UI(DOM / canvas)
+└─ shared/                  공용 타입, 유틸, UI
+```
 
-To learn more about Next.js, take a look at the following resources:
+각 슬라이스는 `index.ts`로만 외부에 공개하고, 의존은 위 레이어 → 아래 레이어 한 방향으로만 흐릅니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 동작 방식
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+알고리즘은 배열을 직접 다루지 않고 `Tracer`를 통해 `cmp(i, j)`, `swap(i, j)`, `move(from, to)`, `mark(i)`를 호출합니다. 호출은 `[type, a, b, …]` 형태의 연산 로그로 기록되고, 재생 엔진이 이 로그를 앞뒤로 적용합니다. 모든 연산에는 역연산이 있어서 되감기와 진행바 드래그가 가능합니다. 배열 스냅샷을 저장하지 않으므로 1000개 배열도 메모리 부담이 작습니다.
 
-## Deploy on Vercel
+### 알고리즘 추가하기
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. `src/entities/sort-algorithm/algorithms/xxxSort.ts`에 `SortAlgorithm` 객체를 작성합니다. 설명용 코드는 `algorithms/code.ts`에 넣습니다.
+2. `model/registry.ts`의 `ALGORITHMS`에 추가합니다.
+3. `xxxSort.test.ts`에서 `describeSortAlgorithm(xxxSort)`를 호출합니다. 정렬 결과, id 보존, 연산 재생 일치를 확인하고, `stable: true`이면 안정성도 확인합니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# sort
+개발 과정의 문제와 해결 기록은 [DEVELOPMENT_LOG.md](./DEVELOPMENT_LOG.md)에 있습니다.
