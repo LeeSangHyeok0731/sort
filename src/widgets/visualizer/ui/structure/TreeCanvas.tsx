@@ -2,15 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BAR_TONE_COLORS } from "@/entities/array";
+import { easeInOut, orbitPosition, type Point } from "../../model/orbit";
 
 export type NodeTone = keyof typeof BAR_TONE_COLORS;
 
 export type DrawNode = {
+  /** 노드에 담긴 원소의 고유 id. 같은 원소가 다른 자리로 가면 그 사이를 이동해 보여 준다 */
+  key: number;
   /** 가로 위치 0~1 */
   x: number;
   /** 층 (0 = 루트) */
   depth: number;
-  /** 부모 노드의 인덱스 (nodes 배열 기준), 루트는 -1 */
+  /** 부모 자리의 인덱스 (nodes 배열 기준), 루트는 -1 */
   parent: number;
   label: string;
   tone: NodeTone;
@@ -27,16 +30,36 @@ type Props = {
   maxDepth: number;
   /** 가장 넓은 층의 칸 수 (노드 크기를 정한다) */
   columns: number;
+  /** 원소가 자리를 옮길 때 원을 그리며 이동하는 시간. 0이면 바로 이동 */
+  moveDurationMs: number;
 };
+
+type Motion = { from: Point; to: Point; start: number; duration: number };
 
 const LABEL_MIN_RADIUS = 9;
 const MAX_RADIUS = 15;
 const MIN_PADDING = 10;
+/** 한 번에 이만큼보다 많이 움직이면(진행바를 크게 옮긴 경우 등) 애니메이션 없이 바로 이동 */
+const MAX_ANIMATED_MOVES = 24;
 
-/** 트리를 canvas에 그린다 (노드 1,000개까지 프레임마다 다시 그려도 가볍게) */
-export default function TreeCanvas({ nodes, maxDepth, columns }: Props) {
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * 트리를 canvas에 그린다 (노드 1,000개까지 프레임마다 다시 그려도 가볍게).
+ * 간선은 트리의 "자리"를 잇는 선이라 고정이고, 자리를 바꾼 원소만 두 자리의 한가운데를 중심으로 반원을 그리며 이동한다.
+ */
+export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+
+  /** 원소 id → 지금 목표 자리 (픽셀) */
+  const targetsRef = useRef(new Map<number, Point>());
+  /** 원소 id → 진행 중인 이동 */
+  const motionsRef = useRef(new Map<number, Motion>());
+  const sizeRef = useRef(size);
+  const frameRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -54,12 +77,6 @@ export default function TreeCanvas({ nodes, maxDepth, columns }: Props) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx || size.width === 0) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(size.width * dpr);
-    canvas.height = Math.round(size.height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, size.width, size.height);
-
     // 노드 크기를 먼저 어림한 뒤, 가장자리 노드가 잘리지 않도록 그만큼 여백을 둔다
     const roughLevelH = maxDepth > 0 ? size.height / (maxDepth + 1) : size.height;
     const radius = Math.max(
@@ -70,38 +87,61 @@ export default function TreeCanvas({ nodes, maxDepth, columns }: Props) {
     const innerW = size.width - pad * 2;
     const innerH = size.height - pad * 2;
     const levelH = maxDepth > 0 ? innerH / maxDepth : innerH;
-    const px = (node: DrawNode) => pad + node.x * innerW;
-    const py = (node: DrawNode) => pad + (maxDepth > 0 ? node.depth * levelH : innerH / 2);
+    const slots: Point[] = nodes.map((node) => ({
+      x: pad + node.x * innerW,
+      y: pad + (maxDepth > 0 ? node.depth * levelH : innerH / 2),
+    }));
 
-    // 1) 간선
-    ctx.lineWidth = Math.max(0.5, Math.min(1.5, radius / 6));
-    for (const node of nodes) {
-      if (node.hidden || node.parent < 0) continue;
-      const parent = nodes[node.parent];
-      if (!parent || parent.hidden) continue;
-      ctx.globalAlpha = node.faded || node.ghost ? 0.15 : 0.35;
-      ctx.strokeStyle = "#a5b4fc";
-      ctx.setLineDash(node.ghost ? [3, 3] : []);
-      ctx.beginPath();
-      ctx.moveTo(px(parent), py(parent));
-      ctx.lineTo(px(node), py(node));
-      ctx.stroke();
+    // ── 이동 애니메이션 준비 ──
+    const now = performance.now();
+    const motions = motionsRef.current;
+    const prevTargets = targetsRef.current;
+    const sameSize = sizeRef.current.width === size.width && sizeRef.current.height === size.height;
+    sizeRef.current = size;
+
+    /** 지금 화면에 보이는 위치 (이동 중이면 그 중간 지점) */
+    const shownAt = (key: number, fallback: Point, time: number): Point => {
+      const motion = motions.get(key);
+      if (!motion) return prevTargets.get(key) ?? fallback;
+      const t = Math.min(1, (time - motion.start) / motion.duration);
+      return orbitPosition(motion.from, motion.to, easeInOut(t));
+    };
+
+    const nextTargets = new Map<number, Point>();
+    const moved: Array<{ key: number; to: Point }> = [];
+    nodes.forEach((node, i) => {
+      if (node.hidden) return;
+      nextTargets.set(node.key, slots[i]);
+      const prev = prevTargets.get(node.key);
+      if (prev && (Math.abs(prev.x - slots[i].x) > 0.5 || Math.abs(prev.y - slots[i].y) > 0.5)) {
+        moved.push({ key: node.key, to: slots[i] });
+      }
+    });
+
+    const animate =
+      moveDurationMs > 0 && sameSize && moved.length > 0 && moved.length <= MAX_ANIMATED_MOVES && !prefersReducedMotion();
+    if (animate) {
+      for (const { key, to } of moved) {
+        const from = shownAt(key, to, now);
+        motions.set(key, { from, to, start: now, duration: moveDurationMs });
+      }
+    } else if (moved.length > 0 || !sameSize) {
+      motions.clear();
     }
-    ctx.setLineDash([]);
+    for (const key of [...motions.keys()]) if (!nextTargets.has(key)) motions.delete(key);
+    targetsRef.current = nextTargets;
 
-    // 2) 노드
+    // ── 그리기 ──
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(size.width * dpr);
+    canvas.height = Math.round(size.height * dpr);
     const showLabels = radius >= LABEL_MIN_RADIUS;
-    ctx.font = `600 ${Math.round(radius * 0.85)}px ui-monospace, monospace`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (const node of nodes) {
-      if (node.hidden) continue;
+
+    const drawNode = (node: DrawNode, at: Point) => {
       const [bottom, top] = BAR_TONE_COLORS[node.tone];
-      const x = px(node);
-      const y = py(node);
       ctx.globalAlpha = node.faded ? 0.45 : 1;
       ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.arc(at.x, at.y, radius, 0, Math.PI * 2);
       if (node.ghost) {
         ctx.setLineDash([3, 2]);
         ctx.lineWidth = Math.max(1, radius / 6);
@@ -109,7 +149,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns }: Props) {
         ctx.stroke();
         ctx.setLineDash([]);
       } else {
-        const gradient = ctx.createLinearGradient(x, y + radius, x, y - radius);
+        const gradient = ctx.createLinearGradient(at.x, at.y + radius, at.x, at.y - radius);
         gradient.addColorStop(0, bottom);
         gradient.addColorStop(1, top);
         ctx.fillStyle = gradient;
@@ -118,11 +158,56 @@ export default function TreeCanvas({ nodes, maxDepth, columns }: Props) {
       if (showLabels) {
         ctx.globalAlpha = node.ghost ? 0.8 : 1;
         ctx.fillStyle = node.ghost ? top : "#0f172a";
-        ctx.fillText(node.label, x, y + 0.5);
+        ctx.fillText(node.label, at.x, at.y + 0.5);
       }
-    }
-    ctx.globalAlpha = 1;
-  }, [nodes, maxDepth, columns, size]);
+    };
+
+    const draw = (time: number) => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size.width, size.height);
+
+      // 1) 간선: 자리끼리 잇는 선이라 원소가 이동해도 그대로
+      ctx.lineWidth = Math.max(0.5, Math.min(1.5, radius / 6));
+      ctx.strokeStyle = "#a5b4fc";
+      nodes.forEach((node, i) => {
+        if (node.hidden || node.parent < 0) return;
+        const parent = nodes[node.parent];
+        if (!parent || parent.hidden) return;
+        ctx.globalAlpha = node.faded || node.ghost ? 0.15 : 0.35;
+        ctx.setLineDash(node.ghost ? [3, 3] : []);
+        ctx.beginPath();
+        ctx.moveTo(slots[node.parent].x, slots[node.parent].y);
+        ctx.lineTo(slots[i].x, slots[i].y);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // 2) 노드: 이동 중인 노드는 다른 노드 위에 보이도록 마지막에
+      ctx.font = `600 ${Math.round(radius * 0.85)}px ui-monospace, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const moving: Array<[DrawNode, Point]> = [];
+      nodes.forEach((node, i) => {
+        if (node.hidden) return;
+        const motion = motions.get(node.key);
+        if (!motion) {
+          drawNode(node, slots[i]);
+          return;
+        }
+        const t = Math.min(1, (time - motion.start) / motion.duration);
+        moving.push([node, orbitPosition(motion.from, motion.to, easeInOut(t))]);
+        if (t >= 1) motions.delete(node.key);
+      });
+      for (const [node, at] of moving) drawNode(node, at);
+      ctx.globalAlpha = 1;
+
+      if (motions.size > 0) frameRef.current = requestAnimationFrame(draw);
+    };
+
+    cancelAnimationFrame(frameRef.current);
+    draw(now);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [nodes, maxDepth, columns, size, moveDurationMs]);
 
   return <canvas ref={canvasRef} className="block w-full h-full" />;
 }

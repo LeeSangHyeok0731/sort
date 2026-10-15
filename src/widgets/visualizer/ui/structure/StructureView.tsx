@@ -20,11 +20,13 @@ type Props = {
   view: TrackView;
   /** 정렬 전 원래 배열 (트리 정렬은 입력 순서대로 트리를 만든다) */
   input: readonly ArrayItem[];
+  /** 원소가 자리를 옮길 때 원을 그리며 이동하는 시간 (0이면 바로 이동) */
+  moveDurationMs: number;
   className?: string;
 };
 
 /** 막대 대신 트리로 보여 준다. 힙은 배열 그대로, 트리 정렬은 입력으로 만든 이진 검색 트리. */
-export default function StructureView({ algorithm, view, input, className }: Props) {
+export default function StructureView({ algorithm, view, input, moveDurationMs, className }: Props) {
   const structure = algorithm.structure;
   const n = view.items.length;
 
@@ -57,6 +59,7 @@ export default function StructureView({ algorithm, view, input, className }: Pro
     nodes = view.items.map((item, i) => {
       const inHeap = i < heapSize;
       return {
+        key: item.id,
         x: heapPositions[i].x,
         depth: heapPositions[i].depth,
         parent: heapParent(i, structure.arity),
@@ -85,6 +88,7 @@ export default function StructureView({ algorithm, view, input, className }: Pro
       if (i === progress.comparing || i === progress.inserting) tone = "compare";
       if (i === changedNode) tone = "change";
       return {
+        key: item.id,
         x: (bst.rank[i] + 0.5) / n,
         depth: bst.depth[i],
         parent: bst.parent[i],
@@ -106,7 +110,7 @@ export default function StructureView({ algorithm, view, input, className }: Pro
 
   return (
     <div className={cn("relative w-full h-64 md:h-80 px-2 pt-2", className)} role="img" aria-label={`${algorithm.name} 트리 보기, ${caption}`}>
-      <TreeCanvas nodes={nodes} maxDepth={maxDepth} columns={columns} />
+      <TreeCanvas nodes={nodes} maxDepth={maxDepth} columns={columns} moveDurationMs={moveDurationMs} />
       <span className="absolute top-2 right-3 text-[10px] font-mono text-white/40">{caption}</span>
     </div>
   );

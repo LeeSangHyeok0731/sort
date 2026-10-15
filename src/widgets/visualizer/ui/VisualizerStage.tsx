@@ -14,6 +14,8 @@ type Props = {
   input: readonly ArrayItem[];
   algorithms: readonly SortAlgorithm[];
   speed: number;
+  /** 재생 중인지 (일시정지 상태에서 한 단계씩 넘길 때는 이동 애니메이션을 넉넉하게) */
+  playing: boolean;
   /** 비교 모드에서 패널 제목 옆에 붙일 슬롯별 버튼 (예: 슬롯 음소거) */
   renderSlotControls?: (slot: 0 | 1) => React.ReactNode;
 };
@@ -25,6 +27,18 @@ const SLOT_ACCENT = [
   { chip: "bg-indigo-500", border: "border-indigo-500/20" },
   { chip: "bg-pink-500", border: "border-pink-500/20" },
 ];
+
+/** 한 연산 간격이 이보다 짧으면(고배속) 트리 이동 애니메이션 없이 바로 이동 */
+const MIN_ANIMATED_INTERVAL_MS = 25;
+const MAX_TREE_MOVE_MS = 350;
+const STEP_TREE_MOVE_MS = 300;
+
+/** 트리에서 원소가 자리를 옮길 때의 애니메이션 시간: 재생 중에는 연산 간격에 맞추고, 멈춰서 한 단계씩 볼 때는 넉넉하게 */
+function treeMoveDuration(speed: number, playing: boolean) {
+  if (!playing) return STEP_TREE_MOVE_MS;
+  const interval = 1000 / (BASE_OPS_PER_SECOND * speed);
+  return interval < MIN_ANIMATED_INTERVAL_MS ? 0 : Math.min(MAX_TREE_MOVE_MS, interval * 0.9);
+}
 
 const LEGEND = [
   { label: "비교", className: BAR_TONE_CLASS.compare },
@@ -42,10 +56,11 @@ function findWinner(views: readonly TrackView[]): number | null {
   return views[winner].done ? winner : null;
 }
 
-export default function VisualizerStage({ views, input, algorithms, speed, renderSlotControls }: Props) {
+export default function VisualizerStage({ views, input, algorithms, speed, playing, renderSlotControls }: Props) {
   const compare = views.length > 1;
   const animate = speed * BASE_OPS_PER_SECOND <= MAX_ANIMATED_OPS_PER_SECOND;
   const winner = findWinner(views);
+  const moveDurationMs = treeMoveDuration(speed, playing);
   // 코드 패널: 사용자가 정하기 전에는 단일 모드에서 열고 비교 모드에서 닫는다
   const [codeOpen, setCodeOpen] = useState<[boolean | null, boolean | null]>([null, null]);
   // 구조(트리)로 보기: 구조를 지원하는 알고리즘에서만 의미가 있다
@@ -82,6 +97,7 @@ export default function VisualizerStage({ views, input, algorithms, speed, rende
                   algorithm={{ ...algorithm, structure }}
                   view={view}
                   input={input}
+                  moveDurationMs={moveDurationMs}
                   className={cn(compare && "md:h-72")}
                 />
               ) : (

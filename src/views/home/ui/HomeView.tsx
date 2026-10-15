@@ -122,6 +122,7 @@ export default function HomeView() {
         input={input}
         algorithms={algorithms}
         speed={state.speed}
+        playing={player.status === "playing"}
         renderSlotControls={(slot) =>
           sound.enabled && (
             <SlotMuteButton
