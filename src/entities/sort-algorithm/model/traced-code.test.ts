@@ -23,6 +23,7 @@ const INPUTS: number[][] = [
   reversed(300),
   randomValues(300, 9999, 90),
   randomValues(300, 4, 91),
+  randomValues(300, 3, 92),
   [...sorted(150), ...reversed(150)],
   Array(200).fill(7),
 ];
