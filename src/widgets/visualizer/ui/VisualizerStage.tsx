@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { cn } from "@/shared/lib";
 import { ArrayBars, BAR_TONE_CLASS } from "@/entities/array";
-import { CodePanel, type SortAlgorithm } from "@/entities/sort-algorithm";
+import { CodePanel, type SortAlgorithm, type SortOptions } from "@/entities/sort-algorithm";
 import { BASE_OPS_PER_SECOND, TrackStatsView, type TrackView } from "@/features/playback";
 import type { ArrayItem } from "@/shared/model";
+import { structureLabel } from "../model/structures/scene";
 import StructureView from "./structure/StructureView";
 
 type Props = {
@@ -13,6 +14,8 @@ type Props = {
   /** 정렬 전 원래 배열 (트리 보기에서 사용) */
   input: readonly ArrayItem[];
   algorithms: readonly SortAlgorithm[];
+  /** 슬롯별 정렬 옵션 (구조 보기에서 버킷 수 등을 같은 규칙으로 계산) */
+  options: readonly SortOptions[];
   speed: number;
   /** 재생 중인지 (일시정지 상태에서 한 단계씩 넘길 때는 이동 애니메이션을 넉넉하게) */
   playing: boolean;
@@ -56,7 +59,7 @@ function findWinner(views: readonly TrackView[]): number | null {
   return views[winner].done ? winner : null;
 }
 
-export default function VisualizerStage({ views, input, algorithms, speed, playing, renderSlotControls }: Props) {
+export default function VisualizerStage({ views, input, algorithms, options, speed, playing, renderSlotControls }: Props) {
   const compare = views.length > 1;
   const animate = speed * BASE_OPS_PER_SECOND <= MAX_ANIMATED_OPS_PER_SECOND;
   const winner = findWinner(views);
@@ -97,6 +100,7 @@ export default function VisualizerStage({ views, input, algorithms, speed, playi
                   algorithm={{ ...algorithm, structure }}
                   view={view}
                   input={input}
+                  options={options[i] ?? {}}
                   moveDurationMs={moveDurationMs}
                   className={cn(compare && "md:h-72")}
                 />
@@ -156,7 +160,7 @@ export default function VisualizerStage({ views, input, algorithms, speed, playi
                     {(
                       [
                         [false, "막대"],
-                        [true, "트리"],
+                        [true, structureLabel(structure)],
                       ] as const
                     ).map(([on, label]) => (
                       <button

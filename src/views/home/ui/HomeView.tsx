@@ -121,6 +121,7 @@ export default function HomeView() {
         views={player.views}
         input={input}
         algorithms={algorithms}
+        options={slots.map((slot) => slot.options)}
         speed={state.speed}
         playing={player.status === "playing"}
         renderSlotControls={(slot) =>

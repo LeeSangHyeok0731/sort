@@ -85,6 +85,7 @@ export const cartesianTreeSort: SortAlgorithm = {
   stable: true,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "cartesian" },
   sort(t) {
     const n = t.length;
     if (n < 2) return;

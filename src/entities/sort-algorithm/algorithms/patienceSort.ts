@@ -80,6 +80,7 @@ export const patienceSort: SortAlgorithm = {
   stable: false,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "piles" },
   sort(t) {
     const n = t.length;
     if (n < 2) return;

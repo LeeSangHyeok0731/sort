@@ -53,6 +53,7 @@ export const tournamentSort: SortAlgorithm = {
   stable: true,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "tournament" },
   sort(t) {
     const n = t.length;
     if (n < 2) return;

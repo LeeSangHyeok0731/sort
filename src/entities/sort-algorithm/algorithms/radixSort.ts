@@ -42,6 +42,7 @@ export const radixSort: SortAlgorithm = {
   stable: true,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "radix" },
   sort(t) {
     const n = t.length;
     if (n < 2) return;
