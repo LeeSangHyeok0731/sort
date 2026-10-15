@@ -5,7 +5,7 @@ import type { ArrayItem } from "@/shared/model";
 import type { BarHighlight, BarTone } from "./ArrayBars";
 
 /** BAR_TONE_CLASS의 그라디언트와 같은 색 (아래 → 위) */
-const TONE_COLORS: Record<BarTone | "idle" | "done", [string, string]> = {
+export const TONE_COLORS: Record<BarTone | "idle" | "done", [string, string]> = {
   idle: ["#4f46e5", "#818cf8"],
   compare: ["#f59e0b", "#fcd34d"],
   change: ["#f43f5e", "#fda4af"],

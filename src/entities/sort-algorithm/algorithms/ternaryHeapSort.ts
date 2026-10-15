@@ -56,6 +56,7 @@ export const ternaryHeapSort: SortAlgorithm = {
   stable: false,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "heap", arity: 3, heapEndLabel: "swap-root" },
   sort(t) {
     const n = t.length;
     for (let i = Math.floor((n - 2) / 3); i >= 0; i--) siftDown3(t, n, i);

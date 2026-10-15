@@ -75,6 +75,7 @@ export const heapSort: SortAlgorithm = {
   stable: false,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "heap", arity: 2, heapEndLabel: "swap-root" },
   sort(t) {
     heapSortRange(t, 0, t.length - 1, L);
   },
