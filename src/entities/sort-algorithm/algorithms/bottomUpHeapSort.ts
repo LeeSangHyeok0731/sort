@@ -69,6 +69,7 @@ export const bottomUpHeapSort: SortAlgorithm = {
   stable: false,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "heap", arity: 2, heapEndLabel: "swap-root" },
   sort(t) {
     const n = t.length;
     for (let i = Math.floor(n / 2) - 1; i >= 0; i--) siftDownBottomUp(t, n, i);

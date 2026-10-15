@@ -119,6 +119,7 @@ export default function HomeView() {
 
       <VisualizerStage
         views={player.views}
+        input={input}
         algorithms={algorithms}
         speed={state.speed}
         renderSlotControls={(slot) =>
