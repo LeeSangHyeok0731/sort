@@ -3,27 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BAR_TONE_COLORS } from "@/entities/array";
 import { easeInOut, orbitPosition, type Point } from "../../model/orbit";
-
-export type NodeTone = keyof typeof BAR_TONE_COLORS;
-
-export type DrawNode = {
-  /** 노드에 담긴 원소의 고유 id. 같은 원소가 다른 자리로 가면 그 사이를 이동해 보여 준다 */
-  key: number;
-  /** 가로 위치 0~1 */
-  x: number;
-  /** 층 (0 = 루트) */
-  depth: number;
-  /** 부모 자리의 인덱스 (nodes 배열 기준), 루트는 -1 */
-  parent: number;
-  label: string;
-  tone: NodeTone;
-  /** 그리지 않음 (아직 트리에 없는 노드) */
-  hidden?: boolean;
-  /** 점선 테두리 (들어갈 자리를 미리 보여 주는 노드) */
-  ghost?: boolean;
-  /** 흐리게 (힙에서 빠져 정렬이 끝난 노드 등) */
-  faded?: boolean;
-};
+import type { DrawNode } from "../../model/structures/scene";
 
 type Props = {
   nodes: readonly DrawNode[];

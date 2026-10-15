@@ -50,6 +50,7 @@ export const bucketSort: SortAlgorithm = {
   stable: true,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "buckets" },
   sort(t, { bucketCount }) {
     const n = t.length;
     if (n < 2) return;

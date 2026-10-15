@@ -101,6 +101,7 @@ export const splaySort: SortAlgorithm = {
   stable: true,
   code: CODE.code,
   codeLabels: CODE.labels,
+  structure: { kind: "splay" },
   sort(t) {
     const n = t.length;
     if (n < 2) return;

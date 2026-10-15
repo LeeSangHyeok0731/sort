@@ -11,7 +11,11 @@ export type AlgorithmCategory = "standard" | "linear" | "special" | "fun";
  */
 export type AlgorithmStructure =
   | { kind: "heap"; arity: 2 | 3; heapEndLabel: string }
-  | { kind: "bst" };
+  | { kind: "bst" }
+  /** 트리 모양 (배열 밖에서 만드는 트리) */
+  | { kind: "splay" | "cartesian" | "tournament" }
+  /** 칸 모양 (더미·버킷·값·자릿수) */
+  | { kind: "piles" | "buckets" | "counting" | "radix" };
 
 export type SortOptions = {
   /** 셸 정렬 간격 수열 (비어 있으면 n/2, n/4, ...) */
