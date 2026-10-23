@@ -9,7 +9,7 @@ import dynamic from "next/dynamic";
 const HomeView = dynamic(() => import("./HomeView"), {
   ssr: false,
   loading: () => (
-    <div className="text-white/30 text-center animate-pulse py-32">Loading Visualizer...</div>
+    <div className="text-faint text-center animate-pulse py-32">Loading Visualizer...</div>
   ),
 });
 

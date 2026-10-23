@@ -98,15 +98,15 @@ export default function HomeView() {
   return (
     <div className="flex flex-col gap-6 w-full">
       <header className="text-center flex flex-col gap-2">
-        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-indigo-400 via-purple-400 to-pink-400">
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
           Sorting Visualizer
         </h1>
-        <p className="text-sm md:text-base text-indigo-100/50">
+        <p className="text-sm md:text-base text-muted">
           {algorithms.map((a) => a.name).join(" vs ")} · 막대 {input.length}개
         </p>
       </header>
 
-      <div className="sticky top-3 z-30 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl shadow-2xl px-4 py-3">
+      <div className="sticky top-3 z-30 rounded-lg bg-surface border border-line px-4 py-3">
         <PlaybackBar
           player={player}
           speed={state.speed}
@@ -171,10 +171,10 @@ export default function HomeView() {
         </div>
       </div>
 
-      <footer className="text-center text-xs text-white/30 pb-4">
-        단축키 · <kbd className="font-mono text-white/50">Space</kbd> 재생/일시정지 ·{" "}
-        <kbd className="font-mono text-white/50">← →</kbd> 한 단계 · <kbd className="font-mono text-white/50">R</kbd> 새 배열 ·{" "}
-        <kbd className="font-mono text-white/50">M</kbd> 소리
+      <footer className="text-center text-xs text-faint pb-4">
+        단축키 · <kbd className="font-mono text-muted">Space</kbd> 재생/일시정지 ·{" "}
+        <kbd className="font-mono text-muted">← →</kbd> 한 단계 · <kbd className="font-mono text-muted">R</kbd> 새 배열 ·{" "}
+        <kbd className="font-mono text-muted">M</kbd> 소리
       </footer>
     </div>
   );
