@@ -3,16 +3,14 @@ import type { SortAlgorithm } from "../model/types";
 
 type Props = {
   algorithm: SortAlgorithm;
-  accent?: "indigo" | "pink";
+  /** 비교 모드 슬롯 (제목 색) */
+  slot?: 0 | 1;
   className?: string;
 };
 
-const ACCENT = {
-  indigo: "text-indigo-300",
-  pink: "text-pink-300",
-} as const;
+const SLOT_TEXT = ["text-slot-1", "text-slot-2"] as const;
 
-export default function AlgorithmInfoCard({ algorithm, accent = "indigo", className }: Props) {
+export default function AlgorithmInfoCard({ algorithm, slot = 0, className }: Props) {
   const { complexity } = algorithm;
   const rows: Array<[string, string]> = [
     ["최선", complexity.best],
@@ -25,15 +23,15 @@ export default function AlgorithmInfoCard({ algorithm, accent = "indigo", classN
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className={cn("font-bold", ACCENT[accent])}>{algorithm.name}</h3>
-          <p className="text-xs text-white/45 mt-0.5">{algorithm.desc}</p>
+          <h3 className={cn("font-bold", SLOT_TEXT[slot])}>{algorithm.name}</h3>
+          <p className="text-xs text-muted mt-0.5">{algorithm.desc}</p>
         </div>
         <span
           className={cn(
             "shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border",
             algorithm.stable
-              ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/25"
-              : "text-white/40 bg-white/5 border-white/10"
+              ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+              : "text-muted bg-subtle border-line"
           )}
           title="안정 정렬: 같은 값의 원래 순서가 유지됨"
         >
@@ -42,14 +40,14 @@ export default function AlgorithmInfoCard({ algorithm, accent = "indigo", classN
       </div>
       <dl className="grid grid-cols-4 gap-2">
         {rows.map(([label, value]) => (
-          <div key={label} className="flex flex-col gap-0.5 rounded-lg bg-black/20 px-2 py-1.5">
-            <dt className="text-[10px] text-white/30">{label}</dt>
-            <dd className="text-xs font-mono text-white/80 break-words">{value}</dd>
+          <div key={label} className="flex flex-col gap-0.5 rounded-lg bg-subtle border border-line px-2 py-1.5">
+            <dt className="text-[10px] text-faint">{label}</dt>
+            <dd className="text-xs font-mono text-foreground break-words">{value}</dd>
           </div>
         ))}
       </dl>
       {algorithm.note && (
-        <p className="text-[11px] leading-relaxed text-amber-200/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+        <p className="text-[11px] leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           ⚠️ {algorithm.note}
         </p>
       )}

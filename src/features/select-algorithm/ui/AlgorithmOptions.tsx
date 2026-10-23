@@ -30,10 +30,10 @@ type Props = {
   disabled?: boolean;
 };
 
-const SLOT_CHIP = ["bg-indigo-500", "bg-pink-500"] as const;
+const SLOT_CHIP = ["bg-slot-1", "bg-slot-2"] as const;
 
 const inputClass =
-  "bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-indigo-400 disabled:opacity-50";
+  "bg-surface border border-line rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-faint focus:outline-none focus:border-foreground disabled:opacity-50";
 
 function hasOptions(id: AlgorithmId) {
   return id === "shell" || id === "bucket";
@@ -55,13 +55,13 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
         return (
           <fieldset
             key={slot}
-            className="flex flex-col gap-3 p-4 rounded-2xl bg-black/20 border border-white/5"
+            className="flex flex-col gap-3 p-4 rounded-lg bg-subtle border border-line"
           >
             <legend className="sr-only">
               {slot + 1}번 슬롯 {getAlgorithm(algorithmId).name} 옵션
             </legend>
             {showSlotLabel && (
-              <div className="flex items-center gap-2 text-xs font-bold text-white/60">
+              <div className="flex items-center gap-2 text-xs font-bold text-muted">
                 <span
                   className={cn(
                     "w-4 h-4 rounded text-[10px] font-black text-white flex items-center justify-center",
@@ -76,7 +76,7 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
 
             {algorithmId === "shell" && (
               <label htmlFor={`${idPrefix}-gaps`} className="flex flex-col gap-2">
-                <span className="text-xs font-bold text-white/50">셸 정렬 간격</span>
+                <span className="text-xs font-bold text-muted">셸 정렬 간격</span>
                 <input
                   id={`${idPrefix}-gaps`}
                   type="text"
@@ -87,15 +87,15 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
                   disabled={disabled}
                   className={inputClass}
                 />
-                <span className="text-[11px] text-white/30">마지막 간격이 1이 아니면 자동으로 1을 추가합니다.</span>
+                <span className="text-[11px] text-faint">마지막 간격이 1이 아니면 자동으로 1을 추가합니다.</span>
               </label>
             )}
 
             {algorithmId === "bucket" && (
               <label htmlFor={`${idPrefix}-buckets`} className="flex flex-col gap-2">
-                <span className="flex justify-between text-xs font-bold text-white/50">
+                <span className="flex justify-between text-xs font-bold text-muted">
                   <span>버킷 개수</span>
-                  <span className="font-mono text-indigo-300">{values.bucketCount}개</span>
+                  <span className="font-mono text-foreground">{values.bucketCount}개</span>
                 </span>
                 <input
                   id={`${idPrefix}-buckets`}
@@ -105,7 +105,7 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
                   value={values.bucketCount}
                   onChange={(e) => onChange(slot, { bucketCount: Number(e.target.value) })}
                   disabled={disabled}
-                  className="accent-indigo-500"
+                  className="accent-gray-900"
                 />
               </label>
             )}

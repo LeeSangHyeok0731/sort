@@ -165,7 +165,7 @@ export default function HomeView() {
           </Card>
           <Card className="flex flex-col gap-5">
             {algorithms.map((a, i) => (
-              <AlgorithmInfoCard key={`${a.id}-${i}`} algorithm={a} accent={i === 0 ? "indigo" : "pink"} />
+              <AlgorithmInfoCard key={`${a.id}-${i}`} algorithm={a} slot={i as 0 | 1} />
             ))}
           </Card>
         </div>
