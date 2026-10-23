@@ -12,4 +12,3 @@ export {
 export { clampSize, generateArray, shuffleValues, toArrayItems } from "./lib/generate";
 export { parseCustomValues, parseSize, type ParseResult } from "./lib/parse";
 export { default as ArrayBars, BAR_TONE_CLASS, type BarHighlight, type BarTone } from "./ui/ArrayBars";
-export { TONE_COLORS as BAR_TONE_COLORS } from "./ui/CanvasBars";
