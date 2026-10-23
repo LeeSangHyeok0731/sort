@@ -141,7 +141,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                 {compare && (
                   <span
                     className={cn(
-                      "w-5 h-5 rounded-md text-[11px] font-black text-white flex items-center justify-center",
+                      "w-5 h-5 rounded-md text-[11px] font-black text-background flex items-center justify-center",
                       SLOT_ACCENT[i].chip
                     )}
                   >
@@ -170,7 +170,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                         onClick={() => setShowStructure(on)}
                         className={cn(
                           "px-2 py-0.5 rounded-md text-[11px] font-bold transition-all",
-                          showStructure === on ? "bg-foreground text-white" : "text-muted hover:text-foreground"
+                          showStructure === on ? "bg-foreground text-background" : "text-muted hover:text-foreground"
                         )}
                       >
                         {label}
@@ -186,7 +186,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                     "shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono border transition-all",
                     !structure && "ml-auto",
                     showCode
-                      ? "border-foreground bg-foreground text-white"
+                      ? "border-foreground bg-foreground text-background"
                       : "border-line text-muted hover:text-foreground hover:bg-subtle"
                   )}
                 >

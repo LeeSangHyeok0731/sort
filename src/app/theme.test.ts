@@ -8,6 +8,8 @@ const SRC = fileURLToPath(new URL("..", import.meta.url));
 /** 어두운 테마 시절의 클래스·색. 밝은 테마에서는 토큰(bg-surface, text-muted …)을 쓴다 */
 const FORBIDDEN = [
   /text-white\//,
+  // bg-foreground 위 글자는 text-background (다크에서 foreground가 밝아지므로)
+  /\btext-white\b/,
   /bg-white\//,
   /border-white/,
   /bg-black/,
@@ -46,6 +48,17 @@ describe("밝은 테마", () => {
         .flatMap((line, i) =>
           FORBIDDEN.filter((re) => re.test(line)).map((re) => `${file}:${i + 1} ${re}`)
         )
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it("밝은 바탕용 옅은 색에는 dark: 짝이 있다", () => {
+    const LIGHT_ONLY =
+      /\b(bg-(amber|red|sky|emerald|blue|violet)-(50|100)|text-(amber|emerald)-(700|800)|text-(sky|gray)-700|text-red-600|bg-gray-400|bg-white)\b/;
+    const hits = sourceFiles(SRC).flatMap((file) =>
+      readFileSync(file, "utf8")
+        .split("\n")
+        .flatMap((line, i) => (LIGHT_ONLY.test(line) && !/\bdark:/.test(line) ? [`${file}:${i + 1}`] : []))
     );
     expect(hits).toEqual([]);
   });

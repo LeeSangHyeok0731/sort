@@ -21,7 +21,7 @@ type Props = {
 
 function ErrorText({ children }: { children: React.ReactNode }) {
   return (
-    <p role="alert" className="text-xs text-red-600">
+    <p role="alert" className="text-xs text-red-600 dark:text-red-400">
       {children}
     </p>
   );
@@ -106,8 +106,8 @@ export default function ArrayConfigurator({ size, preset, onGenerate, onCustom }
               className={cn(
                 "px-3 py-2 rounded-lg border text-xs font-bold transition-all active:scale-95",
                 preset === p.id
-                  ? "border-foreground bg-foreground text-white"
-                  : "border-line bg-surface text-gray-700 hover:bg-subtle hover:text-foreground"
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-line bg-surface text-gray-700 dark:text-gray-300 hover:bg-subtle hover:text-foreground"
               )}
             >
               {p.name}
@@ -140,7 +140,7 @@ export default function ArrayConfigurator({ size, preset, onGenerate, onCustom }
           <button
             type="submit"
             disabled={!customText.trim()}
-            className="px-4 py-2 rounded-lg text-sm font-bold bg-foreground text-white border border-foreground hover:bg-gray-700 transition-all disabled:opacity-40"
+            className="px-4 py-2 rounded-lg text-sm font-bold bg-foreground text-background border border-foreground hover:bg-gray-700 dark:hover:bg-gray-300 transition-all disabled:opacity-40"
           >
             적용
           </button>

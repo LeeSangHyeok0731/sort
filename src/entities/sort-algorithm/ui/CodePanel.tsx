@@ -19,10 +19,10 @@ type Props = {
 
 /** 현재 줄 강조 색: 막대 색과 맞춘다 (비교 = 노랑, 교환·이동 = 빨강, 읽기 = 파랑) */
 const ACTIVE_CLASS: Record<OpType, string> = {
-  [OpType.Compare]: "bg-amber-100 border-amber-500",
-  [OpType.Swap]: "bg-red-100 border-red-500",
-  [OpType.Move]: "bg-red-100 border-red-500",
-  [OpType.Mark]: "bg-sky-100 border-sky-500",
+  [OpType.Compare]: "bg-amber-100 border-amber-500 dark:bg-amber-500/20",
+  [OpType.Swap]: "bg-red-100 border-red-500 dark:bg-red-500/20",
+  [OpType.Move]: "bg-red-100 border-red-500 dark:bg-red-500/20",
+  [OpType.Mark]: "bg-sky-100 border-sky-500 dark:bg-sky-500/20",
 };
 
 /**

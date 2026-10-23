@@ -319,6 +319,14 @@
 - 코드 패널은 어두운 Prism 테마 대신 밝은 바탕용 문법 색을 직접 정의.
 - 어두운 테마용 클래스(`text-white/…`, `indigo`, `backdrop-blur` 등)가 다시 들어오지 않도록 소스 검사 테스트 추가.
 
+### 35. 🌙 다크 모드
+
+- 처음에는 OS 설정을 따르고, 제목 오른쪽 위 해/달 버튼으로 바꾼다. 선택은 localStorage `theme`에 기억한다.
+- `<head>` 인라인 스크립트가 그리기 전에 `<html data-theme>`를 정해 새로 고칠 때 깜빡이지 않는다.
+- 색 토큰을 `:root[data-theme="dark"]`에서 다시 정의해 컴포넌트 클래스는 그대로 두었다 (GitHub 다크 계열 남회색).
+- canvas는 `PALETTE.light`/`PALETTE.dark` 중 `useTheme()` 쪽으로 그린다. 두 벌 모두 CSS와 같은지 테스트로 확인.
+- `bg-foreground` 위 `text-white`는 `text-background`로 바꿨다. 직접 쓴 옅은 색에는 `dark:` 짝을 붙이고 테스트로 막았다.
+
 ---
 
 _마지막 업데이트: 2026-10-23_

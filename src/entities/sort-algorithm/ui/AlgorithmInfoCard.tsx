@@ -30,7 +30,7 @@ export default function AlgorithmInfoCard({ algorithm, slot = 0, className }: Pr
           className={cn(
             "shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg border",
             algorithm.stable
-              ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+              ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-500/15 dark:border-emerald-500/30"
               : "text-muted bg-subtle border-line"
           )}
           title="안정 정렬: 같은 값의 원래 순서가 유지됨"
@@ -47,7 +47,7 @@ export default function AlgorithmInfoCard({ algorithm, slot = 0, className }: Pr
         ))}
       </dl>
       {algorithm.note && (
-        <p className="text-[11px] leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        <p className="text-[11px] leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 dark:text-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 rounded-lg px-3 py-2">
           ⚠️ {algorithm.note}
         </p>
       )}

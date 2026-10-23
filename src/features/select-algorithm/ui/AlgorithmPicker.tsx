@@ -27,8 +27,8 @@ type Props = {
 };
 
 const SLOT_STYLE = {
-  0: { chip: "bg-slot-1 text-white", ring: "border-slot-1 bg-blue-50 text-slot-1" },
-  1: { chip: "bg-slot-2 text-white", ring: "border-slot-2 bg-violet-50 text-slot-2" },
+  0: { chip: "bg-slot-1 text-background", ring: "border-slot-1 bg-blue-50 dark:bg-blue-500/15 text-slot-1" },
+  1: { chip: "bg-slot-2 text-background", ring: "border-slot-2 bg-violet-50 dark:bg-violet-500/15 text-slot-2" },
 } as const;
 
 export default function AlgorithmPicker({ compareMode, onCompareModeChange, selected, onSelect, disabled }: Props) {
@@ -59,12 +59,12 @@ export default function AlgorithmPicker({ compareMode, onCompareModeChange, sele
             onClick={() => onCompareModeChange(!compareMode)}
             className={cn(
               "relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40",
-              compareMode ? "bg-foreground" : "bg-gray-400"
+              compareMode ? "bg-foreground" : "bg-gray-400 dark:bg-gray-600"
             )}
           >
             <span
               className={cn(
-                "inline-block h-4 w-4 rounded-full bg-white transition-transform",
+                "inline-block h-4 w-4 rounded-full bg-background transition-transform",
                 compareMode ? "translate-x-6" : "translate-x-1"
               )}
             />
@@ -136,7 +136,7 @@ export default function AlgorithmPicker({ compareMode, onCompareModeChange, sele
               onClick={() => setCategory(c.id)}
               className={cn(
                 "flex-1 px-3 py-2 rounded-md text-xs md:text-sm font-bold whitespace-nowrap transition-all",
-                category === c.id ? "bg-foreground text-white" : "text-muted hover:text-foreground"
+                category === c.id ? "bg-foreground text-background" : "text-muted hover:text-foreground"
               )}
             >
               {c.name}
@@ -167,7 +167,7 @@ export default function AlgorithmPicker({ compareMode, onCompareModeChange, sele
                 "relative flex flex-col items-start gap-1 px-3 py-3 rounded-lg border text-left transition-all disabled:opacity-40 disabled:cursor-not-allowed",
                 isActive
                   ? SLOT_STYLE[slot].ring
-                  : "border-line bg-surface text-gray-700 hover:bg-subtle hover:text-foreground"
+                  : "border-line bg-surface text-gray-700 dark:text-gray-300 hover:bg-subtle hover:text-foreground"
               )}
             >
               {searching && (

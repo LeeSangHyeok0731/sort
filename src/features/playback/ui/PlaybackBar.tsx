@@ -40,8 +40,8 @@ function IconButton({
       className={cn(
         "flex items-center justify-center rounded-lg transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-foreground",
         variant === "ghost" && "w-9 h-9 text-muted hover:text-foreground hover:bg-subtle",
-        variant === "primary" && "w-11 h-11 bg-foreground hover:bg-gray-700 text-white",
-        variant === "danger" && "w-11 h-11 bg-tone-change hover:bg-red-600 text-white"
+        variant === "primary" && "w-11 h-11 bg-foreground hover:bg-gray-700 dark:hover:bg-gray-300 text-background",
+        variant === "danger" && "w-11 h-11 bg-tone-change hover:bg-red-600 dark:hover:bg-red-300 text-background"
       )}
     >
       {children}

@@ -12,7 +12,7 @@ type Props = {
 };
 
 /** 슬롯 색에 맞춘 강조 (1번 파랑, 2번 보라) */
-const ON_CLASS = ["text-slot-1 bg-blue-50", "text-slot-2 bg-violet-50"] as const;
+const ON_CLASS = ["text-slot-1 bg-blue-50 dark:bg-blue-500/15", "text-slot-2 bg-violet-50 dark:bg-violet-500/15"] as const;
 
 /** 비교 모드에서 한쪽 알고리즘의 소리만 끄고 켜는 버튼 */
 export default function SlotMuteButton({ slot, name, muted, onToggle }: Props) {

@@ -64,7 +64,7 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
               <div className="flex items-center gap-2 text-xs font-bold text-muted">
                 <span
                   className={cn(
-                    "w-4 h-4 rounded text-[10px] font-black text-white flex items-center justify-center",
+                    "w-4 h-4 rounded text-[10px] font-black text-background flex items-center justify-center",
                     SLOT_CHIP[slot]
                   )}
                 >
