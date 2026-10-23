@@ -87,7 +87,7 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
                   disabled={disabled}
                   className={inputClass}
                 />
-                <span className="text-[11px] text-faint">마지막 간격이 1이 아니면 자동으로 1을 추가합니다.</span>
+                <span className="text-[11px] text-muted">마지막 간격이 1이 아니면 자동으로 1을 추가합니다.</span>
               </label>
             )}
 

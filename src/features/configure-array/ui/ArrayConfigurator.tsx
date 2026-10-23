@@ -90,7 +90,7 @@ export default function ArrayConfigurator({ size, preset, onGenerate, onCustom }
               sizeError ? "border-red-500" : "border-line focus:border-foreground"
             )}
           />
-          <span className="text-xs text-faint">
+          <span className="text-xs text-muted">
             {MIN_ARRAY_SIZE}~{MAX_ARRAY_SIZE}개
           </span>
         </div>
@@ -114,12 +114,12 @@ export default function ArrayConfigurator({ size, preset, onGenerate, onCustom }
             </button>
           ))}
         </div>
-        <p className="text-[11px] text-faint">프리셋을 누르면 해당 크기로 새 배열을 만듭니다.</p>
+        <p className="text-[11px] text-muted">프리셋을 누르면 해당 크기로 새 배열을 만듭니다.</p>
       </div>
 
       <form onSubmit={submitCustom} className="flex flex-col gap-2">
         <label htmlFor="custom-values" className="text-sm text-muted">
-          직접 입력 <span className="text-faint text-xs">(0~{MAX_VALUE} 정수, 쉼표·공백 구분)</span>
+          직접 입력 <span className="text-muted text-xs">(0~{MAX_VALUE} 정수, 쉼표·공백 구분)</span>
         </label>
         <div className="flex gap-2">
           <input

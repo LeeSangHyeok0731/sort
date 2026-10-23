@@ -59,7 +59,7 @@ export default function AlgorithmPicker({ compareMode, onCompareModeChange, sele
             onClick={() => onCompareModeChange(!compareMode)}
             className={cn(
               "relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40",
-              compareMode ? "bg-foreground" : "bg-gray-200"
+              compareMode ? "bg-foreground" : "bg-gray-400"
             )}
           >
             <span
@@ -171,7 +171,7 @@ export default function AlgorithmPicker({ compareMode, onCompareModeChange, sele
               )}
             >
               {searching && (
-                <span className="text-[10px] font-bold text-faint">{CATEGORY_NAME[algo.category]}</span>
+                <span className="text-[10px] font-bold text-muted">{CATEGORY_NAME[algo.category]}</span>
               )}
               <span className="text-sm font-bold leading-tight">{algo.name}</span>
               <span className="text-[11px] leading-snug text-muted">{algo.desc}</span>

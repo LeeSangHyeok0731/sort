@@ -16,10 +16,15 @@ const FORBIDDEN = [
   /pink-/,
   /purple-/,
   /rose-/,
-  /backdrop-blur/,
-  /rounded-3xl/,
+  /backdrop-|\bblur-\[/,
+  /rounded-(3xl|2xl|xl)\b/,
   /bg-linear-/,
+  /bg-gradient-to-/,
   /shadow-\[/,
+  /\bshadow-(sm|md|lg|xl|2xl)\b/,
+  /bg-clip-text/,
+  /prism-tomorrow/,
+  /rgba\(255,\s*255,\s*255/,
   /#0f172a/i,
 ];
 
@@ -27,13 +32,15 @@ function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) return sourceFiles(path);
-    return /\.(tsx?|css)$/.test(name) && !/\.test\.ts$/.test(name) ? [path] : [];
+    return /\.(tsx?|css)$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : [];
   });
 }
 
 describe("밝은 테마", () => {
   it("어두운 테마용 클래스·색이 남아 있지 않다", () => {
-    const hits = sourceFiles(SRC).flatMap((file) =>
+    const files = sourceFiles(SRC);
+    expect(files.length).toBeGreaterThan(0);
+    const hits = files.flatMap((file) =>
       readFileSync(file, "utf8")
         .split("\n")
         .flatMap((line, i) =>

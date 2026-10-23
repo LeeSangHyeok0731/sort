@@ -171,7 +171,7 @@ export default function HomeView() {
         </div>
       </div>
 
-      <footer className="text-center text-xs text-faint pb-4">
+      <footer className="text-center text-xs text-muted pb-4">
         단축키 · <kbd className="font-mono text-muted">Space</kbd> 재생/일시정지 ·{" "}
         <kbd className="font-mono text-muted">← →</kbd> 한 단계 · <kbd className="font-mono text-muted">R</kbd> 새 배열 ·{" "}
         <kbd className="font-mono text-muted">M</kbd> 소리

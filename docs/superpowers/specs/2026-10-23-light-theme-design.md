@@ -24,9 +24,10 @@
 | `surface` | `#ffffff` | 카드·재생 바 |
 | `subtle` | `#f9fafb` | 카드 안 옅은 칸 (복잡도 칸, 통계 줄, 비활성 토글 바탕) |
 | `line` | `#e5e7eb` | 테두리·구분선 |
+| `line-strong` | `#cbd5e1` | 트리 간선·칸 바닥선 (canvas) |
 | `foreground` | `#111827` | 본문 글자, 주요 버튼 바탕 |
 | `muted` | `#6b7280` | 보조 글자 |
-| `faint` | `#9ca3af` | 줄 번호·범례 같은 더 흐린 글자 |
+| `faint` | `#9ca3af` | 줄 번호·placeholder·로딩 문구 같은 장식용 글자 |
 | `tone-idle` | `#94a3b8` | 막대 기본 |
 | `tone-compare` | `#f59e0b` | 비교 |
 | `tone-change` | `#ef4444` | 교환·이동 |
@@ -50,7 +51,7 @@
 
 ## canvas와 코드 패널
 
-- `CanvasBars`·`TreeCanvas`·`BinsCanvas`는 `palette.ts`의 값을 쓴다. 노드·카드 바탕 흰색, 선·테두리 `line`보다 한 단계 진한 회색(`#cbd5e1`), 강조 테두리 `tone-compare`, 글자 `foreground`/`muted`.
+- `CanvasBars`·`TreeCanvas`·`BinsCanvas`는 `palette.ts`의 값을 쓴다. 노드·카드는 `tone` 단색으로 채우고 값 글자는 `foreground`, 고스트(점선)는 `tone` 색 테두리, 간선·칸 바닥선은 `line-strong`, 활성 칸 바닥선은 `tone-compare`·라벨은 `foreground`, 비활성 라벨은 `faint`.
 - 코드 패널은 `prismjs/themes/prism-tomorrow.css`를 빼고 `globals.css`에 밝은 문법 색을 직접 정의한다 (`.token.keyword` 등, 바탕 투명·글자 그림자 없음).
 - 현재 줄 강조와 줄별 실행 횟수 색도 밝은 바탕에 맞춘다.
 

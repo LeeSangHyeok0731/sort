@@ -41,7 +41,7 @@ export default function AlgorithmInfoCard({ algorithm, slot = 0, className }: Pr
       <dl className="grid grid-cols-4 gap-2">
         {rows.map(([label, value]) => (
           <div key={label} className="flex flex-col gap-0.5 rounded-lg bg-subtle border border-line px-2 py-1.5">
-            <dt className="text-[10px] text-faint">{label}</dt>
+            <dt className="text-[10px] text-muted">{label}</dt>
             <dd className="text-xs font-mono text-foreground break-words">{value}</dd>
           </div>
         ))}

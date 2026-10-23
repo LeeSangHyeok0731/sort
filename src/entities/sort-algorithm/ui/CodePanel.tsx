@@ -31,6 +31,7 @@ const ACTIVE_CLASS: Record<OpType, string> = {
  */
 const HEAT_LEVELS = 8;
 const HEAT_STYLE = Array.from({ length: HEAT_LEVELS + 1 }, (_, level) =>
+  // slot-1(#2563eb)과 같은 색
   level === 0 ? undefined : { backgroundColor: `rgba(37, 99, 235, ${0.03 + (0.15 * level) / HEAT_LEVELS})` }
 );
 
@@ -60,7 +61,7 @@ const CodeLine = memo(function CodeLine({ html, lineNo, hitsText, heat, activeCl
       style={{ minHeight: ROW_HEIGHT, ...(activeClass ? undefined : HEAT_STYLE[heat]) }}
     >
       <span className="w-8 shrink-0 text-right pr-2 text-faint select-none">{lineNo}</span>
-      <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-slot-1/70 select-none">
+      <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-slot-1 select-none">
         {hitsText}
       </span>
       {/* 패널보다 긴 줄은 가로 스크롤 대신 줄바꿈 (들여쓰기는 유지) */}

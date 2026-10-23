@@ -84,7 +84,7 @@ function ArrayBars({ items, highlight, done = false, animate = true, className }
             }}
           >
             {showLabels && (
-              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono text-faint select-none">
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono text-muted select-none">
                 {item.value}
               </span>
             )}
