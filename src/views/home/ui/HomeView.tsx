@@ -8,6 +8,7 @@ import { AlgorithmInfoCard, getAlgorithm, type AlgorithmId } from "@/entities/so
 import { ArrayConfigurator } from "@/features/configure-array";
 import { PlaybackBar, useSortPlayer } from "@/features/playback";
 import { SlotMuteButton, SoundToggle, useSortSound } from "@/features/sort-sound";
+import { ThemeToggle } from "@/features/toggle-theme";
 import {
   AlgorithmOptions,
   AlgorithmPicker,
@@ -97,7 +98,8 @@ export default function HomeView() {
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <header className="text-center flex flex-col gap-2">
+      <header className="relative text-center flex flex-col gap-2">
+        <ThemeToggle className="absolute right-0 top-0" />
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
           Sorting Visualizer
         </h1>
