@@ -27,8 +27,8 @@ type Props = {
 const MAX_ANIMATED_OPS_PER_SECOND = 40;
 
 const SLOT_ACCENT = [
-  { chip: "bg-indigo-500", border: "border-indigo-500/20" },
-  { chip: "bg-pink-500", border: "border-pink-500/20" },
+  { chip: "bg-slot-1", border: "border-slot-1/30" },
+  { chip: "bg-slot-2", border: "border-slot-2/30" },
 ];
 
 /** 한 연산 간격이 이보다 짧으면(고배속) 트리 이동 애니메이션 없이 바로 이동 */
@@ -113,7 +113,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                   className={cn(compare && "md:h-72")}
                 />
               )}
-              <div className="px-4 py-3 md:px-5 border-t border-white/5 bg-black/10">
+              <div className="px-4 py-3 md:px-5 border-t border-line bg-subtle">
                 <TrackStatsView view={view} winner={winner === i} />
               </div>
             </>
@@ -124,7 +124,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
               algorithm={algorithm}
               activeLine={view.line}
               lineHits={view.lineHits}
-              className="bg-black/20"
+              className="bg-surface"
             />
           );
 
@@ -133,8 +133,8 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
               key={i}
               aria-label={`${algorithm.name} 시각화`}
               className={cn(
-                "flex flex-col rounded-3xl bg-white/[0.04] border backdrop-blur-sm overflow-hidden",
-                compare ? SLOT_ACCENT[i].border : "border-white/10"
+                "flex flex-col rounded-lg bg-surface border overflow-hidden",
+                compare ? SLOT_ACCENT[i].border : "border-line"
               )}
             >
               <header className="flex items-center gap-2 px-4 pt-4 md:px-5">
@@ -148,12 +148,12 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                     {i + 1}
                   </span>
                 )}
-                <h2 className="font-bold text-white shrink-0">{algorithm.name}</h2>
-                <span className="text-xs text-white/35 truncate">{algorithm.desc}</span>
+                <h2 className="font-bold text-foreground shrink-0">{algorithm.name}</h2>
+                <span className="text-xs text-muted truncate">{algorithm.desc}</span>
                 {compare && renderSlotControls?.(i as 0 | 1)}
                 {structure && (
                   <div
-                    className="ml-auto shrink-0 flex p-0.5 rounded-lg bg-black/30 border border-white/10"
+                    className="ml-auto shrink-0 flex p-0.5 rounded-lg bg-subtle border border-line"
                     role="group"
                     aria-label="보기 방식"
                   >
@@ -170,7 +170,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                         onClick={() => setShowStructure(on)}
                         className={cn(
                           "px-2 py-0.5 rounded-md text-[11px] font-bold transition-all",
-                          showStructure === on ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"
+                          showStructure === on ? "bg-foreground text-white" : "text-muted hover:text-foreground"
                         )}
                       >
                         {label}
@@ -186,8 +186,8 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                     "shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono border transition-all",
                     !structure && "ml-auto",
                     showCode
-                      ? "border-indigo-400/50 bg-indigo-500/15 text-indigo-200"
-                      : "border-white/10 text-white/50 hover:text-white hover:bg-white/10"
+                      ? "border-foreground bg-foreground text-white"
+                      : "border-line text-muted hover:text-foreground hover:bg-subtle"
                   )}
                 >
                   {"</>"} 코드
@@ -198,14 +198,14 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
                 // 단일 모드: 넓은 화면에서 막대 | 코드, 좁은 화면에서는 위아래
                 <div className="grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                   <div className="flex flex-col min-w-0">{bars}</div>
-                  <div className="relative border-t lg:border-t-0 lg:border-l border-white/5 h-72 lg:h-auto">
+                  <div className="relative border-t lg:border-t-0 lg:border-l border-line h-72 lg:h-auto">
                     <div className="lg:absolute lg:inset-0 h-full flex flex-col">{code}</div>
                   </div>
                 </div>
               ) : (
                 <>
                   {bars}
-                  {showCode && <div className="border-t border-white/5 h-72 flex flex-col">{code}</div>}
+                  {showCode && <div className="border-t border-line h-72 flex flex-col">{code}</div>}
                 </>
               )}
             </section>
@@ -215,7 +215,7 @@ export default function VisualizerStage({ views, input, algorithms, options, spe
 
       <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2" aria-label="막대 색상 범례">
         {LEGEND.map((item) => (
-          <li key={item.label} className="flex items-center gap-2 text-xs text-white/45">
+          <li key={item.label} className="flex items-center gap-2 text-xs text-muted">
             <span className={cn("w-3 h-3 rounded-sm", item.className)} />
             {item.label}
           </li>

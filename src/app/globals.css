@@ -69,6 +69,32 @@ body {
   opacity: 0;
 }
 
+/* 코드 패널 문법 색 (Prism 토큰, 밝은 바탕용) */
+.token.comment {
+  color: var(--color-muted);
+  font-style: italic;
+}
+.token.keyword {
+  color: #7c3aed;
+}
+.token.function {
+  color: #2563eb;
+}
+.token.number,
+.token.boolean {
+  color: #c2410c;
+}
+.token.string {
+  color: #15803d;
+}
+.token.class-name {
+  color: #b45309;
+}
+.token.operator,
+.token.punctuation {
+  color: #4b5563;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
