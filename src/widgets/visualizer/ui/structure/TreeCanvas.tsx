@@ -136,7 +136,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
       }
       if (showLabels) {
         ctx.globalAlpha = node.ghost ? 0.8 : 1;
-        ctx.fillStyle = node.ghost ? color : palette.foreground;
+        ctx.fillStyle = node.ghost ? color : palette.onTone;
         ctx.fillText(node.label, at.x, at.y + 0.5);
       }
     };

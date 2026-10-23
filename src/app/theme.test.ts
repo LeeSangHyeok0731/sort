@@ -28,6 +28,8 @@ const FORBIDDEN = [
   /prism-tomorrow/,
   /rgba\(255,\s*255,\s*255/,
   /#0f172a/i,
+  // 슬라이더 강조색은 accent-foreground (다크에서 회색 900은 바탕에 묻힌다)
+  /accent-gray-/,
 ];
 
 function sourceFiles(dir: string): string[] {

@@ -105,7 +105,7 @@ export default function AlgorithmOptions({ entries, onChange, disabled }: Props)
                   value={values.bucketCount}
                   onChange={(e) => onChange(slot, { bucketCount: Number(e.target.value) })}
                   disabled={disabled}
-                  className="accent-gray-900"
+                  className="accent-foreground"
                 />
               </label>
             )}

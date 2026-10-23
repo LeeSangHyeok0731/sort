@@ -72,7 +72,7 @@ export default function BinsCanvas({ columns }: Props) {
       }
       if (showValues) {
         ctx.globalAlpha = 1;
-        ctx.fillStyle = card.ghost ? color : palette.foreground;
+        ctx.fillStyle = card.ghost ? color : palette.onTone;
         ctx.fillText(card.label, x + cardW / 2, y + h / 2 + 0.5);
       }
     };

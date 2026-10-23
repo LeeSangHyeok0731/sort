@@ -112,7 +112,7 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
       </div>
 
       <div
-        className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgb(0_0_0/0.15)_transparent]"
+        className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgb(0_0_0/0.15)_transparent] dark:[scrollbar-color:rgb(255_255_255/0.15)_transparent]"
       >
         <pre className="text-[12px] font-mono text-foreground" style={{ lineHeight: `${ROW_HEIGHT}px`, paddingTop: PADDING_Y, paddingBottom: PADDING_Y }}>
           {/* language-* 클래스를 붙이면 Prism 자동 하이라이트가 React가 그린 줄 구조를 덮어쓴다 */}

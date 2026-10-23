@@ -13,6 +13,8 @@ export const PALETTE = {
     foreground: "#111827",
     muted: "#6b7280",
     faint: "#9ca3af",
+    /** 상태색으로 채운 노드·카드 위 글자 */
+    onTone: "#111827",
     /** 막대·노드 상태색 */
     tone: {
       idle: "#94a3b8",
@@ -33,6 +35,7 @@ export const PALETTE = {
     foreground: "#e6edf3",
     muted: "#8b949e",
     faint: "#6e7681",
+    onTone: "#0d1117",
     tone: {
       idle: "#6e7681",
       compare: "#fbbf24",

@@ -152,7 +152,7 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
           max={SPEEDS.length - 1}
           value={speedIndex}
           onChange={(e) => onSpeedChange(SPEEDS[Number(e.target.value)])}
-          className="flex-1 accent-gray-900"
+          className="flex-1 accent-foreground"
         />
         <span className="w-14 text-right text-sm font-mono font-bold text-foreground">×{speed}</span>
       </label>

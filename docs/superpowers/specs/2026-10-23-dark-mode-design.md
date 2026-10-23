@@ -59,12 +59,15 @@
 | 스위치 꺼짐 | `bg-gray-400` | `bg-gray-600` |
 | 회색 글자 | `text-gray-700` | `text-gray-300` |
 | 주요 버튼 hover | `bg-gray-700` | `bg-gray-300` |
+| 슬라이더 강조 (속도·버킷 수) | `accent-gray-900` → `accent-foreground` (토큰이라 자동) | |
+| 코드 패널 스크롤바 | `rgb(0 0 0 / 0.15)` | `rgb(255 255 255 / 0.15)` |
 
 `bg-red-600`(정지 등 경고 버튼), `border-red-500`처럼 두 바탕 모두에서 잘 보이는 색은 그대로 둔다.
 
 ## canvas
 
 - `PALETTE`를 `PALETTE.light`·`PALETTE.dark` 두 벌로 나눈다 (구조는 지금과 같음).
+- 상태색으로 채운 노드·카드 위 값 글자는 `onTone`을 쓴다 (밝은 `#111827`, 어두운 `#0d1117`). 다크의 상태색이 밝아서 밝은 글자는 대비가 모자라다.
 - `shared/lib`에 현재 테마를 돌려주는 `useTheme()`를 둔다. `<html>`의 `data-theme` 변화를 `MutationObserver`로 지켜보고 `useSyncExternalStore`로 읽는다.
 - `CanvasBars`·`TreeCanvas`·`BinsCanvas`는 `PALETTE[theme]`를 쓰고, 테마가 바뀌면 다시 그린다.
 
