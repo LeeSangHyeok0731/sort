@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BAR_TONE_COLORS } from "@/entities/array";
+import { PALETTE } from "@/shared/config";
+import { useTheme } from "@/shared/lib";
 import { easeInOut, orbitPosition, type Point } from "../../model/orbit";
 import type { DrawNode } from "../../model/structures/scene";
 
@@ -31,6 +32,7 @@ function prefersReducedMotion() {
  * 간선은 트리의 "자리"를 잇는 선이라 고정이고, 자리를 바꾼 원소만 두 자리의 한가운데를 중심으로 반원을 그리며 이동한다.
  */
 export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }: Props) {
+  const palette = PALETTE[useTheme()];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -118,26 +120,23 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
     const showLabels = radius >= LABEL_MIN_RADIUS;
 
     const drawNode = (node: DrawNode, at: Point) => {
-      const [bottom, top] = BAR_TONE_COLORS[node.tone];
+      const color = palette.tone[node.tone];
       ctx.globalAlpha = node.faded ? 0.45 : 1;
       ctx.beginPath();
       ctx.arc(at.x, at.y, radius, 0, Math.PI * 2);
       if (node.ghost) {
         ctx.setLineDash([3, 2]);
         ctx.lineWidth = Math.max(1, radius / 6);
-        ctx.strokeStyle = top;
+        ctx.strokeStyle = color;
         ctx.stroke();
         ctx.setLineDash([]);
       } else {
-        const gradient = ctx.createLinearGradient(at.x, at.y + radius, at.x, at.y - radius);
-        gradient.addColorStop(0, bottom);
-        gradient.addColorStop(1, top);
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = color;
         ctx.fill();
       }
       if (showLabels) {
         ctx.globalAlpha = node.ghost ? 0.8 : 1;
-        ctx.fillStyle = node.ghost ? top : "#0f172a";
+        ctx.fillStyle = node.ghost ? color : palette.onTone;
         ctx.fillText(node.label, at.x, at.y + 0.5);
       }
     };
@@ -148,12 +147,12 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
 
       // 1) 간선: 자리끼리 잇는 선이라 원소가 이동해도 그대로
       ctx.lineWidth = Math.max(0.5, Math.min(1.5, radius / 6));
-      ctx.strokeStyle = "#a5b4fc";
+      ctx.strokeStyle = palette.lineStrong;
       nodes.forEach((node, i) => {
         if (node.hidden || node.parent < 0) return;
         const parent = nodes[node.parent];
         if (!parent || parent.hidden) return;
-        ctx.globalAlpha = node.faded || node.ghost ? 0.15 : 0.35;
+        ctx.globalAlpha = node.faded || node.ghost ? 0.5 : 1;
         ctx.setLineDash(node.ghost ? [3, 3] : []);
         ctx.beginPath();
         ctx.moveTo(slots[node.parent].x, slots[node.parent].y);
@@ -187,7 +186,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
     cancelAnimationFrame(frameRef.current);
     draw(now);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [nodes, maxDepth, columns, size, moveDurationMs]);
+  }, [nodes, maxDepth, columns, size, moveDurationMs, palette]);
 
   return <canvas ref={canvasRef} className="block w-full h-full" />;
 }

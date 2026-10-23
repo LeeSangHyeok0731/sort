@@ -38,12 +38,10 @@ function IconButton({
       aria-label={label}
       title={shortcut ? `${label} (${shortcut})` : label}
       className={cn(
-        "flex items-center justify-center rounded-xl transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-indigo-400",
-        variant === "ghost" && "w-9 h-9 text-white/60 hover:text-white hover:bg-white/10",
-        variant === "primary" &&
-          "w-11 h-11 bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.45)]",
-        variant === "danger" &&
-          "w-11 h-11 bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)]"
+        "flex items-center justify-center rounded-lg transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-foreground",
+        variant === "ghost" && "w-9 h-9 text-muted hover:text-foreground hover:bg-subtle",
+        variant === "primary" && "w-11 h-11 bg-foreground hover:bg-gray-700 dark:hover:bg-gray-300 text-background",
+        variant === "danger" && "w-11 h-11 bg-tone-change hover:bg-red-600 dark:hover:bg-red-300 text-background"
       )}
     >
       {children}
@@ -115,20 +113,20 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
       </div>
 
       <div className="flex-1 flex flex-col gap-1 min-w-0">
-        <div className="flex justify-between gap-3 whitespace-nowrap text-[11px] font-mono text-white/40">
-          <span className={cn(computing && "text-indigo-300 animate-pulse")} aria-live="polite">
+        <div className="flex justify-between gap-3 whitespace-nowrap text-[11px] font-mono text-muted">
+          <span className={cn(computing && "text-foreground animate-pulse")} aria-live="polite">
             {statusText}
           </span>
           <span>
-            <span className="text-indigo-300">{cursor.toLocaleString()}</span>
+            <span className="text-foreground">{cursor.toLocaleString()}</span>
             {" / "}
             {total === null ? "—" : total.toLocaleString()} 연산
           </span>
         </div>
         <div className="relative h-5 flex items-center">
-          <div className="absolute inset-x-0 h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="absolute inset-x-0 h-1.5 rounded-full bg-line overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-indigo-500 to-pink-500"
+              className="h-full bg-foreground"
               style={{ width: `${progress * 100}%` }}
             />
           </div>
@@ -146,7 +144,7 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
       </div>
 
       <label className="flex items-center gap-3 md:w-56">
-        <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-white/40">속도</span>
+        <span className="shrink-0 whitespace-nowrap text-[11px] font-bold text-muted">속도</span>
         <input
           type="range"
           aria-label="재생 속도"
@@ -154,9 +152,9 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
           max={SPEEDS.length - 1}
           value={speedIndex}
           onChange={(e) => onSpeedChange(SPEEDS[Number(e.target.value)])}
-          className="flex-1 accent-indigo-500"
+          className="flex-1 accent-foreground"
         />
-        <span className="w-14 text-right text-sm font-mono font-bold text-indigo-300">×{speed}</span>
+        <span className="w-14 text-right text-sm font-mono font-bold text-foreground">×{speed}</span>
       </label>
     </div>
   );

@@ -18,8 +18,8 @@ export default function SoundToggle({ enabled, onToggle }: Props) {
       aria-label={label}
       title={`${label} (M)`}
       className={cn(
-        "w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-indigo-400",
-        enabled ? "text-indigo-200 bg-indigo-500/20" : "text-white/40 hover:text-white hover:bg-white/10"
+        "w-9 h-9 flex items-center justify-center rounded-lg transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-foreground",
+        enabled ? "text-background bg-foreground" : "text-muted hover:text-foreground hover:bg-subtle"
       )}
     >
       <SpeakerIcon on={enabled} />

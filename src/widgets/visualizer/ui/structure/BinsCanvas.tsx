@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BAR_TONE_COLORS } from "@/entities/array";
+import { PALETTE } from "@/shared/config";
+import { useTheme } from "@/shared/lib";
 import type { DrawCard, DrawColumn } from "../../model/structures/scene";
 
 type Props = { columns: readonly DrawColumn[] };
@@ -14,6 +15,7 @@ const LABEL_MIN_CARD_H = 11;
 
 /** 칸(더미·버킷·값·자릿수)마다 원소 카드를 아래에서부터 쌓아 그린다 */
 export default function BinsCanvas({ columns }: Props) {
+  const palette = PALETTE[useTheme()];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -53,7 +55,7 @@ export default function BinsCanvas({ columns }: Props) {
     ctx.textBaseline = "middle";
 
     const drawCard = (card: DrawCard, x: number, y: number) => {
-      const [bottom, top] = BAR_TONE_COLORS[card.tone];
+      const color = palette.tone[card.tone];
       const h = Math.max(1, cardH - gap);
       ctx.globalAlpha = card.faded ? 0.4 : 1;
       ctx.beginPath();
@@ -61,19 +63,16 @@ export default function BinsCanvas({ columns }: Props) {
       if (card.ghost) {
         ctx.setLineDash([3, 2]);
         ctx.lineWidth = 1.2;
-        ctx.strokeStyle = top;
+        ctx.strokeStyle = color;
         ctx.stroke();
         ctx.setLineDash([]);
       } else {
-        const gradient = ctx.createLinearGradient(x, y + h, x + cardW, y);
-        gradient.addColorStop(0, bottom);
-        gradient.addColorStop(1, top);
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = color;
         ctx.fill();
       }
       if (showValues) {
         ctx.globalAlpha = 1;
-        ctx.fillStyle = card.ghost ? top : "#0f172a";
+        ctx.fillStyle = card.ghost ? color : palette.onTone;
         ctx.fillText(card.label, x + cardW / 2, y + h / 2 + 0.5);
       }
     };
@@ -83,8 +82,8 @@ export default function BinsCanvas({ columns }: Props) {
       const cx = PAD + slotW * (c + 0.5);
       const x = cx - cardW / 2;
       // 바닥과 칸 테두리
-      ctx.globalAlpha = column.active ? 0.6 : 0.2;
-      ctx.strokeStyle = column.active ? "#fcd34d" : "#a5b4fc";
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = column.active ? palette.tone.compare : palette.lineStrong;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x - 2, floor + 1);
@@ -97,12 +96,12 @@ export default function BinsCanvas({ columns }: Props) {
       ctx.globalAlpha = 1;
       ctx.font = `600 10px ui-monospace, monospace`;
       columns.forEach((column, c) => {
-        ctx.fillStyle = column.active ? "#fcd34d" : "rgba(255,255,255,0.4)";
+        ctx.fillStyle = column.active ? palette.foreground : palette.faint;
         ctx.fillText(column.label, PAD + slotW * (c + 0.5), floor + LABEL_H / 2 + 2);
       });
     }
     ctx.globalAlpha = 1;
-  }, [columns, size]);
+  }, [columns, size, palette]);
 
   return <canvas ref={canvasRef} className="block w-full h-full" />;
 }

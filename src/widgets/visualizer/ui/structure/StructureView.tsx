@@ -39,7 +39,7 @@ export default function StructureView({ algorithm, view, input, options, moveDur
       ) : (
         <BinsCanvas columns={scene.columns} />
       )}
-      <span className="absolute top-2 right-3 text-[10px] font-mono text-white/40">{scene.caption}</span>
+      <span className="absolute top-2 right-3 text-[10px] font-mono text-muted">{scene.caption}</span>
     </div>
   );
 }

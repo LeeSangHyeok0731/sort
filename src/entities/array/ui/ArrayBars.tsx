@@ -10,13 +10,13 @@ export type BarTone = "compare" | "change" | "read";
 
 export type BarHighlight = { tone: BarTone; indices: readonly number[] } | null;
 
-/** 막대 색상. 범례(Legend)와 공유한다. */
+/** 막대 색상. 범례(Legend)와 공유한다. canvas는 PALETTE[theme].tone을 쓴다 */
 export const BAR_TONE_CLASS: Record<BarTone | "idle" | "done", string> = {
-  idle: "bg-linear-to-t from-indigo-600 to-indigo-400",
-  compare: "bg-linear-to-t from-amber-500 to-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.5)]",
-  change: "bg-linear-to-t from-rose-500 to-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.5)]",
-  read: "bg-linear-to-t from-sky-500 to-sky-300 shadow-[0_0_12px_rgba(14,165,233,0.5)]",
-  done: "bg-linear-to-t from-emerald-600 to-emerald-400",
+  idle: "bg-tone-idle",
+  compare: "bg-tone-compare",
+  change: "bg-tone-change",
+  read: "bg-tone-read",
+  done: "bg-tone-done",
 };
 
 type Props = {
@@ -74,8 +74,8 @@ function ArrayBars({ items, highlight, done = false, animate = true, className }
               : {})}
             className={cn(
               "relative flex-1 min-w-0 transition-colors duration-200",
-              "rounded-t-md",
-              tone ? "z-10 opacity-100" : "opacity-85",
+              "rounded-t-sm",
+              tone && "z-10",
               colorClass
             )}
             style={{
@@ -84,7 +84,7 @@ function ArrayBars({ items, highlight, done = false, animate = true, className }
             }}
           >
             {showLabels && (
-              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono text-white/40 select-none">
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono text-muted select-none">
                 {item.value}
               </span>
             )}

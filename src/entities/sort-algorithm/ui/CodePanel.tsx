@@ -3,7 +3,6 @@
 import { memo, useMemo, useState } from "react";
 import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
-import "prismjs/themes/prism-tomorrow.css";
 import { cn } from "@/shared/lib";
 import { opTypeOfLabel } from "../model/code-lines";
 import { OpType } from "../model/op";
@@ -20,10 +19,10 @@ type Props = {
 
 /** 현재 줄 강조 색: 막대 색과 맞춘다 (비교 = 노랑, 교환·이동 = 빨강, 읽기 = 파랑) */
 const ACTIVE_CLASS: Record<OpType, string> = {
-  [OpType.Compare]: "bg-amber-400/20 border-amber-400",
-  [OpType.Swap]: "bg-rose-400/20 border-rose-400",
-  [OpType.Move]: "bg-rose-400/20 border-rose-400",
-  [OpType.Mark]: "bg-sky-400/20 border-sky-400",
+  [OpType.Compare]: "bg-amber-100 border-amber-500 dark:bg-amber-500/20",
+  [OpType.Swap]: "bg-red-100 border-red-500 dark:bg-red-500/20",
+  [OpType.Move]: "bg-red-100 border-red-500 dark:bg-red-500/20",
+  [OpType.Mark]: "bg-sky-100 border-sky-500 dark:bg-sky-500/20",
 };
 
 /**
@@ -32,7 +31,8 @@ const ACTIVE_CLASS: Record<OpType, string> = {
  */
 const HEAT_LEVELS = 8;
 const HEAT_STYLE = Array.from({ length: HEAT_LEVELS + 1 }, (_, level) =>
-  level === 0 ? undefined : { backgroundColor: `rgba(99, 102, 241, ${0.05 + (0.25 * level) / HEAT_LEVELS})` }
+  // --heat-rgb는 globals.css에서 테마별로 정한다 (slot-1과 같은 색)
+  level === 0 ? undefined : { backgroundColor: `rgb(var(--heat-rgb) / ${0.03 + (0.15 * level) / HEAT_LEVELS})` }
 );
 
 /** 한 줄의 최소 높이(px). 긴 줄은 줄바꿈되어 더 높아질 수 있다 */
@@ -60,8 +60,8 @@ const CodeLine = memo(function CodeLine({ html, lineNo, hitsText, heat, activeCl
       className={cn("flex border-l-2 pr-3", activeClass ?? "border-transparent")}
       style={{ minHeight: ROW_HEIGHT, ...(activeClass ? undefined : HEAT_STYLE[heat]) }}
     >
-      <span className="w-8 shrink-0 text-right pr-2 text-white/15 select-none">{lineNo}</span>
-      <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-indigo-300/70 select-none">
+      <span className="w-8 shrink-0 text-right pr-2 text-faint select-none">{lineNo}</span>
+      <span className="w-10 shrink-0 text-right pr-3 text-[10px] tabular-nums text-slot-1 select-none">
         {hitsText}
       </span>
       {/* 패널보다 긴 줄은 가로 스크롤 대신 줄바꿈 (들여쓰기는 유지) */}
@@ -98,13 +98,13 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
 
   return (
     <div className={cn("flex flex-col min-h-0", className)}>
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/5">
-        <span className="text-[11px] font-mono text-white/40 truncate">{algorithm.id}Sort.js</span>
+      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-line">
+        <span className="text-[11px] font-mono text-muted truncate">{algorithm.id}Sort.js</span>
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={copy}
-            className="text-[11px] font-bold px-2 py-1 rounded-md border border-white/10 text-white/50 hover:text-white hover:bg-white/10 transition-all"
+            className="text-[11px] font-bold px-2 py-1 rounded-md border border-line text-muted hover:text-foreground hover:bg-subtle transition-all"
           >
             {copied ? "복사됨 ✓" : "복사"}
           </button>
@@ -112,9 +112,9 @@ export default function CodePanel({ algorithm, activeLine = 0, lineHits, classNa
       </div>
 
       <div
-        className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/0.15)_transparent]"
+        className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgb(0_0_0/0.15)_transparent] dark:[scrollbar-color:rgb(255_255_255/0.15)_transparent]"
       >
-        <pre className="text-[12px] font-mono" style={{ lineHeight: `${ROW_HEIGHT}px`, paddingTop: PADDING_Y, paddingBottom: PADDING_Y }}>
+        <pre className="text-[12px] font-mono text-foreground" style={{ lineHeight: `${ROW_HEIGHT}px`, paddingTop: PADDING_Y, paddingBottom: PADDING_Y }}>
           {/* language-* 클래스를 붙이면 Prism 자동 하이라이트가 React가 그린 줄 구조를 덮어쓴다 */}
           <code className="block">
             {lines.map((html, i) => {
