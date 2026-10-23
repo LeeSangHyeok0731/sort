@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark: 변형은 OS 설정이 아니라 <html data-theme="dark">를 따른다 */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 /* 색 토큰. canvas용 src/shared/config/palette.ts와 값이 같아야 한다 */
 @theme {
   --color-background: #ffffff;
@@ -19,6 +22,36 @@
 
   --color-slot-1: #2563eb;
   --color-slot-2: #7c3aed;
+}
+
+/* 코드 패널 줄별 실행 횟수 색 (slot-1과 같은 색의 RGB) */
+:root {
+  --heat-rgb: 37 99 235;
+}
+
+/* 어두운 테마. 토큰 이름은 @theme과 같고 값만 다르다 (palette.ts의 PALETTE.dark와 같아야 한다) */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-background: #0d1117;
+  --color-surface: #161b22;
+  --color-subtle: #1c2128;
+  --color-line: #30363d;
+  --color-line-strong: #484f58;
+  --color-foreground: #e6edf3;
+  --color-muted: #8b949e;
+  --color-faint: #6e7681;
+
+  --color-tone-idle: #6e7681;
+  --color-tone-compare: #fbbf24;
+  --color-tone-change: #f87171;
+  --color-tone-read: #38bdf8;
+  --color-tone-done: #34d399;
+
+  --color-slot-1: #60a5fa;
+  --color-slot-2: #a78bfa;
+
+  --heat-rgb: 96 165 250;
 }
 
 body {
@@ -51,7 +84,7 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 9999px;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 0 0 2px var(--color-foreground);
 }
 .scrubber::-moz-range-thumb {
@@ -59,7 +92,7 @@ body {
   height: 14px;
   border: none;
   border-radius: 9999px;
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: 0 0 0 2px var(--color-foreground);
 }
 .scrubber:disabled::-webkit-slider-thumb {
@@ -69,7 +102,7 @@ body {
   opacity: 0;
 }
 
-/* 코드 패널 문법 색 (Prism 토큰, 밝은 바탕용) */
+/* 코드 패널 문법 색 (Prism 토큰) */
 .token.comment {
   color: var(--color-muted);
   font-style: italic;
@@ -93,6 +126,26 @@ body {
 .token.operator,
 .token.punctuation {
   color: #4b5563;
+}
+[data-theme="dark"] .token.keyword {
+  color: #c4b5fd;
+}
+[data-theme="dark"] .token.function {
+  color: #93c5fd;
+}
+[data-theme="dark"] .token.number,
+[data-theme="dark"] .token.boolean {
+  color: #fdba74;
+}
+[data-theme="dark"] .token.string {
+  color: #86efac;
+}
+[data-theme="dark"] .token.class-name {
+  color: #fcd34d;
+}
+[data-theme="dark"] .token.operator,
+[data-theme="dark"] .token.punctuation {
+  color: #c9d1d9;
 }
 
 @media (prefers-reduced-motion: reduce) {

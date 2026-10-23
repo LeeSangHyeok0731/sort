@@ -31,8 +31,8 @@ const ACTIVE_CLASS: Record<OpType, string> = {
  */
 const HEAT_LEVELS = 8;
 const HEAT_STYLE = Array.from({ length: HEAT_LEVELS + 1 }, (_, level) =>
-  // slot-1(#2563eb)과 같은 색
-  level === 0 ? undefined : { backgroundColor: `rgba(37, 99, 235, ${0.03 + (0.15 * level) / HEAT_LEVELS})` }
+  // --heat-rgb는 globals.css에서 테마별로 정한다 (slot-1과 같은 색)
+  level === 0 ? undefined : { backgroundColor: `rgb(var(--heat-rgb) / ${0.03 + (0.15 * level) / HEAT_LEVELS})` }
 );
 
 /** 한 줄의 최소 높이(px). 긴 줄은 줄바꿈되어 더 높아질 수 있다 */

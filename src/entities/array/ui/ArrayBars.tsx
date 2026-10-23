@@ -10,7 +10,7 @@ export type BarTone = "compare" | "change" | "read";
 
 export type BarHighlight = { tone: BarTone; indices: readonly number[] } | null;
 
-/** 막대 색상. 범례(Legend)와 공유한다. canvas는 PALETTE.tone을 쓴다 */
+/** 막대 색상. 범례(Legend)와 공유한다. canvas는 PALETTE[theme].tone을 쓴다 */
 export const BAR_TONE_CLASS: Record<BarTone | "idle" | "done", string> = {
   idle: "bg-tone-idle",
   compare: "bg-tone-compare",

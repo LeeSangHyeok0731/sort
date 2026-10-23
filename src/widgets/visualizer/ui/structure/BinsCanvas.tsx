@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PALETTE } from "@/shared/config";
+import { useTheme } from "@/shared/lib";
 import type { DrawCard, DrawColumn } from "../../model/structures/scene";
 
 type Props = { columns: readonly DrawColumn[] };
@@ -14,6 +15,7 @@ const LABEL_MIN_CARD_H = 11;
 
 /** 칸(더미·버킷·값·자릿수)마다 원소 카드를 아래에서부터 쌓아 그린다 */
 export default function BinsCanvas({ columns }: Props) {
+  const palette = PALETTE[useTheme()];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -53,7 +55,7 @@ export default function BinsCanvas({ columns }: Props) {
     ctx.textBaseline = "middle";
 
     const drawCard = (card: DrawCard, x: number, y: number) => {
-      const color = PALETTE.tone[card.tone];
+      const color = palette.tone[card.tone];
       const h = Math.max(1, cardH - gap);
       ctx.globalAlpha = card.faded ? 0.4 : 1;
       ctx.beginPath();
@@ -70,7 +72,7 @@ export default function BinsCanvas({ columns }: Props) {
       }
       if (showValues) {
         ctx.globalAlpha = 1;
-        ctx.fillStyle = card.ghost ? color : PALETTE.foreground;
+        ctx.fillStyle = card.ghost ? color : palette.foreground;
         ctx.fillText(card.label, x + cardW / 2, y + h / 2 + 0.5);
       }
     };
@@ -81,7 +83,7 @@ export default function BinsCanvas({ columns }: Props) {
       const x = cx - cardW / 2;
       // 바닥과 칸 테두리
       ctx.globalAlpha = 1;
-      ctx.strokeStyle = column.active ? PALETTE.tone.compare : PALETTE.lineStrong;
+      ctx.strokeStyle = column.active ? palette.tone.compare : palette.lineStrong;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x - 2, floor + 1);
@@ -94,12 +96,12 @@ export default function BinsCanvas({ columns }: Props) {
       ctx.globalAlpha = 1;
       ctx.font = `600 10px ui-monospace, monospace`;
       columns.forEach((column, c) => {
-        ctx.fillStyle = column.active ? PALETTE.foreground : PALETTE.faint;
+        ctx.fillStyle = column.active ? palette.foreground : palette.faint;
         ctx.fillText(column.label, PAD + slotW * (c + 0.5), floor + LABEL_H / 2 + 2);
       });
     }
     ctx.globalAlpha = 1;
-  }, [columns, size]);
+  }, [columns, size, palette]);
 
   return <canvas ref={canvasRef} className="block w-full h-full" />;
 }

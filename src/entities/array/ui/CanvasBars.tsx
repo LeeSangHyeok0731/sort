@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ArrayItem } from "@/shared/model";
 import { PALETTE } from "@/shared/config";
+import { useTheme } from "@/shared/lib";
 import type { BarHighlight } from "./ArrayBars";
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
  */
 export default function CanvasBars({ items, highlight, done = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const palette = PALETTE[useTheme()];
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function CanvasBars({ items, highlight, done = false }: Props) {
     for (let i = 0; i < n; i++) {
       const h = Math.max(1.5, (items[i].value / maxValue) * size.height);
       const tone = highlighted.has(i) ? highlight!.tone : done ? "done" : "idle";
-      ctx.fillStyle = PALETTE.tone[tone];
+      ctx.fillStyle = palette.tone[tone];
       ctx.fillRect(i * slot, size.height - h, Math.max(1, slot - gap), h);
     }
 
@@ -58,12 +60,12 @@ export default function CanvasBars({ items, highlight, done = false }: Props) {
     for (const i of highlighted) {
       if (i >= n) continue;
       const h = Math.max(1.5, (items[i].value / maxValue) * size.height);
-      ctx.fillStyle = PALETTE.tone[highlight!.tone];
+      ctx.fillStyle = palette.tone[highlight!.tone];
       ctx.beginPath();
       ctx.arc((i + 0.5) * slot, size.height - h - 5, 3, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [items, highlight, done, size]);
+  }, [items, highlight, done, size, palette]);
 
   return <canvas ref={canvasRef} className="w-full h-full block" />;
 }

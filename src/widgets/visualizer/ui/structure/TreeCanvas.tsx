@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PALETTE } from "@/shared/config";
+import { useTheme } from "@/shared/lib";
 import { easeInOut, orbitPosition, type Point } from "../../model/orbit";
 import type { DrawNode } from "../../model/structures/scene";
 
@@ -31,6 +32,7 @@ function prefersReducedMotion() {
  * 간선은 트리의 "자리"를 잇는 선이라 고정이고, 자리를 바꾼 원소만 두 자리의 한가운데를 중심으로 반원을 그리며 이동한다.
  */
 export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }: Props) {
+  const palette = PALETTE[useTheme()];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -118,7 +120,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
     const showLabels = radius >= LABEL_MIN_RADIUS;
 
     const drawNode = (node: DrawNode, at: Point) => {
-      const color = PALETTE.tone[node.tone];
+      const color = palette.tone[node.tone];
       ctx.globalAlpha = node.faded ? 0.45 : 1;
       ctx.beginPath();
       ctx.arc(at.x, at.y, radius, 0, Math.PI * 2);
@@ -134,7 +136,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
       }
       if (showLabels) {
         ctx.globalAlpha = node.ghost ? 0.8 : 1;
-        ctx.fillStyle = node.ghost ? color : PALETTE.foreground;
+        ctx.fillStyle = node.ghost ? color : palette.foreground;
         ctx.fillText(node.label, at.x, at.y + 0.5);
       }
     };
@@ -145,7 +147,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
 
       // 1) 간선: 자리끼리 잇는 선이라 원소가 이동해도 그대로
       ctx.lineWidth = Math.max(0.5, Math.min(1.5, radius / 6));
-      ctx.strokeStyle = PALETTE.lineStrong;
+      ctx.strokeStyle = palette.lineStrong;
       nodes.forEach((node, i) => {
         if (node.hidden || node.parent < 0) return;
         const parent = nodes[node.parent];
@@ -184,7 +186,7 @@ export default function TreeCanvas({ nodes, maxDepth, columns, moveDurationMs }:
     cancelAnimationFrame(frameRef.current);
     draw(now);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [nodes, maxDepth, columns, size, moveDurationMs]);
+  }, [nodes, maxDepth, columns, size, moveDurationMs, palette]);
 
   return <canvas ref={canvasRef} className="block w-full h-full" />;
 }
