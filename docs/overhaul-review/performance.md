@@ -1,4 +1,6 @@
-# 성능 측정: Node vs 브라우저 (임시 정리)
+# 성능 측정: 개편 전 vs 지금 (Node · 브라우저)
+
+[← 개편 전 문제점과 개선 결과](./README.md)
 
 - 예전 = 개편 전 `35db39f` (단계마다 배열 전체를 복사한 `SortStep[]`, `setTimeout` 재생, DOM 막대)
 - 지금 = `main` (연산 로그 → `Int32Array`, Web Worker 계산, rAF 재생, 100개 초과 시 canvas)
@@ -66,3 +68,30 @@
   - 1000개에서는 예전(204ms~7.6초)보다 빠르다.
 - **Node만으로는 안 보이는 것**: 예전 방식은 계산이 끝난 뒤에도 재생이 목표 속도를 못 냄 (100개 44~70, 1000개 15~27 단계/초). 원인은 매 단계 React 리렌더 + DOM 막대 갱신이고, 이건 브라우저 측정에서만 드러난다.
 - **브라우저만으로는 안 보이는 것**: 메모리. `performance.memory`는 GC 때문에 음수까지 나와서 쓸 수 없었고, 메모리 차이(30~400배)는 Node 측정으로만 확인했다.
+
+## 재현 방법
+
+스크립트는 [bench/](./bench)에 있다. 저장소 루트에서 실행한다.
+
+### Node
+
+```bash
+sh docs/overhaul-review/bench/setup-old.sh          # 35db39f의 버블·퀵·병합을 bench/old/로 꺼냄
+npx esbuild docs/overhaul-review/bench/case.ts --bundle --platform=node --format=esm   --tsconfig=tsconfig.json --outfile=docs/overhaul-review/bench/case.js
+node docs/overhaul-review/bench/runner.mjs           # 결과: 콘솔 + bench/results.json
+```
+
+- `runner.mjs`가 케이스마다 `node --expose-gc --max-old-space-size=4096`로 새 프로세스를 띄운다. 메모리 부족으로 죽어도 다음 케이스는 계속된다.
+- 예전 버블 1,000개는 4GB를 채울 때까지 약 30초 걸리고, 그동안 메모리를 많이 쓴다.
+
+### 브라우저
+
+```bash
+git worktree add --detach ../sort-old 35db39f
+(cd ../sort-old && npm ci && npm run build && npx next start -p 3001)   # 예전 버전
+npm run build && npx next start -p 3000                                 # 지금 버전 (다른 터미널)
+```
+
+1. Chrome에서 각 페이지를 열고 개발자 도구 콘솔에 [bench/browser-harness.js](./bench/browser-harness.js)를 붙여 넣는다.
+2. 파일 맨 위 주석의 사용법대로 `__runOld` / `__runNew`를 호출한다. 탭을 앞에 둔 채로 잰다.
+3. 끝나면 `git worktree remove ../sort-old`.
