@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArrayItem } from "@/shared/model";
 import type { BarHighlight } from "@/entities/array";
 import type { SortAlgorithm, SortOptions } from "@/entities/sort-algorithm";
-import { runSortsInBackground, SortCancelled, type BackgroundSort } from "./runInBackground";
+import { prewarmSortWorkers, runSortsInBackground, SortCancelled, type BackgroundSort } from "./runInBackground";
 import { Track, type TrackStats } from "./track";
 
 /** 1배속 = 초당 10개 연산 */
@@ -94,6 +94,8 @@ export function useSortPlayer({ input, slots, speed }: Params) {
 
   // 화면을 떠나면 진행 중인 계산을 멈춘다
   useEffect(() => () => jobRef.current?.cancel(), []);
+  // 첫 재생에서 워커 기동을 기다리지 않도록 미리 띄워 둔다
+  useEffect(prewarmSortWorkers, []);
 
   const ready = matches(session, input, key);
   const isComputing = matches(computing, input, key);
