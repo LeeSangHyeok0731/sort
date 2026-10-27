@@ -51,15 +51,17 @@ function shuffle(t: Tracer, n: number) {
 /** from 이후에 기록된 교환을 거꾸로 다시 적용해 그 시점의 배열로 되돌린다 */
 function undoSwapsSince(t: Tracer, from: number) {
   const swaps: Array<[number, number]> = [];
-  for (let k = from; k < t.ops.length; k += OP_STRIDE) {
-    if (t.ops[k] === OpType.Swap) swaps.push([t.ops[k + 1], t.ops[k + 2]]);
+  const ops = t.ops;
+  for (let k = from; k < ops.length; k += OP_STRIDE) {
+    if (ops[k] === OpType.Swap) swaps.push([ops[k + 1], ops[k + 2]]);
   }
   for (let k = swaps.length - 1; k >= 0; k--) t.swap(swaps[k][0], swaps[k][1], L.swap);
 }
 
 function hasSwapSince(t: Tracer, from: number) {
-  for (let k = from; k < t.ops.length; k += OP_STRIDE) {
-    if (t.ops[k] === OpType.Swap) return true;
+  const ops = t.ops;
+  for (let k = from; k < ops.length; k += OP_STRIDE) {
+    if (ops[k] === OpType.Swap) return true;
   }
   return false;
 }

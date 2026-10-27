@@ -8,6 +8,9 @@ import { applyOp, OP_STRIDE, OpType } from "./op";
  */
 export const MAX_OPS = 3_000_000;
 
+/** 처음 잡아 두는 연산 수 (작은 정렬은 늘리지 않고 끝난다) */
+const INITIAL_CAPACITY = 1024;
+
 /** 연산 한도를 넘었을 때 정렬을 중단시키는 신호 */
 export class OpBudgetExceeded extends Error {
   constructor() {
@@ -21,8 +24,13 @@ export class OpBudgetExceeded extends Error {
  * 모든 비교·변경을 연산 로그에 기록하면서 작업 배열에 반영한다.
  */
 export class Tracer {
-  /** 기록 중인 연산 (정렬이 끝나면 runSort가 Int32Array로 압축한다) */
-  readonly ops: number[] = [];
+  /**
+   * 기록 중인 연산. 처음부터 Int32Array에 쓰고, 꽉 차면 2배로 늘린다.
+   * (일반 배열에 쌓았다가 마지막에 옮기면 원소당 8바이트에 증가 여유분, 옮길 때 사본까지 겹쳐
+   *  기록 중 최대 메모리가 결과의 약 7배까지 올라갔다)
+   */
+  private buf = new Int32Array(INITIAL_CAPACITY * OP_STRIDE);
+  private size = 0;
   private readonly a: ArrayItem[];
 
   constructor(
@@ -32,10 +40,31 @@ export class Tracer {
     this.a = [...initial];
   }
 
+  /** 지금까지 기록된 연산 (버퍼를 공유하는 뷰라 이후 기록이 늘면 다시 읽어야 한다) */
+  get ops(): Int32Array {
+    return this.buf.subarray(0, this.size);
+  }
+
+  /** 기록을 끝내고 정확한 길이의 연산 로그를 돌려준다. */
+  finish(): Int32Array {
+    return this.size === this.buf.length ? this.buf : this.buf.slice(0, this.size);
+  }
+
   /** 연산을 기록한다. 한도를 넘으면 배열을 바꾸기 전에 중단한다. */
   private record(type: OpType, a: number, b: number, line: number) {
-    if (this.ops.length >= this.maxOps * OP_STRIDE) throw new OpBudgetExceeded();
-    this.ops.push(type, a, b, line);
+    const limit = this.maxOps * OP_STRIDE;
+    if (this.size >= limit) throw new OpBudgetExceeded();
+    if (this.size === this.buf.length) {
+      const grown = new Int32Array(Math.min(limit, this.buf.length * 2));
+      grown.set(this.buf);
+      this.buf = grown;
+    }
+    const buf = this.buf;
+    buf[this.size] = type;
+    buf[this.size + 1] = a;
+    buf[this.size + 2] = b;
+    buf[this.size + 3] = line;
+    this.size += OP_STRIDE;
   }
 
   get length() {
