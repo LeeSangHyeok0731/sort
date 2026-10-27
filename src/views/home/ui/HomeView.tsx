@@ -11,7 +11,7 @@ import { SlotMuteButton, SoundToggle, useSortSound } from "@/features/sort-sound
 import { ThemeToggle } from "@/features/toggle-theme";
 import {
   AlgorithmOptions,
-  AlgorithmPicker,
+  AlgorithmSidebar,
   type AlgorithmOptionValues,
   type Slot,
 } from "@/features/select-algorithm";
@@ -140,7 +140,7 @@ export default function HomeView() {
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr] items-start">
         <Card className="flex flex-col gap-5">
-          <AlgorithmPicker
+          <AlgorithmSidebar
             compareMode={state.compare}
             onCompareModeChange={(compare) => update({ compare })}
             selected={state.algorithms}

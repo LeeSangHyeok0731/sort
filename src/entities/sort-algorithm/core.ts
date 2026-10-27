@@ -4,7 +4,6 @@
  */
 export {
   ALGORITHMS,
-  CATEGORIES,
   DEFAULT_ALGORITHM_ID,
   getAlgorithm,
   isAlgorithmId,

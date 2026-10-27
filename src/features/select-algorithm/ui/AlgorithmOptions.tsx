@@ -2,7 +2,7 @@
 
 import { cn } from "@/shared/lib";
 import { getAlgorithm, type AlgorithmId } from "@/entities/sort-algorithm";
-import type { Slot } from "./AlgorithmPicker";
+import type { Slot } from "./AlgorithmSidebar";
 
 /** 슬롯 하나의 알고리즘 고유 옵션 (입력 중인 원본 문자열 그대로 보관) */
 export type AlgorithmOptionValues = {
