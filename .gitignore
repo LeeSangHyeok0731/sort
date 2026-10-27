@@ -42,3 +42,6 @@ next-env.d.ts
 
 # brainstorming visual companion
 .superpowers/
+
+# Claude Code 개인 설정
+.claude/settings.local.json
