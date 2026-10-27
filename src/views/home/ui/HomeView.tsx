@@ -97,8 +97,9 @@ export default function HomeView() {
   });
 
   return (
-    <div className="grid grid-cols-[260px_minmax(0,1fr)] gap-6 items-start w-full">
-      <aside className="sticky top-3 h-[calc(100vh-1.5rem)] flex flex-col rounded-lg bg-surface border border-line p-4">
+    <>
+      {/* 화면 왼쪽에 고정한다. 본문은 page.tsx의 왼쪽 여백으로 자리를 비워 둔다 */}
+      <aside className="fixed left-3 top-3 bottom-3 z-40 w-[260px] flex flex-col rounded-lg bg-surface border border-line p-4">
         <AlgorithmSidebar
           compareMode={state.compare}
           onCompareModeChange={(compare) => update({ compare })}
@@ -107,7 +108,7 @@ export default function HomeView() {
         />
       </aside>
 
-      <div className="flex flex-col gap-6 min-w-0">
+      <div className="flex flex-col gap-6 w-full">
         <header className="relative text-center flex flex-col gap-2">
           <ThemeToggle className="absolute right-0 top-0" />
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
@@ -179,6 +180,6 @@ export default function HomeView() {
           <kbd className="font-mono text-muted">M</kbd> 소리
         </footer>
       </div>
-    </div>
+    </>
   );
 }
