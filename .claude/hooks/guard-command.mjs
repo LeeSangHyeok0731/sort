@@ -1,10 +1,15 @@
-// PreToolUse(Bash|PowerShell): main 브랜치에서 직접 커밋하지 않게 막는다
+// PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령과 main 브랜치 직접 커밋을 막는다
 import { spawnSync } from "node:child_process";
 import { block, projectDirOf, readInput } from "./io.mjs";
-import { isGitCommit } from "./rules.mjs";
+import { dangerousCommand, isGitCommit } from "./rules.mjs";
 
 const input = await readInput();
-if (isGitCommit(input.tool_input?.command ?? "")) {
+const command = input.tool_input?.command ?? "";
+
+const danger = dangerousCommand(command);
+if (danger) block(`위험한 명령이라 막았어요 (${danger}). 꼭 필요하면 사용자가 직접 실행하게 안내하세요.`);
+
+if (isGitCommit(command)) {
   const branch = spawnSync("git", ["branch", "--show-current"], {
     cwd: projectDirOf(input),
     encoding: "utf8",
