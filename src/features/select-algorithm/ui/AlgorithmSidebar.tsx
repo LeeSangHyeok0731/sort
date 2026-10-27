@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "@/shared/lib";
 import {
   ALGORITHMS,
@@ -15,10 +15,14 @@ import {
 export type Slot = 0 | 1;
 
 type Props = {
+  /** 이 사이드바가 고르는 슬롯 */
+  slot: Slot;
   compareMode: boolean;
-  onCompareModeChange: (value: boolean) => void;
+  /** 두 슬롯의 선택 (다른 슬롯의 선택은 배지로만 보여준다) */
   selected: readonly [AlgorithmId, AlgorithmId];
-  onSelect: (slot: Slot, id: AlgorithmId) => void;
+  onSelect: (id: AlgorithmId) => void;
+  /** 제목 오른쪽에 둘 컨트롤 (비교 모드 스위치 등) */
+  headerAction?: ReactNode;
   disabled?: boolean;
 };
 
@@ -27,16 +31,12 @@ const SLOT_STYLE = {
   1: { chip: "bg-slot-2 text-background", ring: "border-slot-2 bg-violet-50 dark:bg-violet-500/15 text-slot-2" },
 } as const;
 
-/** 알고리즘을 계열별 폴더 트리로 보여주는 선택 사이드바 */
-export default function AlgorithmSidebar({ compareMode, onCompareModeChange, selected, onSelect, disabled }: Props) {
-  const [activeSlot, setActiveSlot] = useState<Slot>(0);
-  const slot: Slot = compareMode ? activeSlot : 0;
+/** 알고리즘을 계열별 폴더 트리로 보여주고, 한 슬롯의 알고리즘을 고르는 사이드바 */
+export default function AlgorithmSidebar({ slot, compareMode, selected, onSelect, headerAction, disabled }: Props) {
   const otherSlot: Slot = slot === 0 ? 1 : 0;
 
   // 처음에는 선택된 알고리즘이 든 폴더만 펼친다
-  const [open, setOpen] = useState<ReadonlySet<AlgorithmFamily>>(
-    () => new Set((compareMode ? selected : selected.slice(0, 1)).map(getFamily))
-  );
+  const [open, setOpen] = useState<ReadonlySet<AlgorithmFamily>>(() => new Set([getFamily(selected[slot])]));
 
   const [query, setQuery] = useState("");
   const searching = query.trim() !== "";
@@ -55,65 +55,24 @@ export default function AlgorithmSidebar({ compareMode, onCompareModeChange, sel
       return next;
     });
 
-  const switchSlot = (next: Slot) => {
-    setActiveSlot(next);
-    setOpen((prev) => new Set(prev).add(getFamily(selected[next])));
-  };
-
   return (
-    <nav className="flex flex-col gap-4 h-full min-h-0" aria-label="알고리즘 선택">
+    <nav className="flex flex-col gap-4 h-full min-h-0" aria-label={compareMode ? `${slot + 1}번 알고리즘 선택` : "알고리즘 선택"}>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-foreground font-bold text-lg">알고리즘</h2>
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <span className="text-xs text-muted">비교 모드</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={compareMode}
-            disabled={disabled}
-            onClick={() => onCompareModeChange(!compareMode)}
-            className={cn(
-              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40",
-              compareMode ? "bg-foreground" : "bg-gray-400 dark:bg-gray-600"
-            )}
-          >
+        <h2 className="flex items-center gap-2 text-foreground font-bold text-lg">
+          {compareMode && (
             <span
               className={cn(
-                "inline-block h-4 w-4 rounded-full bg-background transition-transform",
-                compareMode ? "translate-x-6" : "translate-x-1"
-              )}
-            />
-          </button>
-        </label>
-      </div>
-
-      {compareMode && (
-        <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="편집할 슬롯">
-          {([0, 1] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="tab"
-              aria-selected={slot === s}
-              onClick={() => switchSlot(s)}
-              className={cn(
-                "flex items-center gap-2 px-2 py-2 rounded-lg border text-left transition-all min-w-0",
-                slot === s ? SLOT_STYLE[s].ring : "border-line text-muted hover:bg-subtle"
+                "w-5 h-5 shrink-0 rounded-md text-[11px] font-black flex items-center justify-center",
+                SLOT_STYLE[slot].chip
               )}
             >
-              <span
-                className={cn(
-                  "w-5 h-5 shrink-0 rounded-md text-[11px] font-black flex items-center justify-center",
-                  SLOT_STYLE[s].chip
-                )}
-              >
-                {s + 1}
-              </span>
-              <span className="text-xs font-bold truncate">{getAlgorithm(selected[s]).name}</span>
-            </button>
-          ))}
-        </div>
-      )}
+              {slot + 1}
+            </span>
+          )}
+          알고리즘
+        </h2>
+        {headerAction}
+      </div>
 
       <div className="relative">
         <input
@@ -187,7 +146,7 @@ export default function AlgorithmSidebar({ compareMode, onCompareModeChange, sel
                           aria-pressed={isActive}
                           disabled={disabled}
                           title={algo.desc}
-                          onClick={() => onSelect(slot, id)}
+                          onClick={() => onSelect(id)}
                           className={cn(
                             "w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-left text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
                             isActive
@@ -202,7 +161,7 @@ export default function AlgorithmSidebar({ compareMode, onCompareModeChange, sel
                                 "w-4 h-4 shrink-0 rounded text-[10px] font-black flex items-center justify-center",
                                 SLOT_STYLE[otherSlot].chip
                               )}
-                              title={`${otherSlot + 1}번 슬롯에서 선택됨`}
+                              title={`${otherSlot + 1}번에서 선택됨`}
                             >
                               {otherSlot + 1}
                             </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/shared/lib";
 import { Card } from "@/shared/ui";
 import type { ArrayItem } from "@/shared/model";
 import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayItems, type PresetId } from "@/entities/array";
@@ -12,6 +13,7 @@ import { ThemeToggle } from "@/features/toggle-theme";
 import {
   AlgorithmOptions,
   AlgorithmSidebar,
+  CompareToggle,
   type AlgorithmOptionValues,
   type Slot,
 } from "@/features/select-algorithm";
@@ -19,6 +21,8 @@ import { VisualizerStage } from "@/widgets/visualizer";
 import { activeAlgorithmIds, buildPlayerSlots } from "../model/slots";
 import { readState, writeState, type HomeState } from "../model/urlState";
 import { useKeyboardShortcuts } from "../model/useKeyboardShortcuts";
+
+const SIDEBAR_CLASS = "fixed top-3 bottom-3 z-40 w-[260px] flex flex-col rounded-lg bg-surface border border-line p-4";
 
 function initialInput(state: HomeState): ArrayItem[] {
   if (state.preset !== "custom") return generateArray(state.size, state.preset);
@@ -98,15 +102,26 @@ export default function HomeView() {
 
   return (
     <>
-      {/* 화면 왼쪽에 고정한다. 본문은 page.tsx의 왼쪽 여백으로 자리를 비워 둔다 */}
-      <aside className="fixed left-3 top-3 bottom-3 z-40 w-[260px] flex flex-col rounded-lg bg-surface border border-line p-4">
+      {/* 화면 양옆에 고정한다. 본문은 page.tsx의 좌우 여백으로 자리를 비워 둔다 */}
+      <aside className={cn(SIDEBAR_CLASS, "left-3")}>
         <AlgorithmSidebar
+          slot={0}
           compareMode={state.compare}
-          onCompareModeChange={(compare) => update({ compare })}
           selected={state.algorithms}
-          onSelect={selectAlgorithm}
+          onSelect={(id) => selectAlgorithm(0, id)}
+          headerAction={<CompareToggle enabled={state.compare} onChange={(compare) => update({ compare })} />}
         />
       </aside>
+      {state.compare && (
+        <aside className={cn(SIDEBAR_CLASS, "right-3")}>
+          <AlgorithmSidebar
+            slot={1}
+            compareMode
+            selected={state.algorithms}
+            onSelect={(id) => selectAlgorithm(1, id)}
+          />
+        </aside>
+      )}
 
       <div className="flex flex-col gap-6 w-full">
         <header className="relative text-center flex flex-col gap-2">
