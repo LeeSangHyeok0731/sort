@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/shared/lib";
 import { Card } from "@/shared/ui";
 import type { ArrayItem } from "@/shared/model";
 import { DEFAULT_PRESET, generateArray, MIN_ARRAY_SIZE, shuffleValues, toArrayItems, type PresetId } from "@/entities/array";
@@ -11,7 +12,8 @@ import { SlotMuteButton, SoundToggle, useSortSound } from "@/features/sort-sound
 import { ThemeToggle } from "@/features/toggle-theme";
 import {
   AlgorithmOptions,
-  AlgorithmPicker,
+  AlgorithmSidebar,
+  CompareToggle,
   type AlgorithmOptionValues,
   type Slot,
 } from "@/features/select-algorithm";
@@ -19,6 +21,8 @@ import { VisualizerStage } from "@/widgets/visualizer";
 import { activeAlgorithmIds, buildPlayerSlots } from "../model/slots";
 import { readState, writeState, type HomeState } from "../model/urlState";
 import { useKeyboardShortcuts } from "../model/useKeyboardShortcuts";
+
+const SIDEBAR_CLASS = "fixed top-3 bottom-3 z-40 w-[260px] flex flex-col rounded-lg bg-surface border border-line p-4";
 
 function initialInput(state: HomeState): ArrayItem[] {
   if (state.preset !== "custom") return generateArray(state.size, state.preset);
@@ -97,72 +101,85 @@ export default function HomeView() {
   });
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <header className="relative text-center flex flex-col gap-2">
-        <ThemeToggle className="absolute right-0 top-0" />
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
-          Sorting Visualizer
-        </h1>
-        <p className="text-sm md:text-base text-muted">
-          {algorithms.map((a) => a.name).join(" vs ")} · 막대 {input.length}개
-        </p>
-      </header>
-
-      <div className="sticky top-3 z-30 rounded-lg bg-surface border border-line px-4 py-3">
-        <PlaybackBar
-          player={player}
-          speed={state.speed}
-          onSpeedChange={(speed) => update({ speed })}
-          onShuffle={shuffle}
-          disabled={!canPlay}
-          extraControls={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />}
+    <>
+      {/* 화면 양옆에 고정한다. 본문은 page.tsx의 좌우 여백으로 자리를 비워 둔다 */}
+      <aside className={cn(SIDEBAR_CLASS, "left-3")}>
+        <AlgorithmSidebar
+          slot={0}
+          compareMode={state.compare}
+          selected={state.algorithms}
+          onSelect={(id) => selectAlgorithm(0, id)}
+          headerAction={<CompareToggle enabled={state.compare} onChange={(compare) => update({ compare })} />}
         />
-      </div>
-
-      <VisualizerStage
-        views={player.views}
-        input={input}
-        algorithms={algorithms}
-        options={slots.map((slot) => slot.options)}
-        speed={state.speed}
-        playing={player.status === "playing"}
-        renderSlotControls={(slot) =>
-          sound.enabled && (
-            <SlotMuteButton
-              slot={slot}
-              name={algorithms[slot].name}
-              muted={sound.isSlotMuted(slot)}
-              onToggle={() => sound.toggleSlot(slot)}
-            />
-          )
-        }
-      />
-
-      <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr] items-start">
-        <Card className="flex flex-col gap-5">
-          <AlgorithmPicker
-            compareMode={state.compare}
-            onCompareModeChange={(compare) => update({ compare })}
+      </aside>
+      {state.compare && (
+        <aside className={cn(SIDEBAR_CLASS, "right-3")}>
+          <AlgorithmSidebar
+            slot={1}
+            compareMode
             selected={state.algorithms}
-            onSelect={selectAlgorithm}
+            onSelect={(id) => selectAlgorithm(1, id)}
           />
-          <AlgorithmOptions
-            entries={slotIds.map((algorithmId, i) => ({
-              slot: i as Slot,
-              algorithmId,
-              values: state.slotOptions[i],
-            }))}
-            onChange={changeSlotOptions}
-          />
-        </Card>
+        </aside>
+      )}
 
-        <div className="flex flex-col gap-6">
-          <Card>
+      <div className="flex flex-col gap-6 w-full">
+        <header className="relative text-center flex flex-col gap-2">
+          <ThemeToggle className="absolute right-0 top-0" />
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
+            Sorting Visualizer
+          </h1>
+          <p className="text-sm md:text-base text-muted">
+            {algorithms.map((a) => a.name).join(" vs ")} · 막대 {input.length}개
+          </p>
+        </header>
+
+        <div className="sticky top-3 z-30 rounded-lg bg-surface border border-line px-4 py-3">
+          <PlaybackBar
+            player={player}
+            speed={state.speed}
+            onSpeedChange={(speed) => update({ speed })}
+            onShuffle={shuffle}
+            disabled={!canPlay}
+            extraControls={<SoundToggle enabled={sound.enabled} onToggle={sound.toggle} />}
+          />
+        </div>
+
+        <VisualizerStage
+          views={player.views}
+          input={input}
+          algorithms={algorithms}
+          options={slots.map((slot) => slot.options)}
+          speed={state.speed}
+          playing={player.status === "playing"}
+          renderSlotControls={(slot) =>
+            sound.enabled && (
+              <SlotMuteButton
+                slot={slot}
+                name={algorithms[slot].name}
+                muted={sound.isSlotMuted(slot)}
+                onToggle={() => sound.toggleSlot(slot)}
+              />
+            )
+          }
+        />
+
+        <div className="grid gap-6 lg:grid-cols-2 items-start">
+          <Card className="flex flex-col gap-5">
             <ArrayConfigurator
               size={input.length}
               preset={state.preset}
               onGenerate={generate}
               onCustom={applyCustom}
+            />
+            {/* 옵션이 있는 알고리즘일 때만 그려진다 */}
+            <AlgorithmOptions
+              entries={slotIds.map((algorithmId, i) => ({
+                slot: i as Slot,
+                algorithmId,
+                values: state.slotOptions[i],
+              }))}
+              onChange={changeSlotOptions}
             />
           </Card>
           <Card className="flex flex-col gap-5">
@@ -171,13 +188,13 @@ export default function HomeView() {
             ))}
           </Card>
         </div>
-      </div>
 
-      <footer className="text-center text-xs text-muted pb-4">
-        단축키 · <kbd className="font-mono text-muted">Space</kbd> 재생/일시정지 ·{" "}
-        <kbd className="font-mono text-muted">← →</kbd> 한 단계 · <kbd className="font-mono text-muted">R</kbd> 새 배열 ·{" "}
-        <kbd className="font-mono text-muted">M</kbd> 소리
-      </footer>
-    </div>
+        <footer className="text-center text-xs text-muted pb-4">
+          단축키 · <kbd className="font-mono text-muted">Space</kbd> 재생/일시정지 ·{" "}
+          <kbd className="font-mono text-muted">← →</kbd> 한 단계 · <kbd className="font-mono text-muted">R</kbd> 새 배열 ·{" "}
+          <kbd className="font-mono text-muted">M</kbd> 소리
+        </footer>
+      </div>
+    </>
   );
 }

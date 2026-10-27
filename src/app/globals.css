@@ -61,11 +61,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 가로 스크롤 영역의 스크롤바 숨김 */
-.no-scrollbar {
+/* 페이지와 모든 스크롤 영역의 스크롤바를 숨긴다 (휠·트랙패드 스크롤은 그대로) */
+* {
   scrollbar-width: none;
 }
-.no-scrollbar::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
 }
 

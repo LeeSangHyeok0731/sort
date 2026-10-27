@@ -1,4 +1,5 @@
-export { default as AlgorithmPicker, type Slot } from "./ui/AlgorithmPicker";
+export { default as AlgorithmSidebar, type Slot } from "./ui/AlgorithmSidebar";
+export { default as CompareToggle } from "./ui/CompareToggle";
 export {
   default as AlgorithmOptions,
   DEFAULT_OPTION_VALUES,

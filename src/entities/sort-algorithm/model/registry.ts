@@ -56,9 +56,9 @@ import { timSort } from "../algorithms/timSort";
 import { tournamentSort } from "../algorithms/tournamentSort";
 import { treeSort } from "../algorithms/treeSort";
 import { weakHeapSort } from "../algorithms/weakHeapSort";
-import type { AlgorithmCategory, SortAlgorithm } from "./types";
+import type { SortAlgorithm } from "./types";
 
-/** 새 알고리즘은 여기 한 곳에만 추가하면 된다. 분류 안에서는 이 순서대로 표시된다. */
+/** 새 알고리즘은 여기에 추가하고, 선택 사이드바에 보이도록 families.ts의 폴더에도 넣는다. */
 export const ALGORITHMS = [
   // 기본 정렬
   bubbleSort,
@@ -127,13 +127,6 @@ export const ALGORITHMS = [
 export type AlgorithmId = (typeof ALGORITHMS)[number]["id"];
 
 export const DEFAULT_ALGORITHM_ID: AlgorithmId = "bubble";
-
-export const CATEGORIES: ReadonlyArray<{ id: AlgorithmCategory; name: string }> = [
-  { id: "standard", name: "기본 정렬" },
-  { id: "linear", name: "비교 없는 정렬" },
-  { id: "special", name: "특이한 정렬" },
-  { id: "fun", name: "재미있는 정렬" },
-];
 
 const byId = new Map<string, SortAlgorithm>(ALGORITHMS.map((a) => [a.id, a]));
 

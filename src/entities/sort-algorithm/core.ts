@@ -4,12 +4,12 @@
  */
 export {
   ALGORITHMS,
-  CATEGORIES,
   DEFAULT_ALGORITHM_ID,
   getAlgorithm,
   isAlgorithmId,
   type AlgorithmId,
 } from "./model/registry";
+export { FAMILIES, getFamily, type AlgorithmFamily } from "./model/families";
 export { applyOp, opCount, OpType, OP_STRIDE, readOp, revertOp, type Op, type OpLog } from "./model/op";
 export { runSort } from "./model/run";
 export { searchAlgorithms } from "./model/search";
