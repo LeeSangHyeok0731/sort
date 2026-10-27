@@ -42,3 +42,32 @@ describe("연산 한도", () => {
     expect(() => runSort(broken, input)).toThrow("boom");
   });
 });
+
+describe("연산 기록 버퍼", () => {
+  /** i번째 연산의 줄 번호에 i를 남겨, 버퍼를 늘릴 때 기록이 밀리거나 사라지지 않았는지 확인한다 */
+  const numbered = (count: number): Pick<SortAlgorithm, "sort"> => ({
+    sort(t) {
+      for (let i = 0; i < count; i++) t.mark(i % t.length, i);
+    },
+  });
+
+  it("처음 잡은 크기를 여러 번 넘겨도 모든 연산을 순서대로 담는다", () => {
+    const result = runSort(numbered(5000), input);
+    expect(opCount(result.ops)).toBe(5000);
+    for (const k of [0, 1023, 1024, 2047, 2048, 4999]) {
+      expect(readOp(result.ops, k).line).toBe(k);
+    }
+  });
+
+  it("결과는 기록된 길이에 딱 맞는 별도 버퍼다 (넘길 때 여유분까지 보내지 않는다)", () => {
+    const result = runSort(numbered(1500), input);
+    expect(result.ops.length).toBe(1500 * 4);
+    expect(result.ops.buffer.byteLength).toBe(1500 * 4 * 4);
+  });
+
+  it("늘리는 도중에 한도에 닿아도 한도까지 정확히 기록한다", () => {
+    const result = runSort(endless, input, {}, { maxOps: 3001 });
+    expect(result.truncated).toBe(true);
+    expect(opCount(result.ops)).toBe(3001);
+  });
+});

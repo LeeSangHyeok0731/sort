@@ -16,6 +16,5 @@ export function runSort(
     if (!(e instanceof OpBudgetExceeded)) throw e;
     truncated = true;
   }
-  // 일반 배열(원소당 8바이트 + 증가 여유분) → Int32Array(원소당 4바이트)로 압축
-  return { ops: Int32Array.from(t.ops), final: t.snapshot(), truncated };
+  return { ops: t.finish(), final: t.snapshot(), truncated };
 }
