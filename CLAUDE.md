@@ -8,11 +8,12 @@
 npm run dev        # 개발 서버 (localhost:3000)
 npm test           # Vitest 전체 (node 환경)
 npm run typecheck  # tsc --noEmit
-npm run lint       # ESLint (FSD 레이어 검사 포함)
+npm run lint       # ESLint (@/ 별칭 FSD 레이어 검사 포함)
+npm run lint:fsd   # FSD 의존성 검사 (상대 경로, 같은 레이어 슬라이스까지)
 npm run build      # 프로덕션 빌드
 ```
 
-CI(`.github/workflows/ci.yml`)는 PR마다 lint → typecheck → test를 돌린다.
+CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → test를 돌린다.
 
 ## 작업 규칙
 
@@ -40,8 +41,9 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → typecheck → test를 돌린
 | 구성 | 내용 |
 |---|---|
 | `settings.json` 권한 | lint·test·typecheck·build, git 조회, `gh pr view/checks/list` 허용. force push, main 직접 push, `git reset --hard` 거부 |
-| 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 eslint, 오류면 바로 알려줌 |
-| 훅 `guard-main-commit.mjs` | main 브랜치에서 `git commit` 차단 |
+| 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 `eslint --fix`, 남은 오류만 알려줌 |
+| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit` 차단 |
+| 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
 | 스킬 `/ship` | 검사 → push → PR → CI → 머지 (승인 후) |

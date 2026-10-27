@@ -1,6 +1,6 @@
 # 구조
 
-Feature-Sliced Design(FSD)을 따른다. 이 문서의 레이어 규칙과 공개 진입점 규칙은 `eslint.config.mjs`가 검사한다.
+Feature-Sliced Design(FSD)을 따른다. 이 문서의 규칙은 두 곳에서 검사한다: `eslint.config.mjs`(`@/` 별칭 import, 에디터에 바로 표시)와 `scripts/check-fsd.mjs`(`npm run lint:fsd`, 상대 경로와 같은 레이어 슬라이스까지). 둘 다 CI에서 돈다.
 
 ## 레이어
 
@@ -8,8 +8,8 @@ Feature-Sliced Design(FSD)을 따른다. 이 문서의 레이어 규칙과 공�
 app → views → widgets → features → entities → shared
 ```
 
-- 화살표 방향으로만 import한다. 아래 레이어는 위 레이어를 모른다. (ESLint 검사)
-- 같은 레이어의 다른 슬라이스는 import하지 않는다. 예: `features/playback`이 `features/sort-sound`를 가져오지 않는다. 둘을 함께 써야 하면 위 레이어(`widgets`, `views`)에서 조립한다. (문서 규칙, 검사 없음)
+- 화살표 방향으로만 import한다. 아래 레이어는 위 레이어를 모른다. (ESLint, lint:fsd)
+- 같은 레이어의 다른 슬라이스는 import하지 않는다. 예: `features/playback`이 `features/sort-sound`를 가져오지 않는다. 둘을 함께 써야 하면 위 레이어(`widgets`, `views`)에서 조립한다. (lint:fsd)
 - 슬라이스 안에서는 상대 경로(`../model/track`)를 쓴다.
 
 | 레이어 | 역할 | 넣는 것 |
@@ -123,4 +123,4 @@ SortAlgorithm.sort(t)          entities/sort-algorithm/algorithms/*.ts
 ## 테스트
 
 - 대상 파일 옆에 `*.test.ts`로 둔다. Vitest는 node 환경이라 DOM 렌더링 테스트는 없다. 로직은 `model`·`lib`로 빼서 테스트한다.
-- Claude Code 훅의 판단 로직 테스트는 `.claude/hooks/*.test.mjs`에 있다.
+- Claude Code 훅의 판단 로직 테스트는 `.claude/hooks/*.test.mjs`, FSD 검사 스크립트 테스트는 `scripts/*.test.mjs`에 있다.
