@@ -42,7 +42,7 @@ export const bubbleSort: SortAlgorithm = {
 - 연산이 일어나는 줄 끝에 `//@표식`을 단다. 표식 이름의 접두어가 연산 종류를 정한다: `cmp*` → `t.cmp`, `swap*` → `t.swap`, `move*` → `t.move`, `read*` → `t.mark`. 같은 종류가 여러 줄이면 `cmp-left`, `swap-root`처럼 접미어를 붙인다. 표식은 한 번씩만 쓴다.
 - `sort(t, options)` 안에서는 배열을 직접 만지지 않고 tracer 메서드만 쓴다: `t.length`, `t.value(i)`, `t.item(i)`, `t.cmp(i, j, line)`, `t.swap(i, j, line)`, `t.move(from, to, line)`, `t.mark(i, line)`, `t.arrange(start, target, line)`. 모든 호출에 `L.xxx` 줄 번호를 넘긴다.
 - 연산이 폭발할 수 있는 알고리즘(보고 정렬류)은 한도 초과 시 `true`를 반환하고 `note`에 주의 사항을 적는다.
-- `category`: `"standard" | "linear" | "special" | "fun"` (`fun`은 테스트에서 큰 입력 검증을 건너뛴다).
+- `category`: `"standard" | "linear" | "special" | "fun"` (`fun`은 연산이 폭발할 수 있어 일부 테스트가 작은 입력만 쓴다).
 - 트리·힙·버킷처럼 구조 보기가 가능하면 `structure`를 지정한다(`model/types.ts`의 `AlgorithmStructure`).
 
 ## 2. 테스트 `algorithms/<name>Sort.test.ts`
