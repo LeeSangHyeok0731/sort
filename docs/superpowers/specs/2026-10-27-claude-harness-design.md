@@ -112,3 +112,27 @@ Windows(Git Bash·PowerShell)와 다른 OS에서 모두 돌도록 node 스크립
 - 테스트·tsc·lint 통과(새 ESLint 규칙 포함, 훅 판단 로직 테스트 포함).
 - ESLint: 위반 import를 임시로 넣어 실패하는지 확인.
 - 훅: 각 스크립트에 샘플 stdin JSON을 넣어 exit code 확인(main에서 commit 차단, src 밖 파일은 lint 건너뜀, tsc 실패 시 exit 2).
+
+## 6. 추가 (2026-10-28): 다른 하네스에서 가져온 것
+다른 팀 하네스에서 프론트엔드·보안 항목만 우리 구조(node 스크립트, `$CLAUDE_PROJECT_DIR`, exit 2로 Claude에게 전달)에 맞게 다시 만든다.
+
+### FSD 의존성 검사 `scripts/check-fsd.mjs` (`npm run lint:fsd`, CI 포함)
+ESLint 규칙이 못 잡는 경우까지 본다. import 추출은 이미 설치된 `typescript`의 `ts.preProcessFile`을 쓴다(정적 import, `export … from`, 동적 `import()`, 주석·문자열 무시).
+- 대상: `src/**/*.{ts,tsx}`. `@/` 별칭과 상대 경로만 해석하고 패키지 import는 무시한다.
+- 위반 세 가지
+  1. 상위 레이어 import (상대 경로 `../../features/x` 포함)
+  2. 같은 레이어(views·widgets·features·entities)의 다른 슬라이스 import
+  3. 다른 슬라이스의 내부 파일 import (슬라이스 루트·`index`만 허용, `entities/sort-algorithm/core` 예외)
+- `app`과 `shared`는 슬라이스가 없어 내부끼리 자유롭다.
+- 위반을 `파일:줄 메시지`로 출력하고 exit 1. 판단 로직은 함수로 분리해 테스트한다.
+
+### lint 훅 자동 수정
+`lint-file.mjs`가 `eslint --fix`로 고칠 수 있는 것은 고치고, 남은 오류만 exit 2로 돌려준다.
+
+### 보안 훅
+- `guard-secrets.mjs` (PreToolUse `Edit|Write|MultiEdit`): 쓰려는 내용에 AWS 키(`AKIA…`), GitHub 토큰(`ghp_` 등, `github_pat_`), `sk-` 계열 API 키(앞이 영숫자가 아니고 뒤에 20자 이상), PEM 개인키, Slack 토큰(`xox?-`)이 있으면 exit 2. `.env*` 파일은 검사하지 않는다(gitignore 대상이고 원래 비밀을 두는 곳).
+- `guard-command.mjs` (PreToolUse `Bash|PowerShell`, 기존 `guard-main-commit.mjs`를 대체): main 직접 커밋 차단에 더해 `rm -rf /`·`~`·`/*`, `sudo`, `dd if=`, `mkfs`, `Format-Volume`, `curl|wget … | sh|bash|iex`를 차단한다.
+- 비밀 패턴 테스트는 문자열을 이어 붙여 만들어 테스트 파일 자체가 훅에 걸리지 않게 한다.
+
+### 가져오지 않은 것
+명령 로그(`command.log`, 토큰이 남을 수 있음), vitest·tsc 편집마다 실행, prettier·biome(미사용), 백엔드 전용 스킬, git·PR 스킬(우리 컨벤션과 다름).
