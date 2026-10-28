@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: FSD 의존성 검사
+        run: npm run lint:fsd
+
       - name: Typecheck
         run: npm run typecheck
 

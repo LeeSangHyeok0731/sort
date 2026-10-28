@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ALGORITHMS, runSort, type AlgorithmStructure, type SortAlgorithm } from "@/entities/sort-algorithm";
-import type { TrackView } from "@/features/playback";
-import { Track } from "@/features/playback/model/track";
+import { Track, type TrackView } from "@/features/playback";
 import type { ArrayItem } from "@/shared/model";
 import { buildScene, createSceneCache, STRUCTURE_LABELS, structureLabel, type Scene } from "./scene";
 
