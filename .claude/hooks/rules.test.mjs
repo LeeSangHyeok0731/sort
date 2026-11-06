@@ -4,6 +4,7 @@ import {
   findSecret,
   hasClaudeCoauthor,
   hasSrcChanges,
+  historyRewrite,
   isGitCommit,
   isPrCreate,
   isSecretExempt,
@@ -174,5 +175,45 @@ describe("hasClaudeCoauthor", () => {
   it("사람 공동 작성자나 일반 메시지는 통과", () => {
     expect(hasClaudeCoauthor('git commit -m "feat: x\n\nCo-Authored-By: Kim <kim@example.com>"')).toBe(false);
     expect(hasClaudeCoauthor('git commit -m "docs: CLAUDE.md 규칙 정리"')).toBe(false);
+  });
+});
+
+describe("historyRewrite", () => {
+  it("커밋 기록을 바꾸는 명령을 찾는다", () => {
+    expect(historyRewrite('git commit --amend -m "fix: x"')).toBe("git commit --amend");
+    expect(historyRewrite("git commit --amend --no-edit")).toBe("git commit --amend");
+    expect(historyRewrite("git -c core.editor=true commit --amend")).toBe("git commit --amend");
+    expect(historyRewrite("git rebase main")).toBe("git rebase");
+    expect(historyRewrite("git rebase -i HEAD~3")).toBe("git rebase");
+    expect(historyRewrite("cd sort && git pull --rebase")).toBe("git pull --rebase");
+    expect(historyRewrite("git pull -r origin main")).toBe("git pull --rebase");
+  });
+
+  it("기록을 바꾸지 않는 명령은 통과", () => {
+    expect(historyRewrite('git commit -m "fix: --amend 옵션 설명"')).toBeNull();
+    expect(historyRewrite('git commit -m "docs: rebase 대신 merge"')).toBeNull();
+    expect(historyRewrite("git pull --ff-only")).toBeNull();
+    expect(historyRewrite("git pull --no-rebase")).toBeNull();
+    expect(historyRewrite("git merge main")).toBeNull();
+    expect(historyRewrite("git log --oneline main..HEAD")).toBeNull();
+  });
+
+  it("heredoc·here-string 본문에 적힌 명령 이름은 무시한다", () => {
+    const body = "- 훅이 `git commit --amend`, `git rebase`, `git pull --rebase`를 막는다";
+    expect(historyRewrite(`cat > pr.md <<'EOF'\n${body}\nEOF\ngh pr create --body-file pr.md`)).toBeNull();
+    expect(historyRewrite(`cat <<EOF > pr.md\n${body}\nEOF`)).toBeNull();
+    expect(historyRewrite(`gh pr create --body @'\n${body}\n'@`)).toBeNull();
+    // 본문이 끝난 뒤의 실제 명령은 잡는다
+    expect(historyRewrite(`cat > a.md <<'EOF'\n글\nEOF\ngit rebase main`)).toBe("git rebase");
+  });
+
+  it("옵션은 같은 줄의 같은 명령에서만 찾는다", () => {
+    expect(historyRewrite("git commit -m x\necho --amend")).toBeNull();
+    expect(historyRewrite("git pull --ff-only; echo -r")).toBeNull();
+  });
+
+  it("이미 진행 중인 rebase를 멈추는 명령은 허용한다", () => {
+    expect(historyRewrite("git rebase --abort")).toBeNull();
+    expect(historyRewrite("git rebase --quit")).toBeNull();
   });
 });
