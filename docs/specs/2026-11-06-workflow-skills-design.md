@@ -187,7 +187,7 @@
      - 파일 끝의 `_마지막 업데이트: YYYY-MM-DD_`를 갱신한다.
      - `docs:` 커밋으로 이 브랜치에 넣는다.
   4. `/verify`를 돌린다. 이미 돌렸고 그 뒤 변경이 로그뿐이면 생략할 수 있다.
-  5. push하고 `gh pr create`로 PR을 만든다. 본문은 `.github/pull_request_template.md` 형식을 따른다.
+  5. push하고 `gh pr create`로 PR을 만든다. 본문은 `.github/pull_request_template.md` 형식을 따른다. 본문 끝에 "Generated with Claude Code" 줄을 넣지 않는다(`attribution.pr: ""`).
   6. `gh pr checks --watch`로 CI와 Vercel 결과를 확인하고, PR 링크와 함께 보고한다. **머지하지 않는다.**
 
 ### `/merge` (`/ship`에서 나눔)
