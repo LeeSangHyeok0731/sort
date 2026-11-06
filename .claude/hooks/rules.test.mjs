@@ -198,6 +198,20 @@ describe("historyRewrite", () => {
     expect(historyRewrite("git log --oneline main..HEAD")).toBeNull();
   });
 
+  it("heredoc·here-string 본문에 적힌 명령 이름은 무시한다", () => {
+    const body = "- 훅이 `git commit --amend`, `git rebase`, `git pull --rebase`를 막는다";
+    expect(historyRewrite(`cat > pr.md <<'EOF'\n${body}\nEOF\ngh pr create --body-file pr.md`)).toBeNull();
+    expect(historyRewrite(`cat <<EOF > pr.md\n${body}\nEOF`)).toBeNull();
+    expect(historyRewrite(`gh pr create --body @'\n${body}\n'@`)).toBeNull();
+    // 본문이 끝난 뒤의 실제 명령은 잡는다
+    expect(historyRewrite(`cat > a.md <<'EOF'\n글\nEOF\ngit rebase main`)).toBe("git rebase");
+  });
+
+  it("옵션은 같은 줄의 같은 명령에서만 찾는다", () => {
+    expect(historyRewrite("git commit -m x\necho --amend")).toBeNull();
+    expect(historyRewrite("git pull --ff-only; echo -r")).toBeNull();
+  });
+
   it("이미 진행 중인 rebase를 멈추는 명령은 허용한다", () => {
     expect(historyRewrite("git rebase --abort")).toBeNull();
     expect(historyRewrite("git rebase --quit")).toBeNull();

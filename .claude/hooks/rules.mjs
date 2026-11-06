@@ -102,15 +102,24 @@ export function hasClaudeCoauthor(command) {
   return /co-authored-by:\s*claude|noreply@anthropic\.com/i.test(command);
 }
 
-/** 따옴표 안(커밋 메시지 등)의 글을 지운다. 메시지에 적힌 옵션 이름을 명령으로 오인하지 않게 한다 */
-const stripQuoted = (command) => command.replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
+/**
+ * 명령이 아닌 글을 지운다: heredoc 본문(PR 본문 등), PowerShell here-string, 따옴표 안(커밋 메시지 등).
+ * 글 속에 적힌 명령 이름을 실제 명령으로 오인하지 않게 한다
+ */
+const stripText = (command) =>
+  command
+    .replace(/<<-?\s*(["']?)(\w+)\1[^\n]*\n[\s\S]*?\n\s*\2[ \t]*(?=\n|$)/g, "")
+    .replace(/@(["'])\r?\n[\s\S]*?\r?\n\1@/g, "")
+    .replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
 
 const GIT = String.raw`\bgit(?:\s+-c\s+\S+)*\s+`;
+// 옵션은 같은 줄, 같은 명령(; & | 앞) 안에서만 찾는다
+const SAME_COMMAND = String.raw`[^;&|\n]*`;
 const HISTORY_REWRITES = [
-  ["git commit --amend", new RegExp(GIT + String.raw`commit\b[^;&|]*\s--amend\b`)],
+  ["git commit --amend", new RegExp(GIT + String.raw`commit\b` + SAME_COMMAND + String.raw`\s--amend\b`)],
   // 이미 진행 중인 rebase를 멈추는 --abort·--quit은 기록을 바꾸지 않으므로 허용한다
-  ["git rebase", new RegExp(GIT + String.raw`rebase\b(?![^;&|]*\s--(?:abort|quit)\b)`)],
-  ["git pull --rebase", new RegExp(GIT + String.raw`pull\b[^;&|]*\s(?:--rebase\b(?!=false)|-r\b)`)],
+  ["git rebase", new RegExp(GIT + String.raw`rebase\b(?!` + SAME_COMMAND + String.raw`\s--(?:abort|quit)\b)`)],
+  ["git pull --rebase", new RegExp(GIT + "pull\\b" + SAME_COMMAND + String.raw`\s(?:--rebase\b(?!=false)|-r\b)`)],
 ];
 
 /**
@@ -118,6 +127,6 @@ const HISTORY_REWRITES = [
  * 커밋 규칙: 커밋은 고치지 않고, 고칠 게 생기면 새 커밋을 더한다.
  */
 export function historyRewrite(command) {
-  const bare = stripQuoted(command);
+  const bare = stripText(command);
   return HISTORY_REWRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }
