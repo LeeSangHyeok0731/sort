@@ -38,6 +38,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 서브에이전트 worktree는 각자 자기 폴더에서 검사한다
+    ".claude/worktrees/**",
   ]),
 ]);
 
