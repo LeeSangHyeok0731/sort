@@ -50,20 +50,23 @@ function IconButton({
 }
 
 export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, disabled, extraControls }: Props) {
-  const { status, cursor, total } = player;
+  const { status, cursor, total, error } = player;
   const playing = status === "playing";
   const computing = status === "computing";
+  const failed = status === "error";
   const speedIndex = Math.max(0, SPEEDS.indexOf(speed as (typeof SPEEDS)[number]));
   const progress = total ? cursor / total : status === "done" ? 1 : 0;
 
   let mainLabel = "재생";
   if (playing) mainLabel = "일시정지";
   else if (computing) mainLabel = "계산 취소";
+  else if (failed) mainLabel = "다시 시도";
   else if (status === "done") mainLabel = "다시 재생";
 
   const statusText = {
     idle: "준비됨",
     computing: "계산 중…",
+    error: error ?? "정렬 계산에 실패했습니다",
     playing: "재생 중",
     paused: "일시정지",
     done: "완료",
@@ -114,7 +117,11 @@ export default function PlaybackBar({ player, speed, onSpeedChange, onShuffle, d
 
       <div className="flex-1 flex flex-col gap-1 min-w-0">
         <div className="flex justify-between gap-3 whitespace-nowrap text-[11px] font-mono text-muted">
-          <span className={cn(computing && "text-foreground animate-pulse")} aria-live="polite">
+          <span
+            className={cn("min-w-0 truncate", computing && "text-foreground animate-pulse", failed && "text-tone-change")}
+            title={failed ? statusText : undefined}
+            aria-live="polite"
+          >
             {statusText}
           </span>
           <span>

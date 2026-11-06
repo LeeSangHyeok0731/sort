@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArrayItem } from "@/shared/model";
 import type { BarHighlight } from "@/entities/array";
 import type { SortAlgorithm, SortOptions } from "@/entities/sort-algorithm";
+import { describeSortError, resolvePlayerStatus, type PlayerStatus } from "./playerStatus";
 import { prewarmSortWorkers, runSortsInBackground, SortCancelled, type BackgroundSort } from "./runInBackground";
 import { Track, type TrackStats } from "./track";
 
@@ -16,7 +17,7 @@ const MAX_OPS_PER_FRAME = 20_000;
 
 export type PlayerSlot = { algorithm: SortAlgorithm; options: SortOptions };
 
-export type PlayerStatus = "idle" | "computing" | "playing" | "paused" | "done";
+export type { PlayerStatus };
 
 export type TrackView = {
   items: readonly ArrayItem[];
@@ -38,6 +39,9 @@ type Action = { type: "play" } | { type: "step"; delta: 1 | -1 } | { type: "seek
 
 /** 트랙이 어떤 입력·구성으로 만들어졌는지 */
 type Config = { input: readonly ArrayItem[]; key: string };
+
+/** 계산 실패. 실패한 입력·구성에 묶어 두어 구성이 바뀌면 지운다 */
+type Failure = { config: Config; message: string };
 
 const ZERO_STATS: TrackStats = { compares: 0, swaps: 0, moves: 0, reads: 0 };
 const NO_HITS: readonly number[] = [];
@@ -75,6 +79,7 @@ type Params = {
  * 정렬 연산 로그를 재생한다.
  * 연산 로그는 Web Worker에서 계산하므로, 수백만 연산을 만드는 알고리즘도 화면을 멈추지 않는다.
  * 입력 배열(참조)이나 알고리즘 구성이 바뀌면 자동으로 idle 상태로 돌아간다.
+ * 계산이 실패하면 error 상태가 되고, 다시 시도·reset·구성 변경 때 지워진다.
  */
 export function useSortPlayer({ input, slots, speed }: Params) {
   const key = slotsKey(slots);
@@ -83,6 +88,7 @@ export function useSortPlayer({ input, slots, speed }: Params) {
   const [computing, setComputing] = useState<Config | null>(null);
   const [views, setViews] = useState<TrackView[]>([]);
   const [playing, setPlaying] = useState(false);
+  const [failure, setFailure] = useState<Failure | null>(null);
 
   const jobRef = useRef<BackgroundSort | null>(null);
   const pendingRef = useRef<Action | null>(null);
@@ -97,8 +103,12 @@ export function useSortPlayer({ input, slots, speed }: Params) {
   // 첫 재생에서 워커 기동을 기다리지 않도록 미리 띄워 둔다
   useEffect(prewarmSortWorkers, []);
 
+  // 입력이나 구성이 바뀌면 이전 실패를 지운다 (렌더 중 상태 조정: 같은 구성으로 돌아와도 되살아나지 않게)
+  if (failure !== null && !matches(failure.config, input, key)) setFailure(null);
+
   const ready = matches(session, input, key);
   const isComputing = matches(computing, input, key);
+  const failed = failure !== null && matches(failure.config, input, key);
 
   const publish = useCallback(() => {
     setViews(tracksRef.current.map(toView));
@@ -134,6 +144,8 @@ export function useSortPlayer({ input, slots, speed }: Params) {
     pendingRef.current = action;
     if (isComputing) return;
 
+    // 실패한 뒤 다시 시도하면 오류를 지우고 계산을 새로 시작한다
+    setFailure(null);
     jobRef.current?.cancel();
     const config: Config = { input, key };
     const job = runSortsInBackground(
@@ -159,11 +171,21 @@ export function useSortPlayer({ input, slots, speed }: Params) {
         if (next) apply(tracks, next);
       },
       (error: unknown) => {
-        if (jobRef.current === job) {
-          jobRef.current = null;
-          setComputing(null);
+        if (error instanceof SortCancelled) {
+          if (jobRef.current === job) {
+            jobRef.current = null;
+            setComputing(null);
+          }
+          return;
         }
-        if (!(error instanceof SortCancelled)) console.error(error);
+        console.error(error);
+        if (jobRef.current !== job) return; // 더 새로운 계산이 시작됐다
+        jobRef.current = null;
+        pendingRef.current = null;
+        setComputing(null);
+        const latest = latestRef.current;
+        if (latest.input !== config.input || latest.key !== config.key) return; // 계산 중 설정이 바뀌었다
+        setFailure({ config, message: describeSortError(error) });
       }
     );
   };
@@ -177,6 +199,7 @@ export function useSortPlayer({ input, slots, speed }: Params) {
 
   const reset = () => {
     cancelComputing();
+    setFailure(null);
     setPlaying(false);
     setSession(null);
     tracksRef.current = [];
@@ -233,13 +256,12 @@ export function useSortPlayer({ input, slots, speed }: Params) {
 
   const shown = ready ? views : idleViews;
   const allDone = ready && shown.every((v) => v.done);
-  let status: PlayerStatus;
-  if (!ready) status = isComputing ? "computing" : "idle";
-  else if (active) status = "playing";
-  else status = allDone ? "done" : "paused";
+  const status = resolvePlayerStatus({ ready, computing: isComputing, failed, active, allDone });
 
   return {
     status,
+    /** 계산이 실패했을 때 보여 줄 메시지 (status가 "error"일 때만 값이 있다) */
+    error: status === "error" && failure ? failure.message : null,
     views: shown,
     cursor: Math.max(0, ...shown.map((v) => v.cursor)),
     total: ready ? Math.max(0, ...shown.map((v) => v.total ?? 0)) : null,

@@ -42,6 +42,9 @@ describe("runSortsInBackground (워커가 없는 환경)", () => {
   });
 });
 
+/** 이 id로 작업을 보내면 가짜 워커가 onerror를 낸다 */
+const CRASH = "__crash__";
+
 /** 메시지를 받으면 같은 계산을 비동기로 돌려주는 가짜 워커 */
 class FakeWorker {
   static created: FakeWorker[] = [];
@@ -54,6 +57,11 @@ class FakeWorker {
   postMessage(job: Parameters<typeof executeSortJob>[0]) {
     queueMicrotask(() => {
       if (this.terminated) return;
+      // 스크립트 로드 실패처럼 워커 자체가 망가진 경우를 흉내 낸다
+      if (job.algorithmId === CRASH) {
+        this.onerror?.({ message: "워커 스크립트를 불러오지 못함" });
+        return;
+      }
       try {
         this.onmessage?.({ data: { ok: true, result: executeSortJob(job) } });
       } catch (error) {
@@ -117,5 +125,39 @@ describe("runSortsInBackground (워커 재사용)", () => {
     ).rejects.toThrow(/nope/);
     await pool.runSortsInBackground([job]).promise;
     expect(FakeWorker.created).toHaveLength(1);
+  });
+
+  it("작업 하나가 실패하면 같은 묶음의 계산 중인 워커를 종료하고 빈자리를 채운다", async () => {
+    const running = pool.runSortsInBackground([{ algorithmId: "nope", input, options: {} }, job]);
+    await expect(running.promise).rejects.toThrow(/nope/);
+
+    const [failedWorker, otherWorker] = FakeWorker.created;
+    expect(failedWorker.terminated).toBe(false); // 오류를 보고한 워커는 멀쩡하니 다시 쓴다
+    expect(otherWorker.terminated).toBe(true);
+    expect(FakeWorker.created).toHaveLength(3);
+
+    await pool.runSortsInBackground([job, job]).promise;
+    expect(FakeWorker.created).toHaveLength(3);
+  });
+
+  it("워커가 오류로 죽으면 거부되고, 그 워커는 버린 뒤 풀을 다시 채운다", async () => {
+    const running = pool.runSortsInBackground([{ algorithmId: CRASH, input, options: {} }, job]);
+    await expect(running.promise).rejects.toThrow("워커 스크립트를 불러오지 못함");
+
+    expect(FakeWorker.created.slice(0, 2).every((w) => w.terminated)).toBe(true);
+    expect(FakeWorker.created).toHaveLength(4);
+
+    await pool.runSortsInBackground([job, job]).promise;
+    expect(FakeWorker.created).toHaveLength(4);
+  });
+
+  it("쉬는 동안 오류를 낸 워커에는 계산을 맡기지 않는다", async () => {
+    pool.prewarmSortWorkers();
+    FakeWorker.created.forEach((w) => w.onerror?.({ message: "로드 실패" }));
+
+    const results = await pool.runSortsInBackground([job]).promise;
+    expect(results[0].final.map((x) => x.value)).toEqual([1, 2, 3, 5, 8, 9]);
+    expect(FakeWorker.created).toHaveLength(3);
+    expect(FakeWorker.created.slice(0, 2).every((w) => w.terminated)).toBe(true);
   });
 });
