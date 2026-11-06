@@ -1,7 +1,15 @@
-// PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령, main 브랜치 직접 커밋, Claude 공동 작성자 줄이 든 커밋을 막고,
-// 여러 작업이 섞인 PR을 만들려 하면 사용자에게 묻는다
+// PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령, main 브랜치 직접 커밋, Claude 공동 작성자 줄이 든 커밋,
+// 커밋 기록을 고치는 명령(amend·rebase)을 막고, 여러 작업이 섞인 PR을 만들려 하면 사용자에게 묻는다
 import { ask, block, commandDirOf, git, readInput } from "./io.mjs";
-import { dangerousCommand, hasClaudeCoauthor, isGitCommit, isPrCreate, mainCommitTypes, prHeadBranch } from "./rules.mjs";
+import {
+  dangerousCommand,
+  hasClaudeCoauthor,
+  historyRewrite,
+  isGitCommit,
+  isPrCreate,
+  mainCommitTypes,
+  prHeadBranch,
+} from "./rules.mjs";
 
 const input = await readInput();
 const command = input.tool_input?.command ?? "";
@@ -10,6 +18,11 @@ const dir = commandDirOf(input);
 
 const danger = dangerousCommand(command);
 if (danger) block(`위험한 명령이라 막았어요 (${danger}). 꼭 필요하면 사용자가 직접 실행하게 안내하세요.`);
+
+const rewrite = historyRewrite(command);
+if (rewrite) {
+  block(`이미 만든 커밋은 고치지 않아요 (${rewrite}). 고칠 내용은 새 커밋으로 더하세요 (CLAUDE.md 커밋 규칙).`);
+}
 
 if (isGitCommit(command)) {
   const branch = git(dir, ["branch", "--show-current"])?.trim();

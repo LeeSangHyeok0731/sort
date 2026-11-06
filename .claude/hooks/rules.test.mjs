@@ -4,6 +4,7 @@ import {
   findSecret,
   hasClaudeCoauthor,
   hasSrcChanges,
+  historyRewrite,
   isGitCommit,
   isPrCreate,
   isSecretExempt,
@@ -174,5 +175,31 @@ describe("hasClaudeCoauthor", () => {
   it("사람 공동 작성자나 일반 메시지는 통과", () => {
     expect(hasClaudeCoauthor('git commit -m "feat: x\n\nCo-Authored-By: Kim <kim@example.com>"')).toBe(false);
     expect(hasClaudeCoauthor('git commit -m "docs: CLAUDE.md 규칙 정리"')).toBe(false);
+  });
+});
+
+describe("historyRewrite", () => {
+  it("커밋 기록을 바꾸는 명령을 찾는다", () => {
+    expect(historyRewrite('git commit --amend -m "fix: x"')).toBe("git commit --amend");
+    expect(historyRewrite("git commit --amend --no-edit")).toBe("git commit --amend");
+    expect(historyRewrite("git -c core.editor=true commit --amend")).toBe("git commit --amend");
+    expect(historyRewrite("git rebase main")).toBe("git rebase");
+    expect(historyRewrite("git rebase -i HEAD~3")).toBe("git rebase");
+    expect(historyRewrite("cd sort && git pull --rebase")).toBe("git pull --rebase");
+    expect(historyRewrite("git pull -r origin main")).toBe("git pull --rebase");
+  });
+
+  it("기록을 바꾸지 않는 명령은 통과", () => {
+    expect(historyRewrite('git commit -m "fix: --amend 옵션 설명"')).toBeNull();
+    expect(historyRewrite('git commit -m "docs: rebase 대신 merge"')).toBeNull();
+    expect(historyRewrite("git pull --ff-only")).toBeNull();
+    expect(historyRewrite("git pull --no-rebase")).toBeNull();
+    expect(historyRewrite("git merge main")).toBeNull();
+    expect(historyRewrite("git log --oneline main..HEAD")).toBeNull();
+  });
+
+  it("이미 진행 중인 rebase를 멈추는 명령은 허용한다", () => {
+    expect(historyRewrite("git rebase --abort")).toBeNull();
+    expect(historyRewrite("git rebase --quit")).toBeNull();
   });
 });

@@ -101,3 +101,23 @@ export function mainCommitTypes(subjects) {
 export function hasClaudeCoauthor(command) {
   return /co-authored-by:\s*claude|noreply@anthropic\.com/i.test(command);
 }
+
+/** 따옴표 안(커밋 메시지 등)의 글을 지운다. 메시지에 적힌 옵션 이름을 명령으로 오인하지 않게 한다 */
+const stripQuoted = (command) => command.replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
+
+const GIT = String.raw`\bgit(?:\s+-c\s+\S+)*\s+`;
+const HISTORY_REWRITES = [
+  ["git commit --amend", new RegExp(GIT + String.raw`commit\b[^;&|]*\s--amend\b`)],
+  // 이미 진행 중인 rebase를 멈추는 --abort·--quit은 기록을 바꾸지 않으므로 허용한다
+  ["git rebase", new RegExp(GIT + String.raw`rebase\b(?![^;&|]*\s--(?:abort|quit)\b)`)],
+  ["git pull --rebase", new RegExp(GIT + String.raw`pull\b[^;&|]*\s(?:--rebase\b(?!=false)|-r\b)`)],
+];
+
+/**
+ * 이미 만든 커밋을 고치는 명령이면 그 종류, 아니면 null.
+ * 커밋 규칙: 커밋은 고치지 않고, 고칠 게 생기면 새 커밋을 더한다.
+ */
+export function historyRewrite(command) {
+  const bare = stripQuoted(command);
+  return HISTORY_REWRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
+}
