@@ -24,8 +24,17 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 - `docs/perf-benchmark` 브랜치는 성능 측정 기록용이다. push만 하고 PR·머지하지 않는다.
 - 모바일 화면은 고려하지 않는다.
 - 큰 기능은 설계(`docs/specs/`)와 구현 계획(`docs/plans/`)을 먼저 문서로 남긴다.
-- 커밋 메시지는 `feat:`, `fix:`, `perf:`, `refactor:`, `style:`, `test:`, `docs:`, `chore:`, `ci:` 접두어를 쓴다.
 - 커밋에 Claude 공동 작성자 줄(`Co-Authored-By: Claude …`)을, PR 본문에 "Generated with Claude Code" 줄을 넣지 않는다. `settings.json`의 `attribution`(`commit`·`pr` 빈 문자열)이 끄고, 커밋에 직접 넣은 줄은 훅이 막는다.
+
+## 커밋 규칙
+
+커밋은 `/commit` 절차로 한다. 끝났다고 말하기 전에는 `/verify`로 확인한다.
+
+- **브랜치 안에서는 필요한 일 하나를 커밋 하나로 만든다.** 접두어 하나와 한국어 한 줄로 설명되면 커밋 하나다. 설명에 "~하고 ~도"가 필요하면 나눈다. 일에 딸린 테스트는 같은 커밋에 넣는다.
+- 접두어는 `feat:` `fix:` `perf:` `refactor:` `style:` `test:` `docs:` `chore:` `ci:`이다. 그 뒤에 결과를 한국어 한 줄로 쓰고, 필요하면 본문에 "왜"를 쓴다.
+- 파일은 이름으로 지정해 스테이징한다. `git add -A`, `git add .`은 쓰지 않는다.
+- **이미 만든 커밋은 고치지 않는다.** 실수, 빠뜨린 파일, 리뷰 반영은 새 커밋으로 더한다. `git commit --amend`, `git rebase`, `git pull --rebase`는 훅이 막는다.
+- 머지는 머지 커밋(`--merge`)으로 한다. squash하지 않는다.
 
 ## 코드 규칙
 
@@ -45,10 +54,12 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 |---|---|
 | `settings.json` | 커밋 공동 작성자 줄·PR 본문 표시 줄 끔(`attribution`). 권한: lint·test·typecheck·build, git 조회, `gh pr view/checks/list` 허용. force push, main 직접 push, `git reset --hard` 거부 |
 | 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 `eslint --fix`, 남은 오류만 알려줌 (파일이 속한 worktree 기준) |
-| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit`, Claude 공동 작성자 줄이 든 커밋 차단. `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
+| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit`, Claude 공동 작성자 줄이 든 커밋, 커밋 기록을 고치는 명령(`commit --amend`, `rebase`, `pull --rebase`) 차단. `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
 | 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
+| 스킬 `/commit` | 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋 (push 안 함) |
+| 스킬 `/verify` | CI와 같은 순서로 검사, 화면이 바뀌었으면 브라우저 확인, 근거와 함께 보고 |
 | 스킬 `/ship` | 검사 → push → PR → CI → 머지 (승인 후) |
 | 스킬 `/parallel-tasks` | 여러 작업을 worktree 서브에이전트로 나눠 작업별 브랜치·PR로 진행 |
 
