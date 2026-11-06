@@ -39,3 +39,10 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # 워커가 번들되지 않는 회귀는 프로덕션 빌드에서만 드러난다
+      - name: 워커 번들 검사
+        run: npm run check:worker

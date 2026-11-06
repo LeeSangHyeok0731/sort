@@ -124,3 +124,4 @@ SortAlgorithm.sort(t)          entities/sort-algorithm/algorithms/*.ts
 
 - 대상 파일 옆에 `*.test.ts`로 둔다. Vitest는 node 환경이라 DOM 렌더링 테스트는 없다. 로직은 `model`·`lib`로 빼서 테스트한다.
 - Claude Code 훅의 판단 로직 테스트는 `.claude/hooks/*.test.mjs`, FSD 검사 스크립트 테스트는 `scripts/*.test.mjs`에 있다.
+- 워커 번들 검사(`scripts/check-worker-bundle.mjs`, `npm run check:worker`)는 `npm run build` 뒤에 `.next/static`을 훑어, 정렬 워커가 JS 청크로 번들됐는지와 `new Worker`가 `.ts` 원본을 띄우지 않는지 확인한다. 프로덕션 빌드에서만 드러나는 워커 회귀를 CI에서 잡기 위한 것이다. 판단 로직 테스트는 `scripts/check-worker-bundle.test.mjs`.

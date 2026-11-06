@@ -11,9 +11,10 @@ npm run typecheck  # tsc --noEmit
 npm run lint       # ESLint (@/ 별칭 FSD 레이어 검사 포함)
 npm run lint:fsd   # FSD 의존성 검사 (상대 경로, 같은 레이어 슬라이스까지)
 npm run build      # 프로덕션 빌드
+npm run check:worker # 빌드 결과물에서 정렬 워커가 JS로 번들됐는지 검사 (build 뒤에)
 ```
 
-CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → test를 돌린다.
+CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → test → build → check:worker를 돌린다.
 
 ## 작업 규칙
 
