@@ -1,6 +1,6 @@
 # 밝은 테마(C1) 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> 작업 단위로 하나씩 진행하고, 단계는 체크박스(`- [ ]`)로 표시한다.
 
 **Goal:** 어두운 남색·그라데이션·유리 카드 디자인을 흰 바탕 + 얇은 테두리의 밝은 테마 하나로 바꾼다.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js 16, React 19, Tailwind CSS v4 (`@theme`), Prism.js, Vitest.
 
-설계 문서: `docs/superpowers/specs/2026-10-23-light-theme-design.md`
+설계 문서: `docs/specs/2026-10-23-light-theme-design.md`
 
 ## Global Constraints
 

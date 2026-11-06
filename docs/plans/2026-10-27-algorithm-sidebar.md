@@ -1,6 +1,6 @@
 # 알고리즘 선택 사이드바 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> 작업 단위로 하나씩 진행하고, 단계는 체크박스(`- [ ]`)로 표시한다.
 
 **Goal:** 알고리즘 58개를 계열별 폴더 트리로 정리하고, 이를 왼쪽 고정 사이드바에서 고를 수 있게 한다.
 
@@ -11,7 +11,7 @@
 
 **Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind, Vitest(node 환경, `src/**/*.test.ts`만 실행)
 
-**Spec:** `docs/superpowers/specs/2026-10-27-algorithm-sidebar-design.md`
+**Spec:** `docs/specs/2026-10-27-algorithm-sidebar-design.md`
 
 ## Global Constraints
 - 데스크톱만 고려한다. 모바일 대응은 하지 않는다.

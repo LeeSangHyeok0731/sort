@@ -1,6 +1,6 @@
 # Claude Code 작업 하네스 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> 작업 단위로 하나씩 진행하고, 단계는 체크박스(`- [ ]`)로 표시한다.
 
 **Goal:** 이 저장소에 CLAUDE.md·구조 문서·ESLint 레이어 검사·권한·훅·프로젝트 스킬을 갖춘 Claude Code 작업 하네스를 만든다.
 
