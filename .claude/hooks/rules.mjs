@@ -96,3 +96,8 @@ export function mainCommitTypes(subjects) {
   }
   return [...types];
 }
+
+/** 커밋 명령에 Claude 공동 작성자 줄(Co-Authored-By: Claude …)을 직접 넣었는지 */
+export function hasClaudeCoauthor(command) {
+  return /co-authored-by:\s*claude|noreply@anthropic\.com/i.test(command);
+}
