@@ -16,6 +16,7 @@ git status --short
 - `main`이면 멈춘다(main에는 직접 반영하지 않는다).
 - 커밋 안 된 변경이 있으면 멈추고 커밋할지 묻는다.
 - `docs/perf-benchmark`이면 2·3단계(검사, push)만 하고 끝낸다. 이 브랜치는 PR·머지하지 않는다.
+- PR 하나에는 작업 하나만 담는다. `git log --oneline main..HEAD`를 보고, 서로 다른 작업 커밋이 섞여 있으면 멈추고 사용자에게 나눌지 묻는다(`/parallel-tasks`). 기능에 딸린 `test:`·`docs:`·`style:` 커밋은 섞인 것으로 보지 않는다.
 
 ## 2. 검사
 

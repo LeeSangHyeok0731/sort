@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Claude Code 개인 설정
 .claude/settings.local.json
+
+# 서브에이전트 작업용 worktree (/parallel-tasks)
+.claude/worktrees/

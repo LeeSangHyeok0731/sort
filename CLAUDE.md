@@ -20,6 +20,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 
 - 답변, 커밋 메시지, PR, 코드 주석은 **한국어**로 쓴다.
 - 작업은 기능별 브랜치에서 한다(main에 직접 커밋하면 훅이 막는다). 커밋까지는 바로 해도 되고, **push·PR·머지는 사용자 승인 후** `/ship` 절차로 한다.
+- **작업 하나 = 브랜치 하나 = PR 하나.** 여러 작업을 한 번에 맡으면 작업마다 main에서 브랜치를 따로 만들고 PR도 따로 올린다. 서브에이전트로 병렬 진행할 때는 `/parallel-tasks` 절차(worktree 격리)를 따른다.
 - `docs/perf-benchmark` 브랜치는 성능 측정 기록용이다. push만 하고 PR·머지하지 않는다.
 - 모바일 화면은 고려하지 않는다.
 - 큰 기능은 설계(`docs/superpowers/specs/`)와 구현 계획(`docs/superpowers/plans/`)을 먼저 문서로 남긴다.
@@ -42,12 +43,15 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 구성 | 내용 |
 |---|---|
 | `settings.json` 권한 | lint·test·typecheck·build, git 조회, `gh pr view/checks/list` 허용. force push, main 직접 push, `git reset --hard` 거부 |
-| 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 `eslint --fix`, 남은 오류만 알려줌 |
-| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit` 차단 |
+| 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 `eslint --fix`, 남은 오류만 알려줌 (파일이 속한 worktree 기준) |
+| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit` 차단. `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
 | 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
 | 스킬 `/ship` | 검사 → push → PR → CI → 머지 (승인 후) |
+| 스킬 `/parallel-tasks` | 여러 작업을 worktree 서브에이전트로 나눠 작업별 브랜치·PR로 진행 |
+
+서브에이전트 worktree(`.claude/worktrees/`)는 gitignore 대상이고, 본 폴더의 tsc·eslint 검사 범위에서 빠진다.
 
 개인 설정은 `.claude/settings.local.json`(커밋 안 함)에 둔다.
 

@@ -4,8 +4,11 @@ import {
   findSecret,
   hasSrcChanges,
   isGitCommit,
+  isPrCreate,
   isSecretExempt,
   lintTarget,
+  mainCommitTypes,
+  prHeadBranch,
   writtenText,
 } from "./rules.mjs";
 
@@ -123,5 +126,39 @@ describe("hasSrcChanges", () => {
   it("src 밖 변경만 있으면 false", () => {
     expect(hasSrcChanges(" M docs/a.md\n?? .claude/x\n")).toBe(false);
     expect(hasSrcChanges("")).toBe(false);
+  });
+});
+
+describe("isPrCreate·prHeadBranch", () => {
+  it("gh pr create를 알아본다", () => {
+    expect(isPrCreate('gh pr create --base main --title "x"')).toBe(true);
+    expect(isPrCreate("cd sort && gh  pr create")).toBe(true);
+    expect(isPrCreate("gh pr view 17")).toBe(false);
+    expect(isPrCreate("gh pr checks 17")).toBe(false);
+  });
+
+  it("--head 브랜치를 꺼낸다", () => {
+    expect(prHeadBranch("gh pr create --base main --head fix/a --title x")).toBe("fix/a");
+    expect(prHeadBranch('gh pr create --head="feat/b"')).toBe("feat/b");
+    expect(prHeadBranch("gh pr create --base main")).toBeNull();
+  });
+});
+
+describe("mainCommitTypes", () => {
+  it("서로 다른 작업 접두어를 모은다", () => {
+    expect(
+      mainCommitTypes(["ci: 빌드 검사", "fix: 계산 실패 표시", "fix: 단축키 수정"])
+    ).toEqual(["ci", "fix"]);
+  });
+
+  it("테스트·문서·서식 커밋은 작업 종류로 세지 않는다", () => {
+    expect(mainCommitTypes(["feat: 새 정렬", "test: 새 정렬 테스트", "docs: README", "style: 정리"])).toEqual([
+      "feat",
+    ]);
+  });
+
+  it("범위·! 표기를 읽고, 접두어 없는 제목은 무시한다", () => {
+    expect(mainCommitTypes(["feat(sound)!: 음색 변경", "Merge branch main", "WIP"])).toEqual(["feat"]);
+    expect(mainCommitTypes([])).toEqual([]);
   });
 });

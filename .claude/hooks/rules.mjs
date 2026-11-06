@@ -70,3 +70,29 @@ const DANGEROUS_COMMANDS = [
 export function dangerousCommand(command) {
   return DANGEROUS_COMMANDS.find(([, pattern]) => pattern.test(command))?.[0] ?? null;
 }
+
+/** 셸 명령에 gh pr create가 들어 있는지 */
+export function isPrCreate(command) {
+  return /\bgh\s+pr\s+create\b/.test(command);
+}
+
+/** gh pr create에 --head로 준 브랜치 (없으면 null) */
+export function prHeadBranch(command) {
+  return command.match(/--head(?:=|\s+)["']?([^\s"']+)/)?.[1] ?? null;
+}
+
+// 다른 작업에 딸려 오는 접두어 (기능과 함께 쓴 테스트·문서·서식). 작업 종류를 셀 때 빼고 센다
+const SUPPORT_TYPES = new Set(["test", "docs", "style"]);
+
+/**
+ * 커밋 제목들에서 주 접두어(feat, fix, ci …)를 모은다.
+ * 둘 이상이면 PR 하나에 서로 다른 작업이 섞였을 가능성이 크다 (작업 하나당 PR 하나 규칙).
+ */
+export function mainCommitTypes(subjects) {
+  const types = new Set();
+  for (const subject of subjects) {
+    const type = subject.match(/^(\w+)(?:\([^)]*\))?!?:/)?.[1];
+    if (type && !SUPPORT_TYPES.has(type)) types.add(type);
+  }
+  return [...types];
+}
