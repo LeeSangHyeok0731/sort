@@ -24,7 +24,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 - **작업 하나 = 브랜치 하나 = PR 하나.** 여러 작업을 한 번에 맡으면 작업마다 main에서 브랜치를 따로 만들고 PR도 따로 올린다. 서브에이전트로 병렬 진행할 때는 `/parallel-tasks` 절차(worktree 격리)를 따른다.
 - `docs/perf-benchmark` 브랜치는 성능 측정 기록용이다. push만 하고 PR·머지하지 않는다.
 - 모바일 화면은 고려하지 않는다.
-- 큰 기능은 설계(`docs/specs/`)와 구현 계획(`docs/plans/`)을 먼저 문서로 남긴다.
+- 큰 기능은 설계(`docs/specs/`, `/design`)와 구현 계획(`docs/plans/`, `/plan`)을 먼저 문서로 남긴다. 설계는 사용자 승인을 받은 뒤에 구현한다.
 - 커밋에 Claude 공동 작성자 줄(`Co-Authored-By: Claude …`)을, PR 본문에 "Generated with Claude Code" 줄을 넣지 않는다. `settings.json`의 `attribution`(`commit`·`pr` 빈 문자열)이 끄고, 커밋에 직접 넣은 줄은 훅이 막는다.
 
 ## 커밋 규칙
@@ -59,6 +59,8 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
+| 스킬 `/design` | 질문(하나씩) → 방식 비교·추천 → `docs/specs/` 설계 문서 → 승인 (승인 전 구현 안 함) |
+| 스킬 `/plan` | 승인된 설계를 커밋 하나 크기의 작업으로 나눠 `docs/plans/`에 계획 문서 |
 | 스킬 `/commit` | 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋 (push 안 함) |
 | 스킬 `/verify` | CI와 같은 순서로 검사, 화면이 바뀌었으면 브라우저 확인, 근거와 함께 보고 |
 | 스킬 `/pr` | 작업 섞임 확인 → 개발 로그 항목 → `/verify` → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
