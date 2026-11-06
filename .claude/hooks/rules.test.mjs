@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dangerousCommand,
   findSecret,
+  hasClaudeCoauthor,
   hasSrcChanges,
   isGitCommit,
   isPrCreate,
@@ -160,5 +161,18 @@ describe("mainCommitTypes", () => {
   it("범위·! 표기를 읽고, 접두어 없는 제목은 무시한다", () => {
     expect(mainCommitTypes(["feat(sound)!: 음색 변경", "Merge branch main", "WIP"])).toEqual(["feat"]);
     expect(mainCommitTypes([])).toEqual([]);
+  });
+});
+
+describe("hasClaudeCoauthor", () => {
+  it("Claude 공동 작성자 줄을 찾는다", () => {
+    expect(hasClaudeCoauthor('git commit -m "feat: x\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"')).toBe(true);
+    expect(hasClaudeCoauthor('git commit -m "fix: y" -m "co-authored-by: claude"')).toBe(true);
+    expect(hasClaudeCoauthor("git commit -m 'docs: z' --trailer 'Co-authored-by: Someone <noreply@anthropic.com>'")).toBe(true);
+  });
+
+  it("사람 공동 작성자나 일반 메시지는 통과", () => {
+    expect(hasClaudeCoauthor('git commit -m "feat: x\n\nCo-Authored-By: Kim <kim@example.com>"')).toBe(false);
+    expect(hasClaudeCoauthor('git commit -m "docs: CLAUDE.md 규칙 정리"')).toBe(false);
   });
 });

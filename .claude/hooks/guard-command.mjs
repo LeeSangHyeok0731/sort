@@ -1,7 +1,7 @@
-// PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령과 main 브랜치 직접 커밋을 막고,
+// PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령, main 브랜치 직접 커밋, Claude 공동 작성자 줄이 든 커밋을 막고,
 // 여러 작업이 섞인 PR을 만들려 하면 사용자에게 묻는다
 import { ask, block, commandDirOf, git, readInput } from "./io.mjs";
-import { dangerousCommand, isGitCommit, isPrCreate, mainCommitTypes, prHeadBranch } from "./rules.mjs";
+import { dangerousCommand, hasClaudeCoauthor, isGitCommit, isPrCreate, mainCommitTypes, prHeadBranch } from "./rules.mjs";
 
 const input = await readInput();
 const command = input.tool_input?.command ?? "";
@@ -14,6 +14,9 @@ if (danger) block(`위험한 명령이라 막았어요 (${danger}). 꼭 필요�
 if (isGitCommit(command)) {
   const branch = git(dir, ["branch", "--show-current"])?.trim();
   if (branch === "main") block("main 브랜치에는 직접 커밋하지 않아요. 기능 브랜치를 먼저 만드세요 (git switch -c <이름>).");
+  if (hasClaudeCoauthor(command)) {
+    block("커밋에 Claude 공동 작성자 줄(Co-Authored-By: Claude)을 넣지 않아요. 그 줄을 빼고 다시 커밋하세요.");
+  }
 }
 
 if (isPrCreate(command)) {
