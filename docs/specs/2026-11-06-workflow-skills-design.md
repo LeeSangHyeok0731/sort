@@ -49,6 +49,7 @@
 - **메시지 형식**
   - 접두어(`feat:` `fix:` `perf:` `refactor:` `style:` `test:` `docs:` `chore:` `ci:`) 뒤에 한국어 한 줄을 쓴다.
   - 필요하면 빈 줄 뒤 본문에 "왜"를 쓴다.
+  - Claude 공동 작성자 줄(`Co-Authored-By: Claude …`)은 넣지 않는다. `settings.json`의 `attribution.commit: ""`가 끄고, 훅이 직접 넣은 줄을 막는다(브랜치 `chore/no-claude-coauthor`에서 따로 반영).
 - **강제:** `guard-command.mjs` 훅이 `git commit --amend`와 `git rebase`를 막는다. `git reset --hard`는 이미 권한 설정이 거부한다.
 
 ## 전체 흐름
