@@ -19,7 +19,8 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 ## 작업 규칙
 
 - 답변, 커밋 메시지, PR, 코드 주석은 **한국어**로 쓴다.
-- 작업은 기능별 브랜치에서 한다(main에 직접 커밋하면 훅이 막는다). 커밋까지는 바로 해도 되고, **push·PR·머지는 사용자 승인 후** `/ship` 절차로 한다.
+- 작업은 기능별 브랜치에서 한다(main에 직접 커밋하면 훅이 막는다). 커밋까지는 바로 해도 되고, **push·PR은 사용자 승인 후 `/pr`**, **머지는 그 PR의 머지 승인을 따로 받은 뒤 `/merge`** 절차로 한다.
+- PR마다 `DEVELOPMENT_LOG.md`에 항목 하나를 쓴다(`/pr` 3단계). 날짜 머리, 다음 번호, 3~6줄 목록, 끝의 "마지막 업데이트" 날짜.
 - **작업 하나 = 브랜치 하나 = PR 하나.** 여러 작업을 한 번에 맡으면 작업마다 main에서 브랜치를 따로 만들고 PR도 따로 올린다. 서브에이전트로 병렬 진행할 때는 `/parallel-tasks` 절차(worktree 격리)를 따른다.
 - `docs/perf-benchmark` 브랜치는 성능 측정 기록용이다. push만 하고 PR·머지하지 않는다.
 - 모바일 화면은 고려하지 않는다.
@@ -60,7 +61,8 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
 | 스킬 `/commit` | 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋 (push 안 함) |
 | 스킬 `/verify` | CI와 같은 순서로 검사, 화면이 바뀌었으면 브라우저 확인, 근거와 함께 보고 |
-| 스킬 `/ship` | 검사 → push → PR → CI → 머지 (승인 후) |
+| 스킬 `/pr` | 작업 섞임 확인 → 개발 로그 항목 → `/verify` → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
+| 스킬 `/merge` | CI 통과 확인 → 머지 커밋으로 머지 → main 동기화·브랜치 정리 (머지 승인 후) |
 | 스킬 `/parallel-tasks` | 여러 작업을 worktree 서브에이전트로 나눠 작업별 브랜치·PR로 진행 |
 
 서브에이전트 worktree(`.claude/worktrees/`)는 gitignore 대상이고, 본 폴더의 tsc·eslint 검사 범위에서 빠진다.
