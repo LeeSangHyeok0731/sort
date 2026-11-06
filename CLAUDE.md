@@ -23,7 +23,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 - **작업 하나 = 브랜치 하나 = PR 하나.** 여러 작업을 한 번에 맡으면 작업마다 main에서 브랜치를 따로 만들고 PR도 따로 올린다. 서브에이전트로 병렬 진행할 때는 `/parallel-tasks` 절차(worktree 격리)를 따른다.
 - `docs/perf-benchmark` 브랜치는 성능 측정 기록용이다. push만 하고 PR·머지하지 않는다.
 - 모바일 화면은 고려하지 않는다.
-- 큰 기능은 설계(`docs/superpowers/specs/`)와 구현 계획(`docs/superpowers/plans/`)을 먼저 문서로 남긴다.
+- 큰 기능은 설계(`docs/specs/`)와 구현 계획(`docs/plans/`)을 먼저 문서로 남긴다.
 - 커밋 메시지는 `feat:`, `fix:`, `perf:`, `refactor:`, `style:`, `test:`, `docs:`, `chore:`, `ci:` 접두어를 쓴다.
 
 ## 코드 규칙

@@ -21,7 +21,7 @@
   - 기능별 브랜치 → 커밋 → 사용자 승인 후 push·PR·CI 확인·머지(`/ship`)
   - `docs/perf-benchmark` 브랜치는 push만 하고 PR·머지하지 않는다
   - 모바일 화면은 고려하지 않는다
-  - 큰 기능은 `docs/superpowers/specs`(설계)와 `plans`(계획)에 문서를 남긴다
+  - 큰 기능은 `docs/specs`(설계)와 `docs/plans`(계획)에 문서를 남긴다
 - 주의할 점: Turbopack dev 캐시(`.next/dev`)가 오래된 CSS를 내보내면 서버를 끄고 `.next/dev`를 지운다
 - 구조는 `docs/ARCHITECTURE.md`를 가리킨다(`@docs/ARCHITECTURE.md`로 불러온다)
 
