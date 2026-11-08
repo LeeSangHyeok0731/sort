@@ -61,6 +61,8 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
 | 스킬 `/design` | 질문(하나씩) → 방식 비교·추천 → `docs/specs/` 설계 문서 → 승인 (승인 전 구현 안 함) |
 | 스킬 `/plan` | 승인된 설계를 커밋 하나 크기의 작업으로 나눠 `docs/plans/`에 계획 문서 |
+| 스킬 `/implement` | 계획(또는 작은 수정)을 작업 하나씩: 테스트 먼저 → 구현 → 검사 → `/commit`, 범위 밖은 보고만 |
+| 스킬 `/debug` | 재현 → 실패하는 테스트 → 원인 확인 → 수정 → `fix:` 커밋 (원인 확인 전 수정 금지) |
 | 스킬 `/commit` | 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋 (push 안 함) |
 | 스킬 `/verify` | CI와 같은 순서로 검사, 화면이 바뀌었으면 브라우저 확인, 근거와 함께 보고 |
 | 스킬 `/pr` | 작업 섞임 확인 → 개발 로그 항목 → `/verify` → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
