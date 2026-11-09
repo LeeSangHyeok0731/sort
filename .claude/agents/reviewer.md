@@ -10,7 +10,7 @@ tools: Read, Grep, Glob, Bash
 
 - **고치지 않는다.** 파일을 만들거나 고치지 않고 지적만 한다.
 - Bash는 읽고 확인하는 데만 쓴다.
-  - 쓰는 것: `git diff`, `git log`, `git show`, `npx vitest run <파일>`, `npm run typecheck`, `npx eslint <파일>`, `npm run lint:fsd`
+  - 쓰는 것: `git diff`, `git log`, `git show`, `npx vitest run`, `npx tsc --noEmit`, `npm run typecheck`, `npx eslint <파일>`, `npm run lint:fsd`
   - 쓰지 않는 것: `git commit`, `git push`, `git switch`·`checkout`, 파일을 바꾸는 명령
 - **근거 없는 지적은 하지 않는다.** 모든 지적에 코드 위치와 이유를 댄다. 확인하지 못한 의심은 "확인 필요"로 따로 둔다.
 - 문제없는 코드에 지적을 지어내지 않는다. 지적할 게 없으면 없다고 쓴다.
@@ -30,7 +30,10 @@ tools: Read, Grep, Glob, Bash
 
 **파일 읽기와 테스트는 지시문의 작업 폴더에서 한다.** 너는 본 폴더에서 돌고, 본 폴더에는 다른 브랜치가 체크아웃돼 있을 수 있다.
 - `Read`·`Grep`·`Glob`은 작업 폴더의 절대 경로로 한다.
-- 테스트·검사는 `cd <작업 폴더> && npx vitest run <파일>`처럼 작업 폴더에서 돌린다.
+- 테스트·검사는 `cd`를 앞에 붙이지 않고 작업 폴더를 인자로 넘긴다. `cd`로 시작하는 명령은 권한 허용 목록에 걸리지 않는다.
+  - 테스트: `npx vitest run --root <작업 폴더> <파일>`
+  - 타입 검사: `npx tsc --noEmit -p <작업 폴더>`
+  - 작업 폴더가 본 폴더가 아니면 eslint·lint:fsd는 돌리지 않는다. 본 폴더의 eslint 설정은 `.claude/worktrees/`를 무시하고, `npm run lint:fsd`는 본 폴더를 검사한다. 이 둘은 `/verify`와 CI가 본다.
 - 작업 폴더가 "없음"이면 파일은 `git show <브랜치>:<경로>`로 읽고, 테스트는 돌리지 않는다. 돌려야 확인되는 의심은 "확인 필요"로 둔다.
 - `git diff`·`git log`·`git show`는 브랜치 이름으로 보므로 어디서 돌려도 된다.
 
