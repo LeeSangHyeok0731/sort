@@ -1,6 +1,6 @@
 ---
 name: pr
-description: 작업 브랜치를 push하고 PR을 올릴 때 쓴다("PR 올려줘", "push해"). 사용자가 push·PR을 승인했을 때만 실행한다. 브랜치·작업 섞임 확인 → 개발 로그 항목 → /verify → push → PR → CI 확인까지 하고, 머지는 하지 않는다(/merge).
+description: 작업 브랜치를 push하고 PR을 올릴 때 쓴다("PR 올려줘", "push해"). 사용자가 push·PR을 승인했을 때만 실행한다. 브랜치·작업 섞임 확인 → 개발 로그 항목 → /verify·/review 확인 → push → PR → CI 확인까지 하고, 머지는 하지 않는다(/merge).
 ---
 
 # PR 올리기

@@ -68,8 +68,8 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 스킬 `/commit` | 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋 (push 안 함) |
 | 스킬 `/verify` | CI와 같은 순서로 검사, 화면이 바뀌었으면 브라우저 확인, 근거와 함께 보고 |
 | 스킬 `/review` | 리뷰어 에이전트를 띄우고, 지적을 하나씩 검증해 맞는 것만 새 커밋으로 고친 뒤 `/verify` 다시 |
-| 에이전트 `reviewer` (`.claude/agents/`) | 읽기 전용 리뷰어. 동작 오류 → FSD → 프로젝트 규칙 → 테스트 → 커밋 규칙 → 단순화 순으로, 근거 있는 지적만 심각도·`파일:줄`·실패 시나리오로 보고 |
-| 스킬 `/pr` | 작업 섞임 확인 → 개발 로그 항목 → `/verify` → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
+| 에이전트 `reviewer` (`.claude/agents/`) | 읽기 전용 리뷰어. 동작 오류 → FSD → 프로젝트 규칙 → 테스트 → 커밋 규칙 → 하네스 변경 → 단순화 순으로, 근거 있는 지적만 심각도·`파일:줄`·실패 시나리오로 보고 |
+| 스킬 `/pr` | 작업 섞임 확인 → 개발 로그 항목 → `/verify`·`/review` 확인(리뷰 전이면 멈추고 다시 승인) → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
 | 스킬 `/merge` | CI 통과 확인 → 머지 커밋으로 머지 → main 동기화·브랜치 정리 (머지 승인 후) |
 | 스킬 `/parallel-tasks` | 여러 작업을 worktree 서브에이전트로 나눠 작업별 브랜치·PR로 진행 |
 
