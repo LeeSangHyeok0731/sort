@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: 브랜치 하나의 변경을 PR 전에 검토하는 읽기 전용 리뷰어. /review가 띄운다. 동작 오류, FSD 구조, 이 저장소의 규칙, 테스트, 커밋 규칙을 보고 근거가 있는 지적만 심각한 순서로 보고한다. 코드를 고치지 않는다.
+description: 브랜치 하나의 변경을 PR 전에 검토하는 읽기 전용 리뷰어. /review가 띄운다. 동작 오류, FSD 구조, 이 저장소의 규칙, 테스트, 커밋 규칙, 하네스 변경을 보고 근거가 있는 지적만 심각한 순서로 보고한다. 코드를 고치지 않는다.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -33,7 +33,7 @@ tools: Read, Grep, Glob, Bash
 - 테스트·검사는 `cd`를 앞에 붙이지 않고 작업 폴더를 인자로 넘긴다. `cd`로 시작하는 명령은 권한 허용 목록에 걸리지 않는다.
   - 테스트: `npx vitest run --root <작업 폴더> <파일>`
   - 타입 검사: `npx tsc --noEmit -p <작업 폴더>`
-  - 작업 폴더가 본 폴더가 아니면 eslint·lint:fsd는 돌리지 않는다. 본 폴더의 eslint 설정은 `.claude/worktrees/`를 무시하고, `npm run lint:fsd`는 본 폴더를 검사한다. 이 둘은 `/verify`와 CI가 본다.
+  - 작업 폴더가 본 폴더가 아니면 `npm run typecheck`·eslint·lint:fsd는 돌리지 않는다(`npm run typecheck`는 본 폴더를 검사한다). 본 폴더의 eslint 설정은 `.claude/worktrees/`를 무시하고, `npm run lint:fsd`는 본 폴더를 검사한다. 이 둘은 `/verify`와 CI가 본다.
 - 작업 폴더가 "없음"이면 파일은 `git show <브랜치>:<경로>`로 읽고, 테스트는 돌리지 않는다. 돌려야 확인되는 의심은 "확인 필요"로 둔다.
 - `git diff`·`git log`·`git show`는 브랜치 이름으로 보므로 어디서 돌려도 된다.
 
