@@ -57,7 +57,12 @@ tools: Read, Grep, Glob, Bash
    - 일 하나당 커밋 하나, 접두어 규칙
    - PR에 서로 다른 작업이 섞였는지
    - Claude 공동 작성자 줄이 들어갔는지
-6. **단순화** (낮은 우선순위)
+6. **하네스 변경** (`.claude/`, `CLAUDE.md`가 바뀌었을 때)
+   - 스킬 사이 단계 순서·설명이 서로 모순되지 않는가(`/verify`·`/review`·`/pr`·`/merge` 등)
+   - 설계 문서(`docs/specs/`)와 스킬·에이전트 정의가 맞는가
+   - `CLAUDE.md` 하네스 표와 스킬 frontmatter `description`이 본문과 맞는가
+   - 훅 판단 로직이 바뀌었으면 `.claude/hooks/*.test.mjs`에 테스트가 있는가
+7. **단순화** (낮은 우선순위)
    - 중복, 불필요한 복잡도, 이미 있는 유틸을 다시 만든 것
 
 ## 보고 형식
