@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dangerousCommand,
   findSecret,
+  forbiddenGit,
   gitOutputFile,
   hasClaudeCoauthor,
   hasSrcChanges,
@@ -12,6 +13,7 @@ import {
   lintTarget,
   mainCommitTypes,
   prHeadBranch,
+  toolWriteOption,
   writtenText,
 } from "./rules.mjs";
 
@@ -263,5 +265,112 @@ describe("gitOutputFile", () => {
     expect(gitOutputFile("git diff main...HEAD --stat")).toBeNull();
     expect(gitOutputFile("git commit -m \"docs: --output 옵션 설명\"")).toBeNull();
     expect(gitOutputFile("git log --oneline; npm run build --output=x")).toBeNull();
+  });
+});
+
+describe("toolWriteOption", () => {
+  it("허용 목록의 검사 명령에 파일을 쓰는 옵션이 붙으면 찾는다", () => {
+    expect(toolWriteOption("npx eslint src --fix")).toBe("eslint --fix");
+    expect(toolWriteOption("npm run lint -- --fix")).toBe("eslint --fix");
+    expect(toolWriteOption("npx eslint src -o out.txt")).toBe("eslint --output-file");
+    expect(toolWriteOption("npx eslint src --output-file=out.txt")).toBe("eslint --output-file");
+    expect(toolWriteOption("npx vitest run -u")).toBe("vitest --update");
+    expect(toolWriteOption("npm test -- --update")).toBe("vitest --update");
+    expect(toolWriteOption("npx vitest run --outputFile=x.json")).toBe("vitest --outputFile");
+    expect(toolWriteOption("npx tsc --noEmit false")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --noEmit=false")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --outDir dist")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc -b")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --init")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npm run typecheck -- --outFile x.js")).toBe("tsc 파일 출력");
+  });
+
+  it("줄 잇기와 따옴표로 감싼 옵션도 찾는다", () => {
+    expect(toolWriteOption("npx eslint src \\\n  --fix")).toBe("eslint --fix");
+    expect(toolWriteOption('npx vitest run "--outputFile=a b.json"')).toBe("vitest --outputFile");
+  });
+
+  it("구분자가 붙은 옵션, 리포터별 --outputFile, --noEmit 없는 npx tsc도 찾는다", () => {
+    expect(toolWriteOption("npx eslint src --fix;")).toBe("eslint --fix");
+    expect(toolWriteOption("npx vitest run --reporter=json --outputFile.json=x")).toBe("vitest --outputFile");
+    expect(toolWriteOption("npx vitest run --outputFile.json x")).toBe("vitest --outputFile");
+    expect(toolWriteOption("npx tsc src/shared/lib/cn.ts")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc -p other/tsconfig.json")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --noEmit src/shared/lib/cn.ts")).toBeNull();
+  });
+
+  it("쓰지 않는 검사 명령은 통과", () => {
+    expect(toolWriteOption("npx eslint src/app")).toBeNull();
+    expect(toolWriteOption("npx eslint src --fix-dry-run")).toBeNull();
+    expect(toolWriteOption("npm run lint")).toBeNull();
+    expect(toolWriteOption("npm run lint:fsd -- -o")).toBeNull();
+    expect(toolWriteOption("npx vitest run --root .claude/worktrees/a src/x.test.ts")).toBeNull();
+    expect(toolWriteOption("npm test")).toBeNull();
+    expect(toolWriteOption("npx tsc --noEmit -p .claude/worktrees/a")).toBeNull();
+    expect(toolWriteOption("npm run typecheck")).toBeNull();
+  });
+
+  it("다른 명령의 옵션이나 따옴표 안 글은 보지 않는다", () => {
+    expect(toolWriteOption("npm test; git log -u")).toBeNull();
+    expect(toolWriteOption("git commit -m \"chore: eslint --fix 확인\"")).toBeNull();
+    expect(toolWriteOption("npx eslint-plugin-x --fix")).toBeNull();
+  });
+});
+
+describe("forbiddenGit", () => {
+  it("deny 규칙의 명령을 찾는다", () => {
+    expect(forbiddenGit("git push --force")).toBe("force push");
+    expect(forbiddenGit("git push origin main")).toBe("main 직접 push");
+    expect(forbiddenGit("git reset --hard HEAD~1")).toBe("git reset --hard");
+  });
+
+  it("형태를 바꿔 deny 규칙을 피하는 명령도 찾는다", () => {
+    expect(forbiddenGit("git -C . push --force")).toBe("force push");
+    expect(forbiddenGit("git -c push.default=current push -f")).toBe("force push");
+    expect(forbiddenGit("git --no-pager push origin feat/x --force-with-lease")).toBe("force push");
+    expect(forbiddenGit("git push -uf origin feat/x")).toBe("force push");
+    expect(forbiddenGit("git push origin +feat/x")).toBe("force push");
+    expect(forbiddenGit("git push -u origin main")).toBe("main 직접 push");
+    expect(forbiddenGit("git push origin HEAD:main")).toBe("main 직접 push");
+    expect(forbiddenGit("git push origin HEAD:refs/heads/main")).toBe("main 직접 push");
+    expect(forbiddenGit('git push origin "main"')).toBe("main 직접 push");
+    expect(forbiddenGit("git -C ../sort reset --hard")).toBe("git reset --hard");
+    expect(forbiddenGit("git status && git push \\\n  --force")).toBe("force push");
+  });
+
+  it("명령 구분자가 바로 붙어도 찾는다", () => {
+    expect(forbiddenGit("git -C . push --force;echo x")).toBe("force push");
+    expect(forbiddenGit("git -C . push --force&&echo")).toBe("force push");
+    expect(forbiddenGit("git -C . push -f;")).toBe("force push");
+    expect(forbiddenGit("git -C . push origin main;echo x")).toBe("main 직접 push");
+    expect(forbiddenGit("git -C . push origin main&& echo x")).toBe("main 직접 push");
+    expect(forbiddenGit("(git -C . push origin main)")).toBe("main 직접 push");
+  });
+
+  it("--mirror·--all로 main을 덮어쓰거나 push하는 것도 찾는다", () => {
+    expect(forbiddenGit("git -C . push --mirror")).toBe("force push");
+    expect(forbiddenGit("git -C . push --all")).toBe("main 직접 push");
+  });
+
+  it("허용되는 push·reset은 통과", () => {
+    expect(forbiddenGit("git push -u origin chore/narrow-npm-permission")).toBeNull();
+    expect(forbiddenGit("git push origin feat/main-menu")).toBeNull();
+    expect(forbiddenGit("git push origin main-fix")).toBeNull();
+    expect(forbiddenGit("git reset --soft HEAD~1")).toBeNull();
+    expect(forbiddenGit("git pull --ff-only")).toBeNull();
+    expect(forbiddenGit("git switch main && git pull --ff-only")).toBeNull();
+  });
+
+  it("다른 명령이나 글 속의 명령 이름은 보지 않는다", () => {
+    expect(forbiddenGit('git commit -m "docs: git push --force 금지"')).toBeNull();
+    expect(forbiddenGit("git push -u origin feat/x; git log --oneline main")).toBeNull();
+    expect(forbiddenGit("git log -f; git push origin feat/x")).toBeNull();
+  });
+});
+
+describe("다른 판단도 git 앞 옵션(-C 등)을 건너뛴다", () => {
+  it("git -C로 amend·--output을 숨겨도 찾는다", () => {
+    expect(historyRewrite("git -C . commit --amend")).toBe("git commit --amend");
+    expect(gitOutputFile("git -C . log --output=x")).toBe("git log --output");
   });
 });

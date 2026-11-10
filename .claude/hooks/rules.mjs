@@ -118,9 +118,13 @@ const stripText = (command) =>
     .replace(/(^|\s)(["'])(--[A-Za-z][\w-]*(?:=[^"']*)?)\2(?=[\s;&|)]|$)/g, "$1$3")
     .replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
 
-const GIT = String.raw`\bgit(?:\s+-c\s+\S+)*\s+`;
+// git과 하위 명령 사이의 전역 옵션(-C 경로, -c 키=값, --no-pager …)은 건너뛴다. `git -C . push`처럼 형태만 바꿔 피하지 못하게
+const GIT = String.raw`\bgit(?:\s+(?:-[Cc]|--git-dir|--work-tree|--namespace)\s+\S+|\s+-[\w-]+(?:=\S+)?)*\s+`;
 // 옵션은 같은 줄, 같은 명령(; & | 앞) 안에서만 찾는다
 const SAME_COMMAND = String.raw`[^;&|\n]*`;
+// 낱말 끝: 공백, 명령 구분자(; & | )), 줄 끝. 구분자가 바로 붙은 `--force;`도 놓치지 않게
+const END = String.raw`(?=[\s;&|)]|$)`;
+const OPTION_END = String.raw`(?=[=\s;&|)]|$)`;
 const HISTORY_REWRITES = [
   ["git commit --amend", new RegExp(GIT + String.raw`commit\b` + SAME_COMMAND + String.raw`\s--amend\b`)],
   // 이미 진행 중인 rebase를 멈추는 --abort·--quit은 기록을 바꾸지 않으므로 허용한다
@@ -146,4 +150,56 @@ const GIT_OUTPUT = new RegExp(GIT + String.raw`(diff|log|show)\b` + SAME_COMMAND
 export function gitOutputFile(command) {
   const match = stripText(command).match(GIT_OUTPUT);
   return match ? `git ${match[1]} --output` : null;
+}
+
+// 허용 목록(`npx eslint *`, `npm test *` …)의 검사 명령. npm run 뒤 `--` 인자는 그 도구로 넘어간다
+const ESLINT = String.raw`\b(?:npx\s+eslint|npm\s+run\s+lint)(?=\s|$)`;
+const VITEST = String.raw`\b(?:npx\s+vitest|npm\s+(?:run\s+)?test)(?=\s|$)`;
+const TSC = String.raw`\b(?:npx\s+tsc|npm\s+run\s+typecheck)(?=\s|$)`;
+const TOOL_WRITES = [
+  ["eslint --fix", ESLINT, "--fix"],
+  ["eslint --output-file", ESLINT, "(?:-o|--output-file)"],
+  ["vitest --update", VITEST, "(?:-u|--update)"],
+  // 리포터별로 `--outputFile.json=x`처럼 쓰기도 한다
+  ["vitest --outputFile", VITEST, String.raw`--outputFile(?:\.\w+)?`],
+  // noEmit을 끄거나, noEmit이어도 빌드 정보·tsconfig·추적 파일을 쓰는 옵션
+  [
+    "tsc 파일 출력",
+    TSC,
+    String.raw`(?:--noEmit(?:=|\s+)false|--outDir|--outFile|--declarationDir|--tsBuildInfoFile|--build|-b|--init|--generateTrace)`,
+  ],
+].map(([label, tool, option]) => [label, new RegExp(tool + SAME_COMMAND + String.raw`\s` + option + OPTION_END)]);
+// npx tsc에 파일 인자나 다른 -p를 주면 tsconfig의 noEmit이 적용되지 않아 .js를 쓴다. --noEmit을 직접 붙이지 않은 호출은 묻는다
+TOOL_WRITES.push([
+  "tsc 파일 출력",
+  new RegExp(String.raw`\bnpx\s+tsc(?=\s|$)(?!` + SAME_COMMAND + String.raw`\s--noEmit` + END + ")"),
+]);
+
+/**
+ * 허용 목록의 검사 명령(eslint·vitest·tsc)에 파일을 쓰는 옵션이 붙었으면 그 종류, 아니면 null.
+ * 허용 목록은 뒤 인자를 가리지 않으므로, 이것으로 소스를 고치거나 아무 파일이나 확인 없이 쓸 수 있다
+ */
+export function toolWriteOption(command) {
+  const bare = stripText(command);
+  return TOOL_WRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
+}
+
+// settings.json deny 규칙과 같은 명령. 허용 목록 규칙은 `git -C . push --force`처럼 형태를 바꾸면 맞지 않아 훅이 한 번 더 본다
+const PUSH = GIT + String.raw`push\b` + SAME_COMMAND;
+const FORBIDDEN_GIT = [
+  // --mirror는 원격 ref를 덮어쓰고 지우기까지 한다
+  [
+    "force push",
+    new RegExp(PUSH + String.raw`\s(?:(?:--force(?:-with-lease|-if-includes)?|--mirror)` + OPTION_END + String.raw`|-[a-z]*f[a-z]*` + END + String.raw`|\+\S)`),
+  ],
+  // --all은 로컬 main까지 push한다
+  ["main 직접 push", new RegExp(PUSH + String.raw`(?:[\s:](?:refs/heads/)?main|\s--all)` + END)],
+  ["git reset --hard", new RegExp(GIT + String.raw`reset\b` + SAME_COMMAND + String.raw`\s--hard\b`)],
+];
+
+/** settings.json이 거부하는 git 명령(force push·--mirror, main 직접 push·--all, reset --hard)이면 그 종류, 아니면 null */
+export function forbiddenGit(command) {
+  // 따옴표로 감싼 한 단어(`"main"`)는 셸이 따옴표를 벗겨 넘기므로 벗긴 채로 본다
+  const bare = stripText(command.replace(/(^|\s)(["'])([\w./:+-]+)\2(?=[\s;&|)]|$)/g, "$1$3"));
+  return FORBIDDEN_GIT.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }
