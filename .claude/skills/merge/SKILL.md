@@ -45,7 +45,7 @@ git pull --ff-only
 git branch -d <브랜치>
 ```
 - `--delete-branch`가 로컬 브랜치를 이미 지웠으면 마지막 줄은 건너뛴다.
-- 남은 worktree가 있으면 `git worktree list`로 보고 지운다(`/parallel-tasks` 5단계).
+- 남은 worktree가 있으면 `git worktree list`로 보고 지운다(`/parallel-tasks` 4단계).
 
 ## 5. 보고
 

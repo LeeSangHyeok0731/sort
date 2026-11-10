@@ -242,7 +242,7 @@
 - **도구:** 전체. 단, 권한 설정과 훅이 push·force push·main 커밋을 막는다.
 - **정의에 고정할 내용**
   - 위 공통 규칙
-  - 시작할 때 브랜치 맞추기: `/parallel-tasks` 2단계 내용
+  - 시작할 때 브랜치 맞추기(전에는 `/parallel-tasks` 지시문에 있던 내용)
   - `/implement` 절차로 진행하고, 필요한 일마다 `/commit`
   - 끝나기 전 `npm run lint`, `lint:fsd`, `typecheck`, `test`
   - 보고 형식: 브랜치, 커밋 목록, 바꾼 파일, 검사 결과, 확인할 점
