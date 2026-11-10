@@ -1,11 +1,13 @@
 ---
 name: start-task
-description: Use first when given a new task ("~ 만들자", "~ 고쳐줘", "~ 추가해줘", "이거 안 돼", "1, 2, 3 하자"). Check the working folder → update main → classify the task (small change, bug, new algorithm, large feature, several tasks) → create the work branch → hand off to the right skill.
+description: Run on your own, first, whenever the user describes a new task — the user does not type it ("~ 만들자", "~ 고쳐줘", "~ 추가해줘", "이거 안 돼", "1, 2, 3 하자"). Check the working folder → update main → classify the task (small change, bug, new algorithm, large feature, several tasks) → create the work branch → hand off to the right skill.
 ---
 
 # Start a task
 
 A new task always starts on a work branch made from the latest main. This skill only goes as far as creating the branch and handing off to the next skill. It does not change code.
+
+Run it on your own when the user describes a new task; do not wait for them to type `/start-task`. Skip it only when the request clearly refers to the current branch's unmerged work: a review fix, a correction to what was just done, or a question about it. If in doubt, run it and let step 1 ask. A branch with no commits beyond `origin/main` has no current work to follow up on. Keep it quiet: speak only to ask (steps 1, 3, 4) or to report a stop or leftover worktrees (steps 1, 2); otherwise the only output is the one line in step 5.
 
 ## 1. Working folder state
 
@@ -61,10 +63,10 @@ git switch -c <prefix>/<short-english-name>
 
 ## 5. Hand off
 
-Announce the classification in one line (in Korean) and move straight on to that skill.
+Say the branch and the next skill in one short line (in Korean) and move straight on to that skill. Do not explain the classification unless asked.
 
 ```
-작은 수정(한 컴포넌트의 색 토큰 교체)으로 보고 style/progress-bar-color 브랜치를 만들었습니다. /implement로 진행합니다.
+style/progress-bar-color 브랜치에서 /implement로 진행합니다.
 ```
 - A large feature goes to `/design`; do not write code before the design is approved. Whether the design doc gets its own PR or stays on the implementation branch is asked of the user in the last step of `/design`.
 - If the classification turns out wrong during the work (thought it was a small change, but an approach must be chosen), stop, say so, and move to the right skill.
