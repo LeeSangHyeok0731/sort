@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dangerousCommand,
   findSecret,
+  gitOutputFile,
   hasClaudeCoauthor,
   hasSrcChanges,
   historyRewrite,
@@ -215,5 +216,21 @@ describe("historyRewrite", () => {
   it("이미 진행 중인 rebase를 멈추는 명령은 허용한다", () => {
     expect(historyRewrite("git rebase --abort")).toBeNull();
     expect(historyRewrite("git rebase --quit")).toBeNull();
+  });
+});
+
+describe("gitOutputFile", () => {
+  it("허용 목록의 조회 명령에 --output이 붙으면 찾는다 (파일을 쓴다)", () => {
+    expect(gitOutputFile("git log -1 --output=.claude/settings.json")).toBe("git log --output");
+    expect(gitOutputFile("git diff main --output x.txt")).toBe("git diff --output");
+    expect(gitOutputFile("git -c core.pager=cat show HEAD --output=a")).toBe("git show --output");
+    expect(gitOutputFile("cd sort && git log --oneline --output=a")).toBe("git log --output");
+  });
+
+  it("--output이 없거나 문자열 안에만 있으면 통과", () => {
+    expect(gitOutputFile("git log --oneline main..HEAD")).toBeNull();
+    expect(gitOutputFile("git diff main...HEAD --stat")).toBeNull();
+    expect(gitOutputFile("git commit -m \"docs: --output 옵션 설명\"")).toBeNull();
+    expect(gitOutputFile("git log --oneline; npm run build --output=x")).toBeNull();
   });
 });

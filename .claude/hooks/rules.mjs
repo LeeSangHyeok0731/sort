@@ -130,3 +130,14 @@ export function historyRewrite(command) {
   const bare = stripText(command);
   return HISTORY_REWRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }
+
+const GIT_OUTPUT = new RegExp(GIT + String.raw`(diff|log|show)\b` + SAME_COMMAND + String.raw`\s--output\b`);
+
+/**
+ * 권한 허용 목록의 조회 명령(git diff·log·show)에 --output이 붙어 파일을 쓰면 "git <명령> --output", 아니면 null.
+ * 허용 목록은 `git log*`처럼 앞부분만 맞추므로, 이것으로 아무 파일이나 확인 없이 덮어쓸 수 있다
+ */
+export function gitOutputFile(command) {
+  const match = stripText(command).match(GIT_OUTPUT);
+  return match ? `git ${match[1]} --output` : null;
+}
