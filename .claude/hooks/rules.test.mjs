@@ -238,6 +238,20 @@ describe("gitOutputFile", () => {
     expect(gitOutputFile("git log --oneline `\n  --output=x")).toBe("git log --output");
     expect(gitOutputFile("git log \"--output=x\"")).toBe("git log --output");
     expect(gitOutputFile("git log '--output=x'")).toBe("git log --output");
+    expect(gitOutputFile('git log "--output=x";')).toBe("git log --output");
+    expect(gitOutputFile('git log "--output=x"&& git status')).toBe("git log --output");
+    expect(gitOutputFile('git log "--output=a b.txt"')).toBe("git log --output");
+  });
+
+  it("따옴표 안의 글은 옵션으로 보지 않는다", () => {
+    expect(historyRewrite("git commit -m 'feat: x' -m '- 훅이 --amend를 막는다'")).toBeNull();
+    expect(historyRewrite('git commit -m "--amend 하지 않는다"')).toBeNull();
+    expect(gitOutputFile("git log --grep '--output 확인' --oneline")).toBeNull();
+  });
+
+  it("알려진 오탐: 따옴표 안 전체가 옵션 모양 한 단어면 옵션으로 본다 (셸 수준에서 구별할 수 없음)", () => {
+    expect(historyRewrite('git commit -m "--amend"')).toBe("git commit --amend");
+    expect(gitOutputFile("git log --grep '--output'")).toBe("git log --output");
   });
 
   it("--output으로 시작하는 다른 옵션은 통과", () => {
