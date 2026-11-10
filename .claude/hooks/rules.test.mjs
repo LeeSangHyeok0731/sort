@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dangerousCommand,
   findSecret,
+  gitOutputFile,
   hasClaudeCoauthor,
   hasSrcChanges,
   historyRewrite,
@@ -189,6 +190,11 @@ describe("historyRewrite", () => {
     expect(historyRewrite("git pull -r origin main")).toBe("git pull --rebase");
   });
 
+  it("줄 잇기로 나눈 명령도 찾는다", () => {
+    expect(historyRewrite("git commit \\\n  --amend --no-edit")).toBe("git commit --amend");
+    expect(historyRewrite("git commit `\r\n  --amend")).toBe("git commit --amend");
+  });
+
   it("기록을 바꾸지 않는 명령은 통과", () => {
     expect(historyRewrite('git commit -m "fix: --amend 옵션 설명"')).toBeNull();
     expect(historyRewrite('git commit -m "docs: rebase 대신 merge"')).toBeNull();
@@ -215,5 +221,47 @@ describe("historyRewrite", () => {
   it("이미 진행 중인 rebase를 멈추는 명령은 허용한다", () => {
     expect(historyRewrite("git rebase --abort")).toBeNull();
     expect(historyRewrite("git rebase --quit")).toBeNull();
+  });
+});
+
+describe("gitOutputFile", () => {
+  it("허용 목록의 조회 명령에 --output이 붙으면 찾는다 (파일을 쓴다)", () => {
+    expect(gitOutputFile("git log -1 --output=.claude/settings.json")).toBe("git log --output");
+    expect(gitOutputFile("git diff main --output x.txt")).toBe("git diff --output");
+    expect(gitOutputFile("git -c core.pager=cat show HEAD --output=a")).toBe("git show --output");
+    expect(gitOutputFile("cd sort && git log --oneline --output=a")).toBe("git log --output");
+  });
+
+  it("줄 잇기(\\·`)와 따옴표로 감싼 옵션도 찾는다", () => {
+    expect(gitOutputFile("git log --oneline \\\n  --output=x")).toBe("git log --output");
+    expect(gitOutputFile("git log --oneline \\\r\n  --output=x")).toBe("git log --output");
+    expect(gitOutputFile("git log --oneline `\n  --output=x")).toBe("git log --output");
+    expect(gitOutputFile("git log \"--output=x\"")).toBe("git log --output");
+    expect(gitOutputFile("git log '--output=x'")).toBe("git log --output");
+    expect(gitOutputFile('git log "--output=x";')).toBe("git log --output");
+    expect(gitOutputFile('git log "--output=x"&& git status')).toBe("git log --output");
+    expect(gitOutputFile('git log "--output=a b.txt"')).toBe("git log --output");
+  });
+
+  it("따옴표 안의 글은 옵션으로 보지 않는다", () => {
+    expect(historyRewrite("git commit -m 'feat: x' -m '- 훅이 --amend를 막는다'")).toBeNull();
+    expect(historyRewrite('git commit -m "--amend 하지 않는다"')).toBeNull();
+    expect(gitOutputFile("git log --grep '--output 확인' --oneline")).toBeNull();
+  });
+
+  it("알려진 오탐: 따옴표 안 전체가 옵션 모양 한 단어면 옵션으로 본다 (셸 수준에서 구별할 수 없음)", () => {
+    expect(historyRewrite('git commit -m "--amend"')).toBe("git commit --amend");
+    expect(gitOutputFile("git log --grep '--output'")).toBe("git log --output");
+  });
+
+  it("--output으로 시작하는 다른 옵션은 통과", () => {
+    expect(gitOutputFile("git log -p --output-indicator-new=+")).toBeNull();
+  });
+
+  it("--output이 없거나 문자열 안에만 있으면 통과", () => {
+    expect(gitOutputFile("git log --oneline main..HEAD")).toBeNull();
+    expect(gitOutputFile("git diff main...HEAD --stat")).toBeNull();
+    expect(gitOutputFile("git commit -m \"docs: --output 옵션 설명\"")).toBeNull();
+    expect(gitOutputFile("git log --oneline; npm run build --output=x")).toBeNull();
   });
 });

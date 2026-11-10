@@ -110,6 +110,12 @@ const stripText = (command) =>
   command
     .replace(/<<-?\s*(["']?)(\w+)\1[^\n]*\n[\s\S]*?\n\s*\2[ \t]*(?=\n|$)/g, "")
     .replace(/@(["'])\r?\n[\s\S]*?\r?\n\1@/g, "")
+    // 줄 잇기(bash `\`, PowerShell 백틱 + 줄바꿈)는 한 명령이므로 공백으로 잇는다
+    .replace(/[\\`]\r?\n/g, " ")
+    // 따옴표로 감싼 옵션 하나("--output=x", "--output=a b")는 셸이 따옴표를 벗겨 옵션으로 넘기므로 옵션으로 남긴다.
+    // `--이름` 또는 `--이름=값` 모양만 본다. "- 훅이 --amend를 막는다" 같은 글은 옵션이 아니다.
+    // 알려진 오탐: 따옴표 안 전체가 옵션 모양 한 단어면(-m "--amend") 셸 수준에서 구별할 수 없어 옵션으로 본다
+    .replace(/(^|\s)(["'])(--[A-Za-z][\w-]*(?:=[^"']*)?)\2(?=[\s;&|)]|$)/g, "$1$3")
     .replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
 
 const GIT = String.raw`\bgit(?:\s+-c\s+\S+)*\s+`;
@@ -129,4 +135,15 @@ const HISTORY_REWRITES = [
 export function historyRewrite(command) {
   const bare = stripText(command);
   return HISTORY_REWRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
+}
+
+const GIT_OUTPUT = new RegExp(GIT + String.raw`(diff|log|show)\b` + SAME_COMMAND + String.raw`\s--output(?=[=\s]|$)`);
+
+/**
+ * 권한 허용 목록의 조회 명령(git diff·log·show)에 --output이 붙어 파일을 쓰면 "git <명령> --output", 아니면 null.
+ * 허용 목록 `git log *`는 뒤 인자를 가리지 않으므로, 이것으로 아무 파일이나 확인 없이 덮어쓸 수 있다
+ */
+export function gitOutputFile(command) {
+  const match = stripText(command).match(GIT_OUTPUT);
+  return match ? `git ${match[1]} --output` : null;
 }

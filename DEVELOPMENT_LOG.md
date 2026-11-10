@@ -384,6 +384,13 @@
 - `git fetch`는 와일드카드(`git fetch*`) 대신 `git fetch origin main` 하나만 허용한다. `--upload-pack`(임의 명령 실행)과 `+ref:main`(로컬 main 강제 덮어쓰기)까지 허용되는 것을 리뷰에서 찾았다.
 - 브랜치를 바꾸는 `git switch`·`git pull`은 계속 확인 창을 띄운다.
 
+### 42. 🔒 git 권한 구멍 막기
+
+- `git branch` 허용을 조회(목록·`--show-current`·`--list`)로 좁혔다. 브랜치 삭제(`-D`)와 main 덮어쓰기(`-f`)는 이제 확인 창이 뜬다.
+- git 조회 허용을 `git diff *`처럼 `*` 앞에 공백을 둔 형태로 바꿨다. 공백이 없으면 `git difftool -x <명령>`(임의 명령 실행)까지 허용됐다.
+- `git diff`·`log`·`show`에 `--output`(파일 쓰기)이 붙으면 `guard-command` 훅이 확인을 묻는다. 허용 목록은 옵션을 가려낼 수 없어서 훅으로 막았다.
+- 훅의 명령 판단이 줄 잇기(bash 백슬래시·PowerShell 백틱)와 따옴표로 감싼 옵션을 놓치던 것을 고쳤다. 같은 방법으로 `--amend` 차단을 피할 수 있던 빈틈도 함께 막혔다.
+
 ---
 
 _마지막 업데이트: 2026-11-10_

@@ -1,8 +1,9 @@
 // PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령, main 브랜치 직접 커밋, Claude 공동 작성자 줄이 든 커밋,
-// 커밋 기록을 고치는 명령(amend·rebase)을 막고, 여러 작업이 섞인 PR을 만들려 하면 사용자에게 묻는다
+// 커밋 기록을 고치는 명령(amend·rebase)을 막고, 파일을 쓰는 조회 명령(git diff·log·show --output)과 여러 작업이 섞인 PR은 사용자에게 묻는다
 import { ask, block, commandDirOf, git, readInput } from "./io.mjs";
 import {
   dangerousCommand,
+  gitOutputFile,
   hasClaudeCoauthor,
   historyRewrite,
   isGitCommit,
@@ -30,6 +31,11 @@ if (isGitCommit(command)) {
   if (hasClaudeCoauthor(command)) {
     block("커밋에 Claude 공동 작성자 줄(Co-Authored-By: Claude)을 넣지 않아요. 그 줄을 빼고 다시 커밋하세요.");
   }
+}
+
+const outputWrite = gitOutputFile(command);
+if (outputWrite) {
+  ask(`${outputWrite}는 결과를 파일에 써요. 조회 명령이라 허용 목록에 있지만 파일을 덮어쓸 수 있어 확인합니다. 실행할까요?`);
 }
 
 if (isPrCreate(command)) {
