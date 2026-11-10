@@ -54,7 +54,7 @@ git pull --ff-only
 ```bash
 git switch -c <접두어>/<짧은-영문-이름>
 ```
-- 접두어는 이 작업의 주 커밋 접두어와 같다(`feat`, `fix`, `perf`, `refactor`, `style`, `docs`, `chore`, `ci`). `test`는 쓰지 않는다. 딸린 커밋이기 때문이다.
+- 접두어는 이 작업의 주 커밋 접두어와 같다(`feat`, `fix`, `perf`, `refactor`, `style`, `docs`, `chore`, `ci`). `test`는 테스트만 보강하는 작업일 때만 쓴다(`test/…`). 다른 작업에 딸린 테스트는 그 작업의 접두어를 따른다.
 - 이름은 영문 소문자와 `-`로 짧게 쓴다. 예: `fix/seek-end-stutter`, `feat/shell-sort-variant`, `ci/rename-workflow`.
 - 같은 이름의 브랜치가 이미 있으면(`git branch --list <이름>`) 멈추고, 그 브랜치를 이어 쓸지 다른 이름으로 만들지 묻는다.
 - 브랜치를 만드는 명령과 첫 `git commit`은 따로 실행한다. 훅이 명령을 실행하기 전의 브랜치(main)를 보고 커밋을 막기 때문이다.
