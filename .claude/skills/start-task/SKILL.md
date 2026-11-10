@@ -7,7 +7,7 @@ description: Run on your own, first, whenever the user describes a new task — 
 
 A new task always starts on a work branch made from the latest main. This skill only goes as far as creating the branch and handing off to the next skill. It does not change code.
 
-Run it on your own when the user describes a new task; do not wait for them to type `/start-task`. Do not run it for follow-ups to the current branch's work (review fixes, small additions, questions about it). Keep it quiet: ask only when something is unclear (steps 1, 3, 4), otherwise the only output is the one line in step 5.
+Run it on your own when the user describes a new task; do not wait for them to type `/start-task`. Skip it only when the request clearly refers to the current branch's unmerged work: a review fix, a correction to what was just done, or a question about it. If in doubt, run it and let step 1 ask. A branch with no commits beyond `origin/main` has no current work to follow up on. Keep it quiet: speak only to ask (steps 1, 3, 4) or to report a stop or leftover worktrees (steps 1, 2); otherwise the only output is the one line in step 5.
 
 ## 1. Working folder state
 
