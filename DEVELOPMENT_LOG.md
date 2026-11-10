@@ -398,6 +398,12 @@
 - `git -C . push --force`, `git push -u origin main`, `HEAD:main`, `push --mirror`·`--all`처럼 형태를 바꿔 deny 규칙을 피하던 명령을 훅이 막는다.
 - 훅이 git 앞 옵션(`-C`, `-c`, `--no-pager` …)을 건너뛰게 해서 amend 차단과 `--output` 확인도 같은 우회에 뚫리지 않는다.
 
+### 44. 👷 작업자 에이전트와 병렬 작업·알고리즘 추가 절차 보강
+
+- 작업자 에이전트(`.claude/agents/worker.md`)를 만들었다. worktree 안에서만 일하기, 브랜치 맞추기, `/implement`·`/commit` 절차, 검사, 보고 형식을 정의에 고정해서 지시문에는 작업의 목표와 범위만 쓰면 된다.
+- `/parallel-tasks`가 작업자를 띄우고, 브랜치마다 `/review`를 돌린 뒤 worktree를 지우고 본 폴더에서 `/verify`한다. 전에는 적힌 순서대로 하면 worktree가 브랜치를 잡고 있어 `git switch`가 실패했다.
+- `/add-algorithm`에 시작 브랜치, 구조 보기 판단(모양별 표식과 자동 검사), 문서의 알고리즘 개수("58개") 갱신, 커밋·확인 단계를 더했다.
+
 ---
 
 _마지막 업데이트: 2026-11-10_

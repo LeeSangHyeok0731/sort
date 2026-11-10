@@ -62,7 +62,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
 | 스킬 `/start-task` | 새 작업의 시작: 작업 폴더 확인 → main 최신화 → 분류(작은 수정·버그·새 알고리즘·큰 기능·작업 여러 개) → 브랜치 → 맞는 스킬로 넘김 |
-| 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
+| 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차: 알고리즘·테스트 → registry·families → 구조 보기 판단 → 문서의 알고리즘 개수 갱신 → `/commit` → `/verify` |
 | 스킬 `/design` | 질문(하나씩) → 방식 비교·추천 → `docs/specs/` 설계 문서 → 승인 (승인 전 구현 안 함) |
 | 스킬 `/plan` | 승인된 설계를 커밋 하나 크기의 작업으로 나눠 `docs/plans/`에 계획 문서 |
 | 스킬 `/implement` | 계획(또는 작은 수정)을 작업 하나씩: 테스트 먼저 → 구현 → 검사 → `/commit`, 범위 밖은 보고만 |
@@ -73,7 +73,8 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 에이전트 `reviewer` (`.claude/agents/`) | 읽기 전용 리뷰어. 동작 오류 → FSD → 프로젝트 규칙 → 테스트 → 커밋 규칙 → 하네스 변경 → 단순화 순으로, 근거 있는 지적만 심각도·`파일:줄`·실패 시나리오로 보고 |
 | 스킬 `/pr` | 작업 섞임 확인 → `/verify`·`/review` 확인(리뷰 전이면 멈추고 다시 승인) → 개발 로그 항목 → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
 | 스킬 `/merge` | CI 통과 확인 → 머지 커밋으로 머지 → main 동기화·브랜치 정리 (머지 승인 후) |
-| 스킬 `/parallel-tasks` | 여러 작업을 worktree 서브에이전트로 나눠 작업별 브랜치·PR로 진행 |
+| 스킬 `/parallel-tasks` | 여러 작업을 작업자 에이전트(worktree)로 나눠 진행 → 브랜치마다 `/review` → worktree 정리 후 본 폴더에서 `/verify` → 작업별 `/pr` |
+| 에이전트 `worker` (`.claude/agents/`) | 작업자. 자기 worktree 브랜치에서 `/implement`·`/commit` 절차로 작업 하나를 구현·커밋하고, lint·lint:fsd·typecheck·test 결과와 함께 보고. push·PR 안 함 |
 
 서브에이전트 worktree(`.claude/worktrees/`)는 gitignore 대상이고, 본 폴더의 tsc·eslint 검사 범위에서 빠진다.
 

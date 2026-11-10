@@ -5,7 +5,9 @@ description: 새 정렬 알고리즘을 시각화 목록에 추가할 때 사용
 
 # 정렬 알고리즘 추가
 
-모든 파일은 `src/entities/sort-algorithm/` 아래에 있다. 기준 예시는 `algorithms/bubbleSort.ts`와 `algorithms/bubbleSort.test.ts`다. 시작 전에 둘 다 읽는다.
+작업은 `/start-task`가 만든 `feat/<name>-sort` 브랜치에서 한다. main에 있으면 `/start-task`부터 한다.
+
+알고리즘 파일은 `src/entities/sort-algorithm/` 아래에 있다. 기준 예시는 `algorithms/bubbleSort.ts`와 `algorithms/bubbleSort.test.ts`다. 시작 전에 둘 다 읽는다.
 
 ## 1. 알고리즘 파일 `algorithms/<name>Sort.ts`
 
@@ -43,7 +45,7 @@ export const bubbleSort: SortAlgorithm = {
 - `sort(t, options)` 안에서는 배열을 직접 만지지 않고 tracer 메서드만 쓴다: `t.length`, `t.value(i)`, `t.item(i)`, `t.cmp(i, j, line)`, `t.swap(i, j, line)`, `t.move(from, to, line)`, `t.mark(i, line)`, `t.arrange(start, target, line)`. 모든 호출에 `L.xxx` 줄 번호를 넘긴다.
 - 연산이 폭발할 수 있는 알고리즘(보고 정렬류)은 한도 초과 시 `true`를 반환하고 `note`에 주의 사항을 적는다.
 - `category`: `"standard" | "linear" | "special" | "fun"` (`fun`은 연산이 폭발할 수 있어 일부 테스트가 작은 입력만 쓴다).
-- 트리·힙·버킷처럼 구조 보기가 가능하면 `structure`를 지정한다(`model/types.ts`의 `AlgorithmStructure`).
+- 트리·힙·버킷처럼 구조 보기가 가능하면 `structure`를 지정한다(5단계).
 
 ## 2. 테스트 `algorithms/<name>Sort.test.ts`
 
@@ -76,11 +78,38 @@ import를 알파벳 순서 자리에 넣고, `ALGORITHMS` 배열의 알맞은 �
 
 사이드바 폴더 중 하나에 id를 넣는다: exchange, selection, insertion, merge, quick, heap, tree, distribution, network, hybrid, fun. 빠뜨리면 `families.test.ts`가 실패한다.
 
-## 5. 검증
+## 5. 구조 보기
+
+힙·트리·더미·버킷·자릿수 칸을 쓰는 알고리즘이면 `structure` 지정을 검토한다. 막대 말고 그 구조로도 볼 수 있게 된다.
+
+- 지원하는 모양은 `model/types.ts`의 `AlgorithmStructure`다: `heap`(arity 2·3), `bst`, `splay`·`cartesian`·`tournament`(트리), `piles`·`buckets`·`counting`·`radix`(칸).
+- 같은 모양을 쓰는 기존 알고리즘(`grep -rln "kind: \"<모양>\"" src/entities/sort-algorithm/algorithms`)을 찾아 지정 방식을 그대로 따른다.
+- 모양마다 설명 코드에 있어야 할 표식이 정해져 있다: `src/widgets/visualizer/model/structures/scene.ts`의 `STRUCTURE_LABELS`(예: `cartesian`은 `cmp-build`·`cmp-heap`·`move`). 표식 이름을 그대로 맞춘다. `heap`은 여기 표식이 없고, 대신 `heapEndLabel`로 준 표식이 설명 코드에 있어야 한다(`src/widgets/visualizer/model/structure.test.ts`가 검사).
+- `scene.test.ts`가 `structure`를 지정한 모든 알고리즘을 자동으로 돌려 표식과 단계별 장면을 검사하므로, 지정만 하면 그 검사에 들어간다. 그 모양 안에서 동작이 다른 점(넣는 순서, 비교 순서 등)이 있으면 사례를 더한다. 힙은 `model/structure.test.ts`, 나머지 모양은 `model/structures/structures.test.ts`다.
+- 새 모양이 필요하면(기존 모양으로 그릴 수 없으면) 여기서 멈추고 사용자에게 알린다. `widgets/visualizer`를 바꾸는 큰 기능이라 `/design`부터 한다.
+- 구조 보기가 맞지 않는 알고리즘이면 지정하지 않는다.
+
+## 6. 알고리즘 개수 갱신
+
+문서에 고정 숫자로 적힌 알고리즘 개수를 새 개수로 바꾼다.
+
+```bash
+ls src/entities/sort-algorithm/algorithms/*Sort.ts | wc -l
+grep -rnE "<옛 개수> ?(개|종|가지)" README.md CLAUDE.md docs/ARCHITECTURE.md
+```
+- 첫 줄이 새 개수다(`rotation.ts` 같은 보조 파일은 `Sort.ts`로 끝나지 않아 빠진다).
+- 둘째 줄이 찾은 곳을 모두 바꾼다. 알고리즘 개수가 아닌 숫자(예: "1,000개")는 그대로 둔다.
+
+## 7. 검증
 
 ```bash
 npx vitest run src/entities/sort-algorithm
 npm run typecheck
 npm run lint
 ```
-`model/traced-code.test.ts`가 표식과 실제 연산 종류가 맞는지 검사한다. 실패하면 표식 접두어나 넘긴 줄 번호를 확인한다. 마지막으로 dev 서버에서 직접 재생해 줄 하이라이트가 자연스러운지 본다.
+`model/traced-code.test.ts`가 표식과 실제 연산 종류가 맞는지 검사한다. 실패하면 표식 접두어나 넘긴 줄 번호를 확인한다. 마지막으로 dev 서버에서 직접 재생해 줄 하이라이트가 자연스러운지 본다. 구조 보기를 지정했으면 그 보기도 재생해 본다.
+
+## 8. 커밋과 확인
+
+- `/commit`으로 커밋한다. 알고리즘 파일·테스트·registry·families·구조 보기 테스트·개수 갱신은 "새 알고리즘 하나 추가"라는 일 하나라 `feat: <이름> 정렬 추가` 커밋 하나로 둔다.
+- 그다음 `/verify`로 넘긴다.

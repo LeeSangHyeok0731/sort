@@ -23,7 +23,7 @@ git worktree list
   git log --oneline origin/main..HEAD
   ```
   커밋이 있으면 이어서 할 일인지 새 작업인지 한 줄로 묻는다. **이어서 할 일이면** 2단계(main 최신화)와 4단계(브랜치 만들기)를 건너뛰고, 3단계 분류 뒤 바로 5단계로 간다.
-- 남은 worktree가 있으면 알린다. 지우지는 않는다(`/parallel-tasks` 5단계에서 정리한다).
+- 남은 worktree가 있으면 알린다. 지우지는 않는다(`/parallel-tasks` 4·6단계에서 정리한다).
 
 ## 2. main 최신화
 
