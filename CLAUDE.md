@@ -58,7 +58,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 |---|---|
 | `settings.json` | 커밋 공동 작성자 줄·PR 본문 표시 줄 끔(`attribution`). 권한: lint·test·typecheck·build, git 조회(`worktree list` 포함, `git branch`는 목록·`--show-current`·`--list`만), `git fetch origin main`(정확히 이 명령만), `gh pr view/checks/list` 허용. force push, main 직접 push, `git reset --hard` 거부 |
 | 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 `eslint --fix`, 남은 오류만 알려줌 (파일이 속한 worktree 기준) |
-| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit`, Claude 공동 작성자 줄이 든 커밋, 커밋 기록을 고치는 명령(`commit --amend`, `rebase`, `pull --rebase`) 차단. `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
+| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit`, Claude 공동 작성자 줄이 든 커밋, 커밋 기록을 고치는 명령(`commit --amend`, `rebase`, `pull --rebase`) 차단. 허용 목록의 `git diff`·`log`·`show`에 `--output`(파일 쓰기)이 붙으면, 그리고 `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
 | 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
 | 스킬 `/start-task` | 새 작업의 시작: 작업 폴더 확인 → main 최신화 → 분류(작은 수정·버그·새 알고리즘·큰 기능·작업 여러 개) → 브랜치 → 맞는 스킬로 넘김 |
