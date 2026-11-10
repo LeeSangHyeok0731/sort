@@ -35,7 +35,7 @@ git pull --ff-only
 
 ## 3. Classify
 
-Read the request and skim the related code (see "새 파일을 어디에 둘까" in `docs/ARCHITECTURE.md`), then pick one of these.
+Read the request and skim the related code (see "Where to put a new file" in `docs/ARCHITECTURE.md`), then pick one of these.
 
 | Kind | Criterion | Skill to hand off to | Branch |
 |---|---|---|---|

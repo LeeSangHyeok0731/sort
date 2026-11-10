@@ -96,10 +96,10 @@ Replace the algorithm count written as a fixed number in the docs with the new c
 
 ```bash
 ls src/entities/sort-algorithm/algorithms/*Sort.ts | wc -l
-grep -rnE "<old count> ?(개|종|가지)" README.md CLAUDE.md docs/ARCHITECTURE.md
+grep -rnE "<old count>( ?(개|종|가지)| (sorting )?algorithms)" README.md CLAUDE.md docs/ARCHITECTURE.md
 ```
 - The first line gives the new count (helper files such as `rotation.ts` do not end in `Sort.ts` and are left out).
-- Change every place the second line finds. Leave numbers that are not the algorithm count (e.g. "1,000개") as they are.
+- Change every place the second line finds (README is in Korean, CLAUDE.md and ARCHITECTURE.md in English). Leave numbers that are not the algorithm count (e.g. "1,000개") as they are.
 
 ## 7. Verify
 
