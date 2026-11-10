@@ -51,7 +51,7 @@ git log --oneline main..HEAD
 npm run lint && npm run lint:fsd && npm run typecheck && npm test
 ```
 - 실패하면 원인을 고쳐 새 커밋으로 더한다. 고치지 못하면 실패한 명령과 핵심 출력을 보고에 적는다.
-- `npm run build`는 worktree에서 돌리지 않는다. 메인 세션이 본 폴더에서 확인한다.
+- `/verify`는 부르지 않는다. `/implement`·`/add-algorithm`이 끝에 `/verify`로 넘기라고 해도 이 검사가 대신한다. `npm run build`와 브라우저 확인은 메인 세션이 본 폴더에서 한다.
 - 화면을 바꿨으면 브라우저 확인은 하지 않고, 확인할 동작을 보고에 적는다.
 
 ## 5. 보고
