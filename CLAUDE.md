@@ -19,6 +19,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 ## 작업 규칙
 
 - 답변, 커밋 메시지, PR, 코드 주석은 **한국어**로 쓴다.
+- **새 작업은 `/start-task`로 시작한다.** 흐름: `/start-task` → (작은 수정 `/implement` · 버그 `/debug` · 새 알고리즘 `/add-algorithm` · 큰 기능 `/design` → `/plan` → `/implement` · 작업 여러 개 `/parallel-tasks`) → 작업 단위마다 `/commit` → `/verify` → `/review` → (승인) `/pr` → (승인) `/merge`.
 - 작업은 기능별 브랜치에서 한다(main에 직접 커밋하면 훅이 막는다). 커밋까지는 바로 해도 되고, **push·PR은 사용자 승인 후 `/pr`**, **머지는 그 PR의 머지 승인을 따로 받은 뒤 `/merge`** 절차로 한다.
 - PR마다 `DEVELOPMENT_LOG.md`에 항목 하나를 쓴다(`/pr` 4단계). 날짜 머리, 다음 번호, 3~6줄 목록, 끝의 "마지막 업데이트" 날짜.
 - **작업 하나 = 브랜치 하나 = PR 하나.** 여러 작업을 한 번에 맡으면 작업마다 main에서 브랜치를 따로 만들고 PR도 따로 올린다. 서브에이전트로 병렬 진행할 때는 `/parallel-tasks` 절차(worktree 격리)를 따른다.
@@ -60,6 +61,7 @@ CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → t
 | 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit`, Claude 공동 작성자 줄이 든 커밋, 커밋 기록을 고치는 명령(`commit --amend`, `rebase`, `pull --rebase`) 차단. `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
 | 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
 | 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
+| 스킬 `/start-task` | 새 작업의 시작: 작업 폴더 확인 → main 최신화 → 분류(작은 수정·버그·새 알고리즘·큰 기능·작업 여러 개) → 브랜치 → 맞는 스킬로 넘김 |
 | 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차 |
 | 스킬 `/design` | 질문(하나씩) → 방식 비교·추천 → `docs/specs/` 설계 문서 → 승인 (승인 전 구현 안 함) |
 | 스킬 `/plan` | 승인된 설계를 커밋 하나 크기의 작업으로 나눠 `docs/plans/`에 계획 문서 |
