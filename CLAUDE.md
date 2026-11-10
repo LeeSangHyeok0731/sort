@@ -18,7 +18,7 @@ CI (`.github/workflows/ci.yml`) runs lint → lint:fsd → typecheck → test �
 
 ## Language
 
-- **Korean:** replies to the user (progress, reports, questions), commit messages, PR titles and bodies, `DEVELOPMENT_LOG.md`, code comments and UI text in `src`, design and plan docs (`docs/specs/`, `docs/plans/`).
+- **Korean:** replies to the user (progress, reports, questions), hook confirmation prompts the user sees (`ask` in `guard-command.mjs`), commit messages, PR titles and bodies, `DEVELOPMENT_LOG.md`, code comments and UI text in `src`, design and plan docs (`docs/specs/`, `docs/plans/`).
 - **English:** the harness itself (this file, `docs/ARCHITECTURE.md`, `.claude/` skills, agents and hooks), and subagent reports (`reviewer`, `worker`). The main session reads those reports and relays them to the user in Korean.
 
 ## Work rules

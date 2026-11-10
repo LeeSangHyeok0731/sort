@@ -41,12 +41,13 @@ if (isGitCommit(command)) {
 
 const outputWrite = gitOutputFile(command);
 if (outputWrite) {
-  ask(`${outputWrite} writes its output to a file. It is a read command on the allowlist, but it can overwrite files, so confirming. Run it?`);
+  // ask() messages appear in the user's permission prompt, so they are in Korean (block() messages go to Claude and are in English)
+  ask(`${outputWrite}는 결과를 파일에 써요. 조회 명령이라 허용 목록에 있지만 파일을 덮어쓸 수 있어 확인합니다. 실행할까요?`);
 }
 
 const toolWrite = toolWriteOption(command);
 if (toolWrite) {
-  ask(`${toolWrite} modifies or writes files. It is a check command on the allowlist, but this is a write, so confirming. Run it?`);
+  ask(`${toolWrite}는 파일을 고치거나 써요. 검사 명령이라 허용 목록에 있지만 쓰기라 확인합니다. 실행할까요?`);
 }
 
 if (isPrCreate(command)) {
@@ -55,8 +56,8 @@ if (isPrCreate(command)) {
   const types = subjects ? mainCommitTypes(subjects.split("\n").filter(Boolean)) : [];
   if (types.length > 1) {
     ask(
-      `This PR mixes commits from different kinds of work (${types.join(", ")}). ` +
-        "The rule is one branch and one PR per task (/parallel-tasks). Open it as one PR anyway?"
+      `이 PR에 서로 다른 작업 커밋(${types.join(", ")})이 섞여 있어요. ` +
+        "작업 하나당 브랜치·PR 하나가 규칙입니다(/parallel-tasks). 그래도 하나로 올릴까요?"
     );
   }
 }
