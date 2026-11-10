@@ -60,6 +60,7 @@ The message is written in **Korean**.
 - The subject states the result. Example: `fix: 슬라이더에 포커스가 있어도 Space 단축키 동작`. Do not write only "수정함" or "업데이트".
 - For a bug fix, state the cause in one line in the body.
 - Do not add a Claude co-author line (`Co-Authored-By: Claude …`). The hook blocks it.
+
 ## 6. Commit
 
 ```bash
