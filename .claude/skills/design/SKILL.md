@@ -1,44 +1,44 @@
 ---
 name: design
-description: 큰 기능이나 방식을 고를 여지가 있는 변경을 시작하기 전에 쓴다("~ 만들자", "~ 기능 넣고 싶어", 여러 레이어를 건드리거나 새 화면·상태·의존성이 생길 때). 질문으로 요구를 정리하고 방식을 비교·추천한 뒤 docs/specs/에 설계 문서를 쓰고 승인을 받는다. 승인 전에는 구현하지 않는다.
+description: Use before starting a large feature or a change with room to choose an approach ("~ 만들자", "~ 기능 넣고 싶어", or when it touches several layers or adds a new screen, state or dependency). Clarifies requirements through questions, compares approaches and recommends one, writes a design doc in docs/specs/ and gets approval. Does not implement before approval.
 ---
 
-# 설계
+# Design
 
-목표는 "무엇을, 왜, 어떤 방식으로"에 사용자와 합의하는 것이다. 코드는 쓰지 않는다.
+The goal is agreement with the user on "what, why, and how". Do not write code.
 
-## 1. 알고 시작하기
+## 1. Know before starting
 
-- 작업 브랜치인지 확인한다(`git branch --show-current`). main이거나 다른 작업의 브랜치면 `/start-task`로 브랜치부터 만든다. 설계 문서도 그 브랜치에 커밋한다.
-- 관련 코드와 `docs/ARCHITECTURE.md`를 읽는다. 기능이 들어갈 FSD 레이어와 슬라이스를 짐작해 둔다.
-- `docs/specs/`에 비슷한 설계가 있으면 읽는다. 이전 결정과 어긋나지 않게 한다.
-- 코드에서 확인할 수 있는 사실은 묻지 말고 직접 확인한다.
+- Check that you are on a work branch (`git branch --show-current`). If it is main or another task's branch, create a branch with `/start-task` first. The design doc is committed on that branch too.
+- Read the related code and `docs/ARCHITECTURE.md`. Make a first guess at the FSD layer and slice the feature belongs to.
+- If `docs/specs/` has a similar design, read it. Do not contradict earlier decisions.
+- Do not ask about facts you can check in the code; check them yourself.
 
-## 2. 질문하기
+## 2. Ask questions
 
-- **한 번에 하나씩** 묻는다. 여러 개를 한꺼번에 묻지 않는다.
-- 고를 수 있는 질문이면 선택지를 2~4개 준다. 추천이 있으면 맨 앞에 두고 이유를 한 줄 붙인다.
-- 무엇을 묻나: 사용자가 실제로 원하는 동작, 범위(이번에 하지 않을 것), 정해진 제약. 데스크톱 전용이라는 것처럼 이미 정해진 것은 묻지 않는다.
-- 답이 나오면 이해한 내용을 한두 줄로 되짚고 다음으로 간다.
+- Ask **one at a time**. Do not ask several at once.
+- For a choice, give 2–4 options. If you have a recommendation, put it first with a one-line reason.
+- What to ask: the behavior the user actually wants, the scope (what is not in this round), fixed constraints. Do not ask about what is already decided, such as desktop-only.
+- When answered, restate your understanding in a line or two and move on.
 
-## 3. 방식 비교
+## 3. Compare approaches
 
-- 방식을 2~3개 세우고, 각각의 장단점(복잡도, 성능, 기존 구조와 맞는지, 테스트하기 쉬운지)을 짧게 비교한다.
-- **하나를 추천하고 이유를 쓴다.** 고르지 않은 채로 나열만 하지 않는다.
-- 사용자가 고르면 그 방식으로 문서를 쓴다.
+- Set out 2–3 approaches and briefly compare their trade-offs (complexity, performance, fit with the existing structure, testability).
+- **Recommend one and say why.** Do not just list them without choosing.
+- When the user picks, write the document for that approach.
 
-## 4. 설계 문서
+## 4. Design document
 
-`docs/specs/YYYY-MM-DD-<영문-이름>-design.md`를 [template.md](template.md) 틀로 쓴다.
-- 이 저장소의 설계 문서처럼 한국어로, 짧은 문장과 목록·표로 쓴다.
-- 정한 것과 아직 정하지 않은 것(열린 질문)을 섞지 않는다.
-- 코드 조각은 인터페이스(타입, 함수 시그니처)까지만 쓴다. 구현은 `/plan`과 `/implement`에서 한다.
+Write `docs/specs/YYYY-MM-DD-<english-name>-design.md` from the [template.md](template.md) skeleton.
+- Write it in Korean like the existing design docs in this repo, in short sentences with lists and tables.
+- Do not mix what is decided with what is not yet decided (open questions).
+- Code snippets go only as far as interfaces (types, function signatures). Implementation happens in `/plan` and `/implement`.
 
-## 5. 승인받기
+## 5. Get approval
 
-1. `/commit`으로 `docs: <기능> 설계` 커밋을 만든다.
-2. 사용자에게 문서 경로와 핵심 결정 3~5개를 보여 주고 검토를 요청한다.
-3. **승인 전에는 구현하지 않는다.** 고칠 점이 나오면 새 커밋으로 문서를 고치고 다시 묻는다.
-4. 승인을 받으면 `/plan`으로 넘어간다.
+1. Make a `docs: <기능> 설계` commit with `/commit`.
+2. Show the user the document path and the 3–5 key decisions, and ask for a review.
+3. **Do not implement before approval.** If changes are requested, fix the document in a new commit and ask again.
+4. Once approved, move on to `/plan`.
 
-설계 문서만 따로 PR로 올릴지, 구현과 같은 브랜치에 둘지는 사용자에게 묻는다. 큰 기능이면 설계 PR을 먼저 올려 검토받는 쪽을 추천한다.
+Ask the user whether the design doc gets its own PR or stays on the same branch as the implementation. For a large feature, recommend opening the design PR first for review.

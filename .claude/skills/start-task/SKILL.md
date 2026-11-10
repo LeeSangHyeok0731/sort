@@ -1,70 +1,70 @@
 ---
 name: start-task
-description: 새 작업을 받았을 때 맨 처음 쓴다("~ 만들자", "~ 고쳐줘", "~ 추가해줘", "이거 안 돼", "1, 2, 3 하자"). 작업 폴더 상태 확인 → main 최신화 → 작업 분류(작은 수정·버그·새 알고리즘·큰 기능·작업 여러 개) → 작업 브랜치 생성 → 맞는 스킬로 넘긴다.
+description: Use first when given a new task ("~ 만들자", "~ 고쳐줘", "~ 추가해줘", "이거 안 돼", "1, 2, 3 하자"). Check the working folder → update main → classify the task (small change, bug, new algorithm, large feature, several tasks) → create the work branch → hand off to the right skill.
 ---
 
-# 작업 시작
+# Start a task
 
-새 작업은 항상 최신 main에서 만든 작업 브랜치에서 시작한다. 이 스킬은 브랜치를 만들고 다음 스킬로 넘기는 데까지만 한다. 코드는 고치지 않는다.
+A new task always starts on a work branch made from the latest main. This skill only goes as far as creating the branch and handing off to the next skill. It does not change code.
 
-## 1. 작업 폴더 상태
+## 1. Working folder state
 
 ```bash
 git branch --show-current
 git status --short
 git worktree list
 ```
-- 커밋 안 된 변경이 있으면 멈추고 묻는다. `git stash`나 `git checkout -- <파일>`로 임의로 치우지 않는다.
-  - 작업 브랜치에 있으면: 그 변경을 지금 브랜치에 커밋할지(`/commit`), 따로 둘지는 사용자가 정한다.
-  - main에 있으면 main에는 커밋할 수 없다(훅이 막는다). 그 변경이 이번 작업의 것이면, 변경을 둔 채로 2단계의 `git pull --ff-only`를 하고(겹치는 파일이 있으면 git이 멈추니 그때 보고한다) 4단계에서 브랜치를 만든다. 변경은 새 브랜치로 따라간다. 이번 작업과 상관없는 변경이면 어떻게 할지 묻는다.
-- 지금 브랜치가 main이 아니면, main에 아직 머지되지 않은 커밋이 있는지 본다. 원격에서 이미 머지됐을 수 있으니 원격 main 기준으로 본다.
+- If there are uncommitted changes, stop and ask. Do not clear them away on your own with `git stash` or `git checkout -- <file>`.
+  - On a work branch: the user decides whether to commit them on this branch (`/commit`) or keep them aside.
+  - On main: you cannot commit on main (the hook blocks it). If the changes belong to this task, keep them in place, do the `git pull --ff-only` of step 2 (git stops if files overlap; report it then), and create the branch in step 4. The changes follow to the new branch. If they are unrelated to this task, ask what to do.
+- If the current branch is not main, check whether it has commits not yet merged into main. It may already have been merged on the remote, so compare against the remote main.
   ```bash
   git fetch origin main
   git log --oneline origin/main..HEAD
   ```
-  커밋이 있으면 이어서 할 일인지 새 작업인지 한 줄로 묻는다. **이어서 할 일이면** 2단계(main 최신화)와 4단계(브랜치 만들기)를 건너뛰고, 3단계 분류 뒤 바로 5단계로 간다.
-- 남은 worktree가 있으면 알린다. 지우지는 않는다(`/parallel-tasks` 4·6단계에서 정리한다).
+  If there are commits, ask in one line whether this continues that work or is a new task. **If it continues**, skip step 2 (update main) and step 4 (create branch), and go straight to step 5 after classifying in step 3.
+- If worktrees remain, mention them. Do not remove them (they are cleaned up in `/parallel-tasks` steps 4 and 6).
 
-## 2. main 최신화
+## 2. Update main
 
 ```bash
 git switch main
 git pull --ff-only
 ```
-- `--ff-only`가 실패하면 로컬 main에 원격에 없는 커밋이 있는 것이다. 멈추고 보고한다. `git reset --hard`나 rebase로 맞추지 않는다.
+- If `--ff-only` fails, the local main has commits not on the remote. Stop and report. Do not reconcile with `git reset --hard` or rebase.
 
-## 3. 분류
+## 3. Classify
 
-요청을 읽고 관련 코드를 가볍게 훑은 뒤(`docs/ARCHITECTURE.md`의 "새 파일을 어디에 둘까"), 다음 중 하나로 정한다.
+Read the request and skim the related code (see "새 파일을 어디에 둘까" in `docs/ARCHITECTURE.md`), then pick one of these.
 
-| 분류 | 기준 | 넘길 스킬 | 브랜치 |
+| Kind | Criterion | Skill to hand off to | Branch |
 |---|---|---|---|
-| 작은 수정 | 파일 몇 개, 한 레이어 안, 새 상태 없음, 방식이 뻔함 | `/implement` | `feat/…`, `style/…`, `refactor/…`, `docs/…`, `ci/…`, `chore/…` 등 |
-| 버그 | 기대와 다르게 동작함, 테스트 실패 | `/debug` | `fix/…` |
-| 새 알고리즘 | 정렬 알고리즘 하나를 목록에 추가 | `/add-algorithm` | `feat/<이름>-sort` |
-| 큰 기능 | 여러 레이어를 건드림, 새 화면·상태·의존성, 또는 방식을 고를 여지가 있음 | `/design` → (승인) → `/plan` → `/implement` | `feat/…` |
-| 작업 여러 개 | 서로 독립된 요청이 둘 이상 | `/parallel-tasks` | 작업마다 거기서 만든다 |
+| Small change | A few files, one layer, no new state, obvious approach | `/implement` | `feat/…`, `style/…`, `refactor/…`, `docs/…`, `ci/…`, `chore/…`, etc. |
+| Bug | Behaves differently than expected, failing test | `/debug` | `fix/…` |
+| New algorithm | Add one sorting algorithm to the list | `/add-algorithm` | `feat/<name>-sort` |
+| Large feature | Touches several layers, new screen/state/dependency, or room to choose an approach | `/design` → (approval) → `/plan` → `/implement` | `feat/…` |
+| Several tasks | Two or more independent requests | `/parallel-tasks` | Created there, one per task |
 
-- 애매하면 혼자 고르지 말고 한 줄로 묻는다. 묻지 않고 넘어가지 않는다.
-- 작은 수정과 큰 기능 사이에서 애매하면, 물을 때 큰 기능을 추천으로 앞에 둔다. 설계 없이 시작해 방향이 틀리면 되돌리는 비용이 더 크다. 예: "단축키 설정 화면까지 만드는 큰 기능으로 보고 설계부터 할까요(추천), 단축키 하나만 더하는 작은 수정으로 볼까요?"
-- 작업 여러 개면 여기서 브랜치를 만들지 않고 바로 `/parallel-tasks`로 넘긴다.
+- If unclear, do not pick on your own; ask in one line. Never move on without asking.
+- If it is unclear between a small change and a large feature, put the large feature first as the recommendation when asking. Starting without a design and heading the wrong way costs more to undo. Example: "단축키 설정 화면까지 만드는 큰 기능으로 보고 설계부터 할까요(추천), 단축키 하나만 더하는 작은 수정으로 볼까요?"
+- For several tasks, do not create a branch here; hand off to `/parallel-tasks` directly.
 
-## 4. 브랜치 만들기
+## 4. Create the branch
 
 ```bash
-git switch -c <접두어>/<짧은-영문-이름>
+git switch -c <prefix>/<short-english-name>
 ```
-- 접두어는 이 작업의 주 커밋 접두어와 같다(`feat`, `fix`, `perf`, `refactor`, `style`, `docs`, `chore`, `ci`). `test`는 테스트만 보강하는 작업일 때만 쓴다(`test/…`). 다른 작업에 딸린 테스트는 그 작업의 접두어를 따른다.
-- 이름은 영문 소문자와 `-`로 짧게 쓴다. 예: `fix/seek-end-stutter`, `feat/shell-sort-variant`, `ci/rename-workflow`.
-- 같은 이름의 브랜치가 이미 있으면(`git branch --list <이름>`) 멈추고, 그 브랜치를 이어 쓸지 다른 이름으로 만들지 묻는다.
-- 브랜치를 만드는 명령과 첫 `git commit`은 따로 실행한다. 훅이 명령을 실행하기 전의 브랜치(main)를 보고 커밋을 막기 때문이다.
+- The prefix is the same as this task's main commit prefix (`feat`, `fix`, `perf`, `refactor`, `style`, `docs`, `chore`, `ci`). Use `test` only for work that only adds tests (`test/…`). Tests that belong to other work follow that work's prefix.
+- The name is short, lowercase English with `-`. Examples: `fix/seek-end-stutter`, `feat/shell-sort-variant`, `ci/rename-workflow`.
+- If a branch with the same name exists (`git branch --list <name>`), stop and ask whether to continue on it or use another name.
+- Run the branch-creating command and the first `git commit` separately. The hook looks at the branch before the command runs (main) and blocks the commit.
 
-## 5. 넘기기
+## 5. Hand off
 
-분류 결과를 한 줄로 알리고, 바로 그 스킬로 넘어간다.
+Announce the classification in one line (in Korean) and move straight on to that skill.
 
 ```
 작은 수정(한 컴포넌트의 색 토큰 교체)으로 보고 style/progress-bar-color 브랜치를 만들었습니다. /implement로 진행합니다.
 ```
-- 큰 기능은 `/design`으로 넘기고, 설계를 승인받기 전에는 코드를 쓰지 않는다. 설계 문서를 따로 PR로 올릴지, 구현과 같은 브랜치에 둘지는 `/design` 마지막 단계에서 사용자에게 묻는다.
-- 작업 중에 분류가 틀렸다고 드러나면(작은 수정인 줄 알았는데 방식을 골라야 함) 멈추고 알린 뒤 맞는 스킬로 옮긴다.
+- A large feature goes to `/design`; do not write code before the design is approved. Whether the design doc gets its own PR or stays on the implementation branch is asked of the user in the last step of `/design`.
+- If the classification turns out wrong during the work (thought it was a small change, but an approach must be chosen), stop, say so, and move to the right skill.

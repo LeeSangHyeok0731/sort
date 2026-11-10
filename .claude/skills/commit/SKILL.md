@@ -1,74 +1,75 @@
 ---
 name: commit
-description: 브랜치에서 필요한 일 하나를 마쳤을 때 커밋한다("커밋해줘", "변경 저장해", 구현 중 작업 단위 하나를 끝냈을 때). 변경 확인 → 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋. push는 하지 않는다.
+description: Commit when one unit of work on a branch is done ("커밋해줘", "변경 저장해", or after finishing one task during implementation). Check changes → stage only this unit's files → run related checks → commit with a prefix and a Korean message. Does not push.
 ---
 
-# 커밋
+# Commit
 
-규칙의 원본은 CLAUDE.md의 "커밋 규칙"이다. 이 스킬은 그 규칙대로 커밋하는 순서만 적는다.
+The source of truth is "Commit rules" in CLAUDE.md. This skill only lists the steps for committing by those rules.
 
-## 1. 브랜치 확인
+## 1. Check the branch
 
 ```bash
 git branch --show-current
 ```
-- `main`이면 멈춘다. 작업 브랜치부터 만든다(`git switch -c <접두어>/<이름>`). 훅도 main 커밋을 막는다.
-- 브랜치 전환과 커밋을 한 명령으로 잇지 않는다(`git switch -c x && git commit`). 훅은 명령을 실행하기 전의 브랜치를 보기 때문에 막힌다. 따로 실행한다.
+- If it is `main`, stop. Create a work branch first (`git switch -c <prefix>/<name>`). The hook also blocks commits on main.
+- Do not chain a branch switch and a commit in one command (`git switch -c x && git commit`). The hook looks at the branch before the command runs, so it blocks it. Run them separately.
 
-## 2. 변경 확인
+## 2. Check the changes
 
 ```bash
 git status --short
 git diff
 git diff --cached
 ```
-- 이번 일과 무관한 변경은 이번 커밋에 넣지 않는다. 사용자가 만든 변경일 수 있으니 되돌리지 말고 보고에 적는다.
-- 일이 둘 이상 섞여 있으면 일마다 나눠 커밋한다(3~6단계를 일마다 반복). 판단 기준: 접두어 하나와 한국어 한 줄로 설명되는가. 설명에 "~하고 ~도"가 필요하면 나눈다.
+- Leave changes unrelated to this unit out of the commit. They may be the user's, so do not revert them; mention them in the report.
+- If two or more units are mixed, commit each separately (repeat steps 3–6 per unit). Test: can it be described with one prefix and one Korean line? If the description needs "A and also B", split it.
 
-## 3. 스테이징
+## 3. Stage
 
 ```bash
-git add <파일> <파일> ...
+git add <file> <file> ...
 ```
-- 파일을 이름으로 지정한다. `git add -A`, `git add .`은 쓰지 않는다.
-- 스테이징한 목록을 `git diff --cached --stat`으로 다시 본다. 다음이 섞이지 않았는지 확인한다.
-  - `.env*`, `.claude/settings.local.json`, 빌드 결과(`.next/`), 임시 파일
-- 일에 딸린 테스트는 같은 커밋에 넣는다.
+- Name files explicitly. Do not use `git add -A` or `git add .`.
+- Review the staged list with `git diff --cached --stat`. Make sure none of these slipped in:
+  - `.env*`, `.claude/settings.local.json`, build output (`.next/`), temp files
+- Tests for this unit go in the same commit.
 
-## 4. 검사
+## 4. Checks
 
-이번 커밋에 든 파일에 맞춰 돌린다.
+Run what matches the files in this commit.
 
-| 바꾼 것 | 돌릴 것 |
+| Changed | Run |
 |---|---|
-| `src` 아래 | 관련 테스트(`npx vitest run <폴더>`), `npm run typecheck`, `npx eslint <파일>` |
-| `.claude/hooks`, `scripts` | `npx vitest run .claude/hooks` 또는 `npx vitest run scripts` |
-| 문서만 | 없음 |
+| under `src` | related tests (`npx vitest run <folder>`), `npm run typecheck`, `npx eslint <file>` |
+| `.claude/hooks`, `scripts` | `npx vitest run .claude/hooks` or `npx vitest run scripts` |
+| docs only | nothing |
 
-실패하면 커밋하지 않고 고친다. 전체 검사는 `/verify`에서 한다.
+If something fails, do not commit; fix it. The full check runs in `/verify`.
 
-## 5. 메시지
+## 5. Message
+
+The message is written in **Korean**.
 
 ```
-<접두어>: <무엇을 했는지 한국어 한 줄>
+<prefix>: <what was done, one Korean line>
 
-<필요하면: 왜 그렇게 했는지>
+<optional: why it was done this way>
 ```
-- 접두어는 `feat` `fix` `perf` `refactor` `style` `test` `docs` `chore` `ci` 중 하나다.
-- 제목은 결과를 쓴다. 예: `fix: 슬라이더에 포커스가 있어도 Space 단축키 동작`. "수정함", "업데이트" 같은 말만 쓰지 않는다.
-- 버그 수정이면 본문에 원인을 한 줄 쓴다.
-- Claude 공동 작성자 줄(`Co-Authored-By: Claude …`)은 넣지 않는다. 훅이 막는다.
-
-## 6. 커밋
+- The prefix is one of `feat` `fix` `perf` `refactor` `style` `test` `docs` `chore` `ci`.
+- The subject states the result. Example: `fix: 슬라이더에 포커스가 있어도 Space 단축키 동작`. Do not write only "수정함" or "업데이트".
+- For a bug fix, state the cause in one line in the body.
+- Do not add a Claude co-author line (`Co-Authored-By: Claude …`). The hook blocks it.
+## 6. Commit
 
 ```bash
-git commit -m "<제목>" -m "<본문>"
+git commit -m "<subject>" -m "<body>"
 git log -1 --format='%h %s'
 ```
-- push하지 않는다. push·PR은 사용자 승인 뒤 `/pr`에서 한다.
-- **이미 만든 커밋은 고치지 않는다.** 실수, 빠뜨린 파일, 리뷰 반영은 새 커밋으로 더한다. 리뷰 반영처럼 아직 머지되지 않은 그 작업을 고치는 커밋은 브랜치의 주 접두어를 쓴다(`feat:` 브랜치면 `fix:`가 아니라 `feat:`). `git commit --amend`, `git rebase`는 훅이 막는다.
-- 훅에 막히면 메시지가 알려 주는 대로 고쳐 다시 커밋한다. 훅을 피해 가지 않는다(`--no-verify` 등).
+- Do not push. Push and PR happen in `/pr` after the user approves.
+- **Never modify a commit that already exists.** Mistakes, forgotten files and review fixes go in new commits. A commit that fixes this branch's own unmerged work (such as a review fix) uses the branch's main prefix (`feat:`, not `fix:`, on a `feat:` branch). The hook blocks `git commit --amend` and `git rebase`.
+- If the hook blocks you, fix what its message says and commit again. Do not get around the hook (`--no-verify`, etc.).
 
-## 7. 보고
+## 7. Report
 
-커밋 해시, 제목, 들어간 파일 수를 한 줄로 알린다. 커밋에서 뺀 변경이 있으면 함께 적는다.
+Tell the user, in one line, the commit hash, subject and number of files. Mention any changes left out of the commit.

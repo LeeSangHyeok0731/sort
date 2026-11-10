@@ -1,34 +1,34 @@
 ---
 name: plan
-description: 승인받은 설계를 구현 계획으로 바꿀 때 쓴다("계획 세워줘", /design 승인 직후). 설계를 커밋 하나 크기의 작업으로 나누고, 작업마다 파일·먼저 쓸 테스트·검사·끝나는 조건을 적어 docs/plans/에 쓴다. 코드는 쓰지 않는다.
+description: Use to turn an approved design into an implementation plan ("계획 세워줘", right after /design is approved). Splits the design into commit-sized tasks, lists for each the files, the test to write first, the checks and the done condition, and writes it to docs/plans/. Does not write code.
 ---
 
-# 구현 계획
+# Implementation plan
 
-계획은 `/implement`가 그대로 따라 할 수 있어야 한다. 이 대화를 모르는 사람이나 서브에이전트가 읽어도 무엇을 할지 알 수 있게 쓴다.
+`/implement` must be able to follow the plan as written. Write it so that someone who does not know this conversation, or a subagent, can tell what to do.
 
-## 1. 준비
+## 1. Prepare
 
-- 승인받은 설계 문서(`docs/specs/…-design.md`)를 다시 읽는다. 설계에 없는 것을 계획에 더하지 않는다.
-- 고칠 파일과 그 주변 코드를 읽어, 실제 파일 경로와 함수 이름으로 쓴다. 짐작한 경로를 쓰지 않는다.
+- Re-read the approved design doc (`docs/specs/…-design.md`). Do not add to the plan anything that is not in the design.
+- Read the files to change and the code around them, and use real file paths and function names. Do not write guessed paths.
 
-## 2. 작업 나누기
+## 2. Split into tasks
 
-- **작업 하나 = 커밋 하나**가 될 크기로 나눈다(CLAUDE.md 커밋 규칙). 접두어 하나와 한국어 한 줄로 설명되면 한 작업이다.
-- 순서는 아래에서 위로 한다. 레이어로는 `shared` → `entities` → `features` → `widgets` → `views`, 종류로는 데이터·로직을 먼저 하고 화면을 나중에 한다. 앞 작업이 끝나면 검사가 통과하는 상태여야 한다.
-- 로직 작업은 테스트부터 쓴다: 실패하는 테스트 → 실패 확인 → 구현 → 통과 확인.
-- 화면 작업은 브라우저에서 무엇을 확인할지 적는다(밝은·어두운 테마, 데스크톱).
-- 작업끼리 서로 기대지 않고 파일도 겹치지 않으면 "독립"이라고 표시한다. 독립 작업이 여럿이면 `/parallel-tasks`로 나눌 수 있다.
+- Split so that **one task = one commit** (CLAUDE.md commit rules). If it can be described with one prefix and one Korean line, it is one task.
+- Go bottom-up. By layer: `shared` → `entities` → `features` → `widgets` → `views`; by kind: data and logic first, UI last. After each task, the checks must pass.
+- Logic tasks start with a test: failing test → confirm it fails → implement → confirm it passes.
+- For UI tasks, write what to check in the browser (light and dark theme, desktop).
+- Mark tasks as "independent" when they do not depend on each other and touch no shared files. Several independent tasks can be split out with `/parallel-tasks`.
 
-## 3. 계획 문서
+## 3. Plan document
 
-`docs/plans/YYYY-MM-DD-<영문-이름>.md`를 [template.md](template.md) 틀로 쓴다.
-- 공통 제약(데스크톱 전용, 한국어 문구, FSD 규칙, 색 토큰)은 문서 머리에 한 번만 쓴다.
-- 단계는 체크박스(`- [ ]`)로 쓴다. `/implement`가 끝낸 단계를 `- [x]`로 바꾼다.
-- 테스트 코드와 인터페이스는 구체적으로 쓴다. 구현 코드는 핵심만 쓴다.
+Write `docs/plans/YYYY-MM-DD-<english-name>.md` from the [template.md](template.md) skeleton, in Korean like the existing plans.
+- Write shared constraints (desktop-only, Korean UI text, FSD rules, color tokens) once at the top.
+- Write steps as checkboxes (`- [ ]`). `/implement` marks finished steps `- [x]`.
+- Be concrete about test code and interfaces. For implementation code, only the essentials.
 
-## 4. 마무리
+## 4. Wrap up
 
-1. `/commit`으로 `docs: <기능> 구현 계획` 커밋을 만든다.
-2. 사용자에게 작업 목록(번호, 한 줄 요약, 독립 여부)을 보여 준다.
-3. 진행 승인을 받으면 `/implement`로 넘어간다. 독립 작업을 나눠 진행할지는 함께 묻는다.
+1. Make a `docs: <기능> 구현 계획` commit with `/commit`.
+2. Show the user the task list (number, one-line summary, independent or not).
+3. Once approved to proceed, move on to `/implement`. Also ask whether to split out the independent tasks.

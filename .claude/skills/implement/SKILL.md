@@ -1,48 +1,48 @@
 ---
 name: implement
-description: 계획 문서(docs/plans/)대로 구현하거나, 작은 수정을 바로 구현할 때 쓴다("구현해줘", "계획대로 진행해", /plan 승인 직후, 파일 몇 개짜리 수정). 작업 하나씩 코드 읽기 → (로직이면) 실패하는 테스트 → 구현 → 검사 → /commit → 체크박스 갱신을 반복하고, 끝나면 /verify로 넘긴다.
+description: Use to implement a plan (docs/plans/) or a small change directly ("구현해줘", "계획대로 진행해", right after /plan is approved, a change of a few files). Repeats read code → (for logic) failing test → implement → check → /commit → update checkbox, one task at a time, then hands off to /verify.
 ---
 
-# 구현
+# Implement
 
-계획이 있으면 계획을 그대로 따른다. 계획이 없는 작은 수정이면 아래 순서를 머릿속 계획으로 삼는다.
+If there is a plan, follow it as written. For a small change with no plan, use the steps below as the plan.
 
-## 0. 시작 전
+## 0. Before starting
 
-- 작업 브랜치인지 확인한다(`git branch --show-current`). main이거나 이 일과 상관없는 다른 작업의 브랜치면 `/start-task`로 브랜치부터 만든다(작업 하나 = 브랜치 하나).
-- 계획 문서가 있으면 처음부터 끝까지 읽는다. 이미 `- [x]`인 단계는 건너뛴다.
-- 계획과 실제 코드가 다르면(파일이 없다, 함수 이름이 다르다) 짐작으로 메우지 않는다. 다른 점을 사용자에게 알리고, 계획을 고칠지 묻는다.
+- Check that you are on a work branch (`git branch --show-current`). If it is main or another task's branch, create a branch with `/start-task` first (one task = one branch).
+- If there is a plan document, read it start to finish. Skip steps already marked `- [x]`.
+- If the plan and the code differ (a file is missing, a function has another name), do not fill the gap with guesses. Tell the user what differs and ask whether to change the plan.
 
-## 1. 작업 하나씩 반복
+## 1. One task at a time
 
-작업 하나가 커밋 하나다(CLAUDE.md 커밋 규칙). 다음 작업으로 넘어가기 전에 지금 작업을 커밋까지 끝낸다.
+One task is one commit (CLAUDE.md commit rules). Finish the current task through its commit before moving on.
 
-1. **읽기:** 고칠 파일과 그 파일을 쓰는 곳을 읽는다. 레이어와 공개 진입점(`index.ts`)을 확인한다.
-2. **테스트 먼저 (로직이면):** `model`·`lib`의 로직은 실패하는 테스트부터 쓴다.
-   - `npx vitest run <테스트 파일>`로 **실패하는 것을 확인한다.** 처음부터 통과하면 테스트가 아무것도 검증하지 않는 것이니 고친다.
-   - 화면(`ui`) 코드는 node 환경이라 렌더링 테스트를 하지 않는다. 대신 로직을 `model`·`lib`로 빼서 테스트한다.
-3. **구현:** 테스트를 통과시킬 만큼만 쓴다.
-   - FSD 레이어 방향과 같은 레이어 슬라이스 import 금지를 지킨다. 슬라이스 밖에서는 index로만 가져온다.
-   - 색은 토큰을 쓰고, 옅은 색을 직접 쓰면 `dark:` 짝을 붙인다.
-   - 알고리즘 설명 코드(`defineCode`)는 실제 기록과 1:1로 맞춘다.
-   - 주석과 UI 문구는 한국어로 쓴다.
-4. **검사:** 관련 테스트, `npm run typecheck`, `npx eslint <파일>`을 돌린다. lint 훅이 저장할 때마다 `eslint --fix`를 돌리고 남은 오류를 알려 준다.
-5. **커밋:** `/commit`. 메시지는 계획에 적힌 것을 쓴다.
-6. **체크박스:** 계획 문서의 그 작업 단계를 `- [x]`로 바꾼다. 이 변경은 다음 작업 커밋에 함께 넣지 말고, 계획 문서만 따로 `docs:` 커밋으로 한다. 여러 작업의 체크박스를 마지막에 한 번에 갱신해도 된다.
+1. **Read:** read the files to change and the places that use them. Check the layer and the public entry point (`index.ts`).
+2. **Test first (for logic):** logic in `model`/`lib` starts with a failing test.
+   - **Confirm it fails** with `npx vitest run <test file>`. If it passes from the start, the test verifies nothing; fix the test.
+   - UI (`ui`) code is not render-tested because the environment is node. Move the logic to `model`/`lib` and test it there.
+3. **Implement:** write just enough to pass the test.
+   - Follow the FSD layer direction and the no-same-layer-slice-import rule. Outside a slice, import only through its index.
+   - Use color tokens; if you use a light color directly, add its `dark:` pair.
+   - Keep algorithm explanation code (`defineCode`) 1:1 with what is actually recorded.
+   - Write code comments and UI text in Korean.
+4. **Check:** run the related tests, `npm run typecheck` and `npx eslint <file>`. The lint hook runs `eslint --fix` on every save and reports remaining errors.
+5. **Commit:** `/commit`. Use the message written in the plan.
+6. **Checkbox:** mark that task's step in the plan as `- [x]`. Do not fold this into the next task's commit; commit the plan document alone as `docs:`. Updating several checkboxes at the end in one go is fine.
 
-## 2. 막혔을 때
+## 2. When stuck
 
-- 테스트가 예상과 다르게 실패하거나 원인을 모르는 오류가 나면 `/debug`로 간다. 원인을 모른 채 이것저것 바꿔 보지 않는다.
-- 계획대로 하면 안 되는 이유가 생기면(설계와 충돌, 더 나은 방법 발견) 멈추고 사용자에게 묻는다. 계획을 바꾸면 계획 문서도 새 커밋으로 고친다.
+- If a test fails unexpectedly or an error's cause is unknown, go to `/debug`. Do not change things at random without knowing the cause.
+- If there is a reason not to follow the plan (conflicts with the design, a better way found), stop and ask the user. If the plan changes, update the plan document in a new commit.
 
-## 3. 범위
+## 3. Scope
 
-- 계획에 없는 개선이나 버그를 발견하면 고치지 않고 적어 둔다. 마지막 보고에서 따로 알린다.
-- 리팩터링이 꼭 필요하면 기능 커밋과 섞지 말고 `refactor:` 커밋을 먼저 따로 만든다.
+- If you find an improvement or bug not in the plan, do not fix it; note it. Report it separately at the end.
+- If refactoring is truly needed, do not mix it with the feature commit; make a separate `refactor:` commit first.
 
-## 4. 끝
+## 4. Done
 
-모든 작업을 커밋했으면 `/verify`로 넘어간다. 보고에는 다음을 적는다.
-- 커밋 목록
-- 계획과 달라진 점
-- 발견했지만 고치지 않은 것
+When every task is committed, move on to `/verify`. The report (in Korean) includes:
+- the list of commits
+- where the work differed from the plan
+- what was found but not fixed
