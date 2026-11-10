@@ -118,7 +118,8 @@ const stripText = (command) =>
     .replace(/(^|\s)(["'])(--[A-Za-z][\w-]*(?:=[^"']*)?)\2(?=[\s;&|)]|$)/g, "$1$3")
     .replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
 
-const GIT = String.raw`\bgit(?:\s+-c\s+\S+)*\s+`;
+// git과 하위 명령 사이의 전역 옵션(-C 경로, -c 키=값, --no-pager …)은 건너뛴다. `git -C . push`처럼 형태만 바꿔 피하지 못하게
+const GIT = String.raw`\bgit(?:\s+(?:-[Cc]|--git-dir|--work-tree|--namespace)\s+\S+|\s+-[\w-]+(?:=\S+)?)*\s+`;
 // 옵션은 같은 줄, 같은 명령(; & | 앞) 안에서만 찾는다
 const SAME_COMMAND = String.raw`[^;&|\n]*`;
 const HISTORY_REWRITES = [
@@ -172,4 +173,19 @@ const TOOL_WRITES = [
 export function toolWriteOption(command) {
   const bare = stripText(command);
   return TOOL_WRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
+}
+
+// settings.json deny 규칙과 같은 명령. 허용 목록 규칙은 `git -C . push --force`처럼 형태를 바꾸면 맞지 않아 훅이 한 번 더 본다
+const PUSH = GIT + String.raw`push\b` + SAME_COMMAND;
+const FORBIDDEN_GIT = [
+  ["force push", new RegExp(PUSH + String.raw`\s(?:--force(?:-with-lease|-if-includes)?(?=[=\s]|$)|-[a-z]*f[a-z]*(?=\s|$)|\+\S)`)],
+  ["main 직접 push", new RegExp(PUSH + String.raw`[\s:](?:refs/heads/)?main(?=\s|$)`)],
+  ["git reset --hard", new RegExp(GIT + String.raw`reset\b` + SAME_COMMAND + String.raw`\s--hard\b`)],
+];
+
+/** settings.json이 거부하는 git 명령(force push, main 직접 push, reset --hard)이면 그 종류, 아니면 null */
+export function forbiddenGit(command) {
+  // 따옴표로 감싼 한 단어(`"main"`)는 셸이 따옴표를 벗겨 넘기므로 벗긴 채로 본다
+  const bare = stripText(command.replace(/(^|\s)(["'])([\w./:+-]+)\2(?=[\s;&|)]|$)/g, "$1$3"));
+  return FORBIDDEN_GIT.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }

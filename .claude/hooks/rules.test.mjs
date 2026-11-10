@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dangerousCommand,
   findSecret,
+  forbiddenGit,
   gitOutputFile,
   hasClaudeCoauthor,
   hasSrcChanges,
@@ -304,5 +305,49 @@ describe("toolWriteOption", () => {
     expect(toolWriteOption("npm test; git log -u")).toBeNull();
     expect(toolWriteOption("git commit -m \"chore: eslint --fix 확인\"")).toBeNull();
     expect(toolWriteOption("npx eslint-plugin-x --fix")).toBeNull();
+  });
+});
+
+describe("forbiddenGit", () => {
+  it("deny 규칙의 명령을 찾는다", () => {
+    expect(forbiddenGit("git push --force")).toBe("force push");
+    expect(forbiddenGit("git push origin main")).toBe("main 직접 push");
+    expect(forbiddenGit("git reset --hard HEAD~1")).toBe("git reset --hard");
+  });
+
+  it("형태를 바꿔 deny 규칙을 피하는 명령도 찾는다", () => {
+    expect(forbiddenGit("git -C . push --force")).toBe("force push");
+    expect(forbiddenGit("git -c push.default=current push -f")).toBe("force push");
+    expect(forbiddenGit("git --no-pager push origin feat/x --force-with-lease")).toBe("force push");
+    expect(forbiddenGit("git push -uf origin feat/x")).toBe("force push");
+    expect(forbiddenGit("git push origin +feat/x")).toBe("force push");
+    expect(forbiddenGit("git push -u origin main")).toBe("main 직접 push");
+    expect(forbiddenGit("git push origin HEAD:main")).toBe("main 직접 push");
+    expect(forbiddenGit("git push origin HEAD:refs/heads/main")).toBe("main 직접 push");
+    expect(forbiddenGit('git push origin "main"')).toBe("main 직접 push");
+    expect(forbiddenGit("git -C ../sort reset --hard")).toBe("git reset --hard");
+    expect(forbiddenGit("git status && git push \\\n  --force")).toBe("force push");
+  });
+
+  it("허용되는 push·reset은 통과", () => {
+    expect(forbiddenGit("git push -u origin chore/narrow-npm-permission")).toBeNull();
+    expect(forbiddenGit("git push origin feat/main-menu")).toBeNull();
+    expect(forbiddenGit("git push origin main-fix")).toBeNull();
+    expect(forbiddenGit("git reset --soft HEAD~1")).toBeNull();
+    expect(forbiddenGit("git pull --ff-only")).toBeNull();
+    expect(forbiddenGit("git switch main && git pull --ff-only")).toBeNull();
+  });
+
+  it("다른 명령이나 글 속의 명령 이름은 보지 않는다", () => {
+    expect(forbiddenGit('git commit -m "docs: git push --force 금지"')).toBeNull();
+    expect(forbiddenGit("git push -u origin feat/x; git log --oneline main")).toBeNull();
+    expect(forbiddenGit("git log -f; git push origin feat/x")).toBeNull();
+  });
+});
+
+describe("다른 판단도 git 앞 옵션(-C 등)을 건너뛴다", () => {
+  it("git -C로 amend·--output을 숨겨도 찾는다", () => {
+    expect(historyRewrite("git -C . commit --amend")).toBe("git commit --amend");
+    expect(gitOutputFile("git -C . log --output=x")).toBe("git log --output");
   });
 });
