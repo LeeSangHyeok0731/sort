@@ -1,83 +1,87 @@
 # Sorting Visualizer
 
-정렬 알고리즘 58개를 막대·트리·버킷으로 단계별 재생하는 웹 앱. Next.js 16(Turbopack), React 19, Tailwind 4, Vitest. 데스크톱 전용.
+A web app that replays 58 sorting algorithms step by step as bars, trees and buckets. Next.js 16 (Turbopack), React 19, Tailwind 4, Vitest. Desktop only.
 
-## 명령어
+## Commands
 
 ```bash
-npm run dev        # 개발 서버 (localhost:3000)
-npm test           # Vitest 전체 (node 환경)
+npm run dev        # dev server (localhost:3000)
+npm test           # all Vitest tests (node environment)
 npm run typecheck  # tsc --noEmit
-npm run lint       # ESLint (@/ 별칭 FSD 레이어 검사 포함)
-npm run lint:fsd   # FSD 의존성 검사 (상대 경로, 같은 레이어 슬라이스까지)
-npm run build      # 프로덕션 빌드
-npm run check:worker # 빌드 결과물에서 정렬 워커가 JS로 번들됐는지 검사 (build 뒤에)
+npm run lint       # ESLint (includes FSD layer checks for the @/ alias)
+npm run lint:fsd   # FSD dependency check (relative paths, down to same-layer slices)
+npm run build      # production build
+npm run check:worker # check that the sort worker was bundled as JS in the build output (after build)
 ```
 
-CI(`.github/workflows/ci.yml`)는 PR마다 lint → lint:fsd → typecheck → test → build → check:worker를 돌린다.
+CI (`.github/workflows/ci.yml`) runs lint → lint:fsd → typecheck → test → build → check:worker on every PR.
 
-## 작업 규칙
+## Language
 
-- 답변, 커밋 메시지, PR, 코드 주석은 **한국어**로 쓴다.
-- **새 작업은 `/start-task`로 시작한다.** 흐름: `/start-task` → (작은 수정 `/implement` · 버그 `/debug` · 새 알고리즘 `/add-algorithm` · 큰 기능 `/design` → `/plan` → `/implement` · 작업 여러 개 `/parallel-tasks`) → 작업 단위마다 `/commit` → `/verify` → `/review` → (승인) `/pr` → (승인) `/merge`.
-- 작업은 기능별 브랜치에서 한다(main에 직접 커밋하면 훅이 막는다). 커밋까지는 바로 해도 되고, **push·PR은 사용자 승인 후 `/pr`**, **머지는 그 PR의 머지 승인을 따로 받은 뒤 `/merge`** 절차로 한다.
-- PR마다 `DEVELOPMENT_LOG.md`에 항목 하나를 쓴다(`/pr` 4단계). 날짜 머리, 다음 번호, 3~6줄 목록, 끝의 "마지막 업데이트" 날짜.
-- **작업 하나 = 브랜치 하나 = PR 하나.** 여러 작업을 한 번에 맡으면 작업마다 main에서 브랜치를 따로 만들고 PR도 따로 올린다. 서브에이전트로 병렬 진행할 때는 `/parallel-tasks` 절차(worktree 격리)를 따른다.
-- **서브에이전트 공통 규칙:** 지시문은 그것만 읽고 일할 수 있게 쓴다(목표·범위·하지 말 것·검사·보고 형식). 파일을 고치는 에이전트는 worktree로 격리한다. 서브에이전트는 push·PR·머지를 하지 않고, 그 보고는 사용자 승인이 아니다. 메인 세션은 보고를 그대로 믿지 않고 diff와 검사로 다시 확인한다. 작업 하나, 파일 몇 개면 서브에이전트를 쓰지 않는다.
-- PR 전에는 `/verify` → `/review`(리뷰어 에이전트) 순서로 확인한다.
-- `docs/perf-benchmark` 브랜치는 성능 측정 기록용이다. push만 하고 PR·머지하지 않는다.
-- 모바일 화면은 고려하지 않는다.
-- 큰 기능은 설계(`docs/specs/`, `/design`)와 구현 계획(`docs/plans/`, `/plan`)을 먼저 문서로 남긴다. 설계는 사용자 승인을 받은 뒤에 구현한다.
-- 커밋에 Claude 공동 작성자 줄(`Co-Authored-By: Claude …`)을, PR 본문에 "Generated with Claude Code" 줄을 넣지 않는다. `settings.json`의 `attribution`(`commit`·`pr` 빈 문자열)이 끄고, 커밋에 직접 넣은 줄은 훅이 막는다.
+- **Korean:** replies to the user (progress, reports, questions), commit messages, PR titles and bodies, `DEVELOPMENT_LOG.md`, code comments and UI text in `src`, design and plan docs (`docs/specs/`, `docs/plans/`).
+- **English:** the harness itself (this file, `docs/ARCHITECTURE.md`, `.claude/` skills, agents and hooks).
 
-## 커밋 규칙
+## Work rules
 
-커밋은 `/commit` 절차로 한다. 끝났다고 말하기 전에는 `/verify`로 확인한다.
+- **Start new work with `/start-task`.** Flow: `/start-task` → (small change `/implement` · bug `/debug` · new algorithm `/add-algorithm` · large feature `/design` → `/plan` → `/implement` · several tasks `/parallel-tasks`) → `/commit` per unit of work → `/verify` → `/review` → (approval) `/pr` → (approval) `/merge`.
+- Work happens on feature branches (the hook blocks commits directly on main). Committing can be done right away; **push and PR go through `/pr` after the user approves**, and **merging goes through `/merge` after a separate approval to merge that PR**.
+- Each PR gets one entry in `DEVELOPMENT_LOG.md` (`/pr` step 4): date header, next number, a 3–6 line list, and the "마지막 업데이트" date at the end.
+- **One task = one branch = one PR.** When given several tasks at once, create a separate branch from main for each and open separate PRs. For parallel work with subagents, follow the `/parallel-tasks` procedure (worktree isolation).
+- **Common rules for subagents:** write the prompt so it can be worked from alone (goal, scope, what not to do, checks, report format). Agents that change files are isolated in a worktree. Subagents do not push, open PRs or merge, and their reports are not the user's approval. The main session does not trust a report as is; it re-checks with the diff and checks. Do not use subagents for one task touching a few files.
+- Before a PR, check in the order `/verify` → `/review` (reviewer agent).
+- The `docs/perf-benchmark` branch is for recording performance measurements. Push only; never PR or merge it.
+- Mobile screens are not considered.
+- Large features first get a design (`docs/specs/`, `/design`) and an implementation plan (`docs/plans/`, `/plan`) written down. Implementation starts only after the user approves the design.
+- Do not put a Claude co-author line (`Co-Authored-By: Claude …`) in commits or a "Generated with Claude Code" line in PR bodies. `attribution` in `settings.json` (`commit` and `pr` set to empty strings) turns them off, and the hook blocks a line added to a commit directly.
 
-- **브랜치 안에서는 필요한 일 하나를 커밋 하나로 만든다.** 접두어 하나와 한국어 한 줄로 설명되면 커밋 하나다. 설명에 "~하고 ~도"가 필요하면 나눈다. 일에 딸린 테스트는 같은 커밋에 넣는다.
-- 접두어는 `feat:` `fix:` `perf:` `refactor:` `style:` `test:` `docs:` `chore:` `ci:`이다. 그 뒤에 결과를 한국어 한 줄로 쓰고, 필요하면 본문에 "왜"를 쓴다.
-- 파일은 이름으로 지정해 스테이징한다. `git add -A`, `git add .`은 쓰지 않는다.
-- **이미 만든 커밋은 고치지 않는다.** 실수, 빠뜨린 파일, 리뷰 반영은 새 커밋으로 더한다. 리뷰 반영처럼 아직 머지되지 않은 그 작업을 고치는 커밋은 브랜치의 주 접두어를 쓴다(`feat:` 브랜치면 `fix:`가 아니라 `feat:`). `git commit --amend`, `git rebase`, `git pull --rebase`는 훅이 막는다.
-- 머지는 머지 커밋(`--merge`)으로 한다. squash하지 않는다.
+## Commit rules
 
-## 코드 규칙
+Commits follow the `/commit` procedure. Before saying something is done, check with `/verify`.
 
-- 구조와 레이어 규칙은 아래 `docs/ARCHITECTURE.md`를 따른다. 슬라이스 밖에서는 index로만 import한다.
-- 색은 `globals.css`의 토큰(`bg-surface`, `text-muted`, `border-line` …)을 쓴다. 옅은 색을 직접 쓰면 `dark:` 짝을 붙인다(`src/app/theme.test.ts`가 검사).
-- 알고리즘의 설명 코드(`defineCode`)는 실제 기록 방식과 1:1로 맞춘다. 새 알고리즘은 `/add-algorithm` 절차를 따른다.
-- 테스트는 대상 파일 옆 `*.test.ts`. 로직은 `model`·`lib`로 빼서 테스트한다.
+- **On a branch, one needed unit of work is one commit.** If it can be described with one prefix and one Korean line, it is one commit. If the description needs "A and also B", split it. Tests for the unit go in the same commit.
+- Prefixes are `feat:` `fix:` `perf:` `refactor:` `style:` `test:` `docs:` `chore:` `ci:`. After it, write the result in one Korean line, and the "why" in the body if needed.
+- Stage files by name. Do not use `git add -A` or `git add .`.
+- **Never modify a commit that already exists.** Mistakes, forgotten files and review fixes go in new commits. A commit that fixes this branch's own unmerged work, such as a review fix, uses the branch's main prefix (`feat:`, not `fix:`, on a `feat:` branch). The hook blocks `git commit --amend`, `git rebase` and `git pull --rebase`.
+- Merge with a merge commit (`--merge`). Do not squash.
 
-## 알아 둘 점
+## Code rules
 
-- dev 서버가 고친 CSS를 반영하지 않으면 Turbopack 캐시 문제다. 서버를 끄고 `.next/dev`를 지운 뒤 다시 띄운다.
-- 워커는 `new Worker(new URL(...))`에 `{ type: "module" }`을 붙이지 않는다. 붙이면 프로덕션 빌드에서 워커가 번들되지 않는다(dev에서는 동작해 놓치기 쉽다).
+- Structure and layer rules follow `docs/ARCHITECTURE.md` below. Outside a slice, import only through its index.
+- Colors use the tokens in `globals.css` (`bg-surface`, `text-muted`, `border-line` …). If you use a light color directly, add its `dark:` pair (checked by `src/app/theme.test.ts`).
+- An algorithm's explanation code (`defineCode`) must match what is actually recorded, 1:1. New algorithms follow the `/add-algorithm` procedure.
+- Tests go in a `*.test.ts` next to the target file. Move logic into `model`/`lib` to test it.
 
-## 하네스 (`.claude/`)
+## Things to know
 
-| 구성 | 내용 |
+- If the dev server does not pick up CSS changes, it is a Turbopack cache problem. Stop the server, delete `.next/dev`, and start it again.
+- Do not pass `{ type: "module" }` to `new Worker(new URL(...))`. With it, the worker is not bundled in the production build (it works in dev, so it is easy to miss).
+
+## Harness (`.claude/`)
+
+| Part | What it does |
 |---|---|
-| `settings.json` | 커밋 공동 작성자 줄·PR 본문 표시 줄 끔(`attribution`). 권한: lint·test·typecheck·build(`npx vitest *`처럼 공백 형태라 비슷한 이름의 다른 패키지는 안 걸림), git 조회(`git diff *`처럼 공백 형태라 `difftool` 같은 비슷한 이름은 안 걸림. `worktree list` 포함, `git branch`는 목록·`--show-current`·`--list`만), `git fetch origin main`(정확히 이 명령만), `gh pr view/checks/list` 허용. force push, main 직접 push, `git reset --hard` 거부(`git -C . push --force`처럼 형태를 바꾼 것은 훅이 막음) |
-| 훅 `lint-file.mjs` | Edit·Write 후 수정한 `src` 파일에 `eslint --fix`, 남은 오류만 알려줌 (파일이 속한 worktree 기준) |
-| 훅 `guard-command.mjs` | 위험한 명령(`rm -rf ~`·`/`, `sudo`, `dd`, 포맷, `curl \| sh`)과 main 브랜치 `git commit`, Claude 공동 작성자 줄이 든 커밋, 커밋 기록을 고치는 명령(`commit --amend`, `rebase`, `pull --rebase`), 형태를 바꿔 deny 규칙을 피한 git 명령(`git -C . push --force`, `push -u origin main`, `push --mirror`·`--all`, `reset --hard`) 차단. 허용 목록의 `git diff`·`log`·`show`에 `--output`(파일 쓰기)이, 검사 명령에 파일을 쓰는 옵션(`eslint --fix`·`-o`, `vitest -u`·`--outputFile`, tsc 출력)이 붙으면, 그리고 `gh pr create` 때 커밋 접두어가 섞여 있으면(`test:`·`docs:`·`style:` 제외) 사용자에게 물음 |
-| 훅 `guard-secrets.mjs` | 파일에 비밀값(AWS·GitHub·`sk-` 키, PEM, Slack 토큰)을 쓰려 하면 차단. `.env*`는 제외 |
-| 훅 `typecheck-on-stop.mjs` | 턴이 끝날 때 `src`에 변경이 있으면 tsc, 실패하면 이어서 고침 |
-| 스킬 `/start-task` | 새 작업의 시작: 작업 폴더 확인 → main 최신화 → 분류(작은 수정·버그·새 알고리즘·큰 기능·작업 여러 개) → 브랜치 → 맞는 스킬로 넘김 |
-| 스킬 `/add-algorithm` | 새 정렬 알고리즘 추가 절차: 알고리즘·테스트 → registry·families → 구조 보기 판단 → 문서의 알고리즘 개수 갱신 → `/commit` → `/verify` |
-| 스킬 `/design` | 질문(하나씩) → 방식 비교·추천 → `docs/specs/` 설계 문서 → 승인 (승인 전 구현 안 함) |
-| 스킬 `/plan` | 승인된 설계를 커밋 하나 크기의 작업으로 나눠 `docs/plans/`에 계획 문서 |
-| 스킬 `/implement` | 계획(또는 작은 수정)을 작업 하나씩: 테스트 먼저 → 구현 → 검사 → `/commit`, 범위 밖은 보고만 |
-| 스킬 `/debug` | 재현 → 실패하는 테스트 → 원인 확인 → 수정 → `fix:` 커밋(머지 전 작업 브랜치 안이면 주 접두어) (원인 확인 전 수정 금지) |
-| 스킬 `/commit` | 이번 일 파일만 스테이징 → 관련 검사 → 접두어·한국어 메시지로 커밋 (push 안 함) |
-| 스킬 `/verify` | CI와 같은 순서로 검사, 화면이 바뀌었으면 브라우저 확인, 근거와 함께 보고 |
-| 스킬 `/review` | 리뷰어 에이전트를 띄우고, 지적을 하나씩 검증해 맞는 것만 새 커밋으로 고친 뒤 `/verify` 다시 |
-| 에이전트 `reviewer` (`.claude/agents/`) | 읽기 전용 리뷰어. 동작 오류 → FSD → 프로젝트 규칙 → 테스트 → 커밋 규칙 → 하네스 변경 → 단순화 순으로, 근거 있는 지적만 심각도·`파일:줄`·실패 시나리오로 보고 |
-| 스킬 `/pr` | 작업 섞임 확인 → `/verify`·`/review` 확인(리뷰 전이면 멈추고 다시 승인) → 개발 로그 항목 → push → PR(`.github/pull_request_template.md`) → CI 확인. 머지 안 함 (승인 후) |
-| 스킬 `/merge` | CI 통과 확인 → 머지 커밋으로 머지 → main 동기화·브랜치 정리 (머지 승인 후) |
-| 스킬 `/parallel-tasks` | 여러 작업을 작업자 에이전트(worktree)로 나눠 진행 → 브랜치마다 `/review` → worktree 정리 후 본 폴더에서 `/verify` → 작업별 `/pr` |
-| 에이전트 `worker` (`.claude/agents/`) | 작업자. 자기 worktree 브랜치에서 `/implement`·`/commit` 절차로 작업 하나를 구현·커밋하고, lint·lint:fsd·typecheck·test 결과와 함께 보고. push·PR 안 함 |
+| `settings.json` | Turns off the commit co-author line and the PR body footer (`attribution`). Permissions allow: lint, test, typecheck, build (space form like `npx vitest *`, so similarly named other packages do not match), git reads (space form like `git diff *`, so similar names like `difftool` do not match; includes `worktree list`; `git branch` only for listing, `--show-current` and `--list`), `git fetch origin main` (exactly this command), `gh pr view/checks/list`. Denies force push, direct push to main and `git reset --hard` (changed forms like `git -C . push --force` are blocked by the hook) |
+| Hook `lint-file.mjs` | After Edit/Write, runs `eslint --fix` on the edited `src` file and reports only the remaining errors (using the worktree the file belongs to) |
+| Hook `guard-command.mjs` | Blocks dangerous commands (`rm -rf ~` or `/`, `sudo`, `dd`, formatting, `curl \| sh`), `git commit` on main, commits with a Claude co-author line, commands that rewrite commit history (`commit --amend`, `rebase`, `pull --rebase`), and git commands that dodge the deny rules by changing form (`git -C . push --force`, `push -u origin main`, `push --mirror`/`--all`, `reset --hard`). Asks the user when an allowlisted `git diff`/`log`/`show` has `--output` (writes a file), when a check command has a file-writing option (`eslint --fix`/`-o`, `vitest -u`/`--outputFile`, tsc output), and when commit prefixes are mixed at `gh pr create` (excluding `test:`/`docs:`/`style:`) |
+| Hook `guard-secrets.mjs` | Blocks writing secrets (AWS, GitHub and `sk-` keys, PEM, Slack tokens) to files. `.env*` is exempt |
+| Hook `typecheck-on-stop.mjs` | At the end of a turn, if `src` has changes, runs tsc; on failure, continues to fix it |
+| Skill `/start-task` | Start of new work: check the working folder → update main → classify (small change, bug, new algorithm, large feature, several tasks) → branch → hand off to the right skill |
+| Skill `/add-algorithm` | Adding a new sorting algorithm: algorithm and tests → registry and families → structure view decision → update the algorithm count in the docs → `/commit` → `/verify` |
+| Skill `/design` | Questions (one at a time) → compare and recommend approaches → design doc in `docs/specs/` → approval (no implementation before approval) |
+| Skill `/plan` | Splits an approved design into commit-sized tasks in a plan doc in `docs/plans/` |
+| Skill `/implement` | Works through a plan (or a small change) one task at a time: test first → implement → check → `/commit`; out-of-scope findings are only reported |
+| Skill `/debug` | Reproduce → failing test → confirm the cause → fix → `fix:` commit (the branch's main prefix when inside unmerged work) (no fix before the cause is confirmed) |
+| Skill `/commit` | Stage only this unit's files → related checks → commit with a prefix and a Korean message (no push) |
+| Skill `/verify` | Checks in the same order as CI, checks the browser if the UI changed, reports with evidence |
+| Skill `/review` | Launches the reviewer agent, verifies each finding, fixes only the valid ones in new commits, then reruns `/verify` |
+| Agent `reviewer` (`.claude/agents/`) | Read-only reviewer. Reports only evidence-backed findings with severity, `file:line` and failure scenario, in the order behavior bugs → FSD → project rules → tests → commit rules → harness changes → simplification |
+| Skill `/pr` | Mixed-work check → `/verify` and `/review` check (if not reviewed, stop and get approval again) → dev log entry → push → PR (`.github/pull_request_template.md`) → CI check. Does not merge (after approval) |
+| Skill `/merge` | Check CI passed → merge with a merge commit → sync main and clean up the branch (after merge approval) |
+| Skill `/parallel-tasks` | Splits several tasks across worker agents (worktrees) → `/review` per branch → remove the worktree, then `/verify` in the main folder → `/pr` per task |
+| Agent `worker` (`.claude/agents/`) | Worker. Implements and commits one task on its own worktree branch by the `/implement` and `/commit` procedures, and reports with lint, lint:fsd, typecheck and test results. No push or PR |
 
-서브에이전트 worktree(`.claude/worktrees/`)는 gitignore 대상이고, 본 폴더의 tsc·eslint 검사 범위에서 빠진다.
+Subagent worktrees (`.claude/worktrees/`) are gitignored and excluded from the main folder's tsc and eslint checks.
 
-개인 설정은 `.claude/settings.local.json`(커밋 안 함)에 둔다.
+Personal settings go in `.claude/settings.local.json` (not committed).
 
 @docs/ARCHITECTURE.md
