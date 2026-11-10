@@ -84,8 +84,8 @@ import를 알파벳 순서 자리에 넣고, `ALGORITHMS` 배열의 알맞은 �
 
 - 지원하는 모양은 `model/types.ts`의 `AlgorithmStructure`다: `heap`(arity 2·3), `bst`, `splay`·`cartesian`·`tournament`(트리), `piles`·`buckets`·`counting`·`radix`(칸).
 - 같은 모양을 쓰는 기존 알고리즘(`grep -rln "kind: \"<모양>\"" src/entities/sort-algorithm/algorithms`)을 찾아 지정 방식을 그대로 따른다.
-- 모양마다 설명 코드에 있어야 할 표식이 정해져 있다: `src/widgets/visualizer/model/structures/scene.ts`의 `STRUCTURE_LABELS`(예: `cartesian`은 `cmp-build`·`cmp-heap`·`move`). 표식 이름을 그대로 맞춘다.
-- `scene.test.ts`가 `structure`를 지정한 모든 알고리즘을 자동으로 돌려 표식과 단계별 장면을 검사하므로, 지정만 하면 그 검사에 들어간다. 그 모양 안에서 동작이 다른 점(넣는 순서, 비교 순서 등)이 있으면 `structures.test.ts`에 그 알고리즘 사례를 더한다.
+- 모양마다 설명 코드에 있어야 할 표식이 정해져 있다: `src/widgets/visualizer/model/structures/scene.ts`의 `STRUCTURE_LABELS`(예: `cartesian`은 `cmp-build`·`cmp-heap`·`move`). 표식 이름을 그대로 맞춘다. `heap`은 여기 표식이 없고, 대신 `heapEndLabel`로 준 표식이 설명 코드에 있어야 한다(`src/widgets/visualizer/model/structure.test.ts`가 검사).
+- `scene.test.ts`가 `structure`를 지정한 모든 알고리즘을 자동으로 돌려 표식과 단계별 장면을 검사하므로, 지정만 하면 그 검사에 들어간다. 그 모양 안에서 동작이 다른 점(넣는 순서, 비교 순서 등)이 있으면 사례를 더한다. 힙은 `model/structure.test.ts`, 나머지 모양은 `model/structures/structures.test.ts`다.
 - 새 모양이 필요하면(기존 모양으로 그릴 수 없으면) 여기서 멈추고 사용자에게 알린다. `widgets/visualizer`를 바꾸는 큰 기능이라 `/design`부터 한다.
 - 구조 보기가 맞지 않는 알고리즘이면 지정하지 않는다.
 
