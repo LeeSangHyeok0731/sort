@@ -16,7 +16,7 @@
       "Bash(git branch*)",
       "Bash(git show*)",
       "Bash(git worktree list*)",
-      "Bash(git fetch*)",
+      "Bash(git fetch origin main)",
       "Bash(gh pr view*)",
       "Bash(gh pr checks*)",
       "Bash(gh pr list*)",
@@ -33,7 +33,7 @@
       "PowerShell(git branch*)",
       "PowerShell(git show*)",
       "PowerShell(git worktree list*)",
-      "PowerShell(git fetch*)",
+      "PowerShell(git fetch origin main)",
       "PowerShell(gh pr view*)",
       "PowerShell(gh pr checks*)",
       "PowerShell(gh pr list*)"
