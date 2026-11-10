@@ -378,6 +378,12 @@
 - 브랜치 이름은 `<주 커밋 접두어>/<짧은-영문-이름>`이다. 테스트만 보강하는 작업은 `test/…`를 쓴다.
 - `/implement`·`/debug`·`/design`이 main이나 다른 작업의 브랜치에서 시작하면 `/start-task`로 브랜치부터 만든다. CLAUDE.md에 전체 흐름 한 줄을 넣었다.
 
+### 41. 🔓 읽기 전용 git 명령 권한 허용
+
+- `/start-task`가 쓰는 `git worktree list`와 `git fetch origin main`을 권한 허용 목록에 넣었다. 자동 모드를 쓰지 않는 사람도 작업을 시작할 때 확인 창이 덜 뜬다.
+- `git fetch`는 와일드카드(`git fetch*`) 대신 `git fetch origin main` 하나만 허용한다. `--upload-pack`(임의 명령 실행)과 `+ref:main`(로컬 main 강제 덮어쓰기)까지 허용되는 것을 리뷰에서 찾았다.
+- 브랜치를 바꾸는 `git switch`·`git pull`은 계속 확인 창을 띄운다.
+
 ---
 
 _마지막 업데이트: 2026-11-10_
