@@ -190,6 +190,11 @@ describe("historyRewrite", () => {
     expect(historyRewrite("git pull -r origin main")).toBe("git pull --rebase");
   });
 
+  it("줄 잇기로 나눈 명령도 찾는다", () => {
+    expect(historyRewrite("git commit \\\n  --amend --no-edit")).toBe("git commit --amend");
+    expect(historyRewrite("git commit `\r\n  --amend")).toBe("git commit --amend");
+  });
+
   it("기록을 바꾸지 않는 명령은 통과", () => {
     expect(historyRewrite('git commit -m "fix: --amend 옵션 설명"')).toBeNull();
     expect(historyRewrite('git commit -m "docs: rebase 대신 merge"')).toBeNull();
@@ -225,6 +230,18 @@ describe("gitOutputFile", () => {
     expect(gitOutputFile("git diff main --output x.txt")).toBe("git diff --output");
     expect(gitOutputFile("git -c core.pager=cat show HEAD --output=a")).toBe("git show --output");
     expect(gitOutputFile("cd sort && git log --oneline --output=a")).toBe("git log --output");
+  });
+
+  it("줄 잇기(\\·`)와 따옴표로 감싼 옵션도 찾는다", () => {
+    expect(gitOutputFile("git log --oneline \\\n  --output=x")).toBe("git log --output");
+    expect(gitOutputFile("git log --oneline \\\r\n  --output=x")).toBe("git log --output");
+    expect(gitOutputFile("git log --oneline `\n  --output=x")).toBe("git log --output");
+    expect(gitOutputFile("git log \"--output=x\"")).toBe("git log --output");
+    expect(gitOutputFile("git log '--output=x'")).toBe("git log --output");
+  });
+
+  it("--output으로 시작하는 다른 옵션은 통과", () => {
+    expect(gitOutputFile("git log -p --output-indicator-new=+")).toBeNull();
   });
 
   it("--output이 없거나 문자열 안에만 있으면 통과", () => {

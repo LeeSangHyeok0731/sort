@@ -110,6 +110,10 @@ const stripText = (command) =>
   command
     .replace(/<<-?\s*(["']?)(\w+)\1[^\n]*\n[\s\S]*?\n\s*\2[ \t]*(?=\n|$)/g, "")
     .replace(/@(["'])\r?\n[\s\S]*?\r?\n\1@/g, "")
+    // 줄 잇기(bash `\`, PowerShell 백틱 + 줄바꿈)는 한 명령이므로 공백으로 잇는다
+    .replace(/[\\`]\r?\n/g, " ")
+    // 따옴표로 감싼 옵션 하나("--output=x")는 셸이 따옴표를 벗겨 옵션으로 넘기므로 옵션으로 남긴다
+    .replace(/(^|\s)(["'])(-[^\s"']+)\2(?=\s|$)/g, "$1$3")
     .replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
 
 const GIT = String.raw`\bgit(?:\s+-c\s+\S+)*\s+`;
@@ -131,7 +135,7 @@ export function historyRewrite(command) {
   return HISTORY_REWRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }
 
-const GIT_OUTPUT = new RegExp(GIT + String.raw`(diff|log|show)\b` + SAME_COMMAND + String.raw`\s--output\b`);
+const GIT_OUTPUT = new RegExp(GIT + String.raw`(diff|log|show)\b` + SAME_COMMAND + String.raw`\s--output(?=[=\s]|$)`);
 
 /**
  * 권한 허용 목록의 조회 명령(git diff·log·show)에 --output이 붙어 파일을 쓰면 "git <명령> --output", 아니면 null.
