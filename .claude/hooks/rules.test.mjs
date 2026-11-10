@@ -12,6 +12,7 @@ import {
   lintTarget,
   mainCommitTypes,
   prHeadBranch,
+  toolWriteOption,
   writtenText,
 } from "./rules.mjs";
 
@@ -263,5 +264,45 @@ describe("gitOutputFile", () => {
     expect(gitOutputFile("git diff main...HEAD --stat")).toBeNull();
     expect(gitOutputFile("git commit -m \"docs: --output 옵션 설명\"")).toBeNull();
     expect(gitOutputFile("git log --oneline; npm run build --output=x")).toBeNull();
+  });
+});
+
+describe("toolWriteOption", () => {
+  it("허용 목록의 검사 명령에 파일을 쓰는 옵션이 붙으면 찾는다", () => {
+    expect(toolWriteOption("npx eslint src --fix")).toBe("eslint --fix");
+    expect(toolWriteOption("npm run lint -- --fix")).toBe("eslint --fix");
+    expect(toolWriteOption("npx eslint src -o out.txt")).toBe("eslint --output-file");
+    expect(toolWriteOption("npx eslint src --output-file=out.txt")).toBe("eslint --output-file");
+    expect(toolWriteOption("npx vitest run -u")).toBe("vitest --update");
+    expect(toolWriteOption("npm test -- --update")).toBe("vitest --update");
+    expect(toolWriteOption("npx vitest run --outputFile=x.json")).toBe("vitest --outputFile");
+    expect(toolWriteOption("npx tsc --noEmit false")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --noEmit=false")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --outDir dist")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc -b")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --init")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npm run typecheck -- --outFile x.js")).toBe("tsc 파일 출력");
+  });
+
+  it("줄 잇기와 따옴표로 감싼 옵션도 찾는다", () => {
+    expect(toolWriteOption("npx eslint src \\\n  --fix")).toBe("eslint --fix");
+    expect(toolWriteOption('npx vitest run "--outputFile=a b.json"')).toBe("vitest --outputFile");
+  });
+
+  it("쓰지 않는 검사 명령은 통과", () => {
+    expect(toolWriteOption("npx eslint src/app")).toBeNull();
+    expect(toolWriteOption("npx eslint src --fix-dry-run")).toBeNull();
+    expect(toolWriteOption("npm run lint")).toBeNull();
+    expect(toolWriteOption("npm run lint:fsd -- -o")).toBeNull();
+    expect(toolWriteOption("npx vitest run --root .claude/worktrees/a src/x.test.ts")).toBeNull();
+    expect(toolWriteOption("npm test")).toBeNull();
+    expect(toolWriteOption("npx tsc --noEmit -p .claude/worktrees/a")).toBeNull();
+    expect(toolWriteOption("npm run typecheck")).toBeNull();
+  });
+
+  it("다른 명령의 옵션이나 따옴표 안 글은 보지 않는다", () => {
+    expect(toolWriteOption("npm test; git log -u")).toBeNull();
+    expect(toolWriteOption("git commit -m \"chore: eslint --fix 확인\"")).toBeNull();
+    expect(toolWriteOption("npx eslint-plugin-x --fix")).toBeNull();
   });
 });

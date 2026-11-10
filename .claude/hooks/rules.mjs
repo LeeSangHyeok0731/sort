@@ -147,3 +147,29 @@ export function gitOutputFile(command) {
   const match = stripText(command).match(GIT_OUTPUT);
   return match ? `git ${match[1]} --output` : null;
 }
+
+// 허용 목록(`npx eslint *`, `npm test *` …)의 검사 명령. npm run 뒤 `--` 인자는 그 도구로 넘어간다
+const ESLINT = String.raw`\b(?:npx\s+eslint|npm\s+run\s+lint)(?=\s|$)`;
+const VITEST = String.raw`\b(?:npx\s+vitest|npm\s+(?:run\s+)?test)(?=\s|$)`;
+const TSC = String.raw`\b(?:npx\s+tsc|npm\s+run\s+typecheck)(?=\s|$)`;
+const TOOL_WRITES = [
+  ["eslint --fix", ESLINT, "--fix"],
+  ["eslint --output-file", ESLINT, "(?:-o|--output-file)"],
+  ["vitest --update", VITEST, "(?:-u|--update)"],
+  ["vitest --outputFile", VITEST, "--outputFile"],
+  // tsconfig가 noEmit이라 보통은 쓰지 않는다. 그것을 끄거나 빌드·초기화·추적 파일을 쓰는 옵션만 본다
+  [
+    "tsc 파일 출력",
+    TSC,
+    String.raw`(?:--noEmit(?:=|\s+)false|--outDir|--outFile|--declarationDir|--tsBuildInfoFile|--build|-b|--init|--generateTrace)`,
+  ],
+].map(([label, tool, option]) => [label, new RegExp(tool + SAME_COMMAND + String.raw`\s` + option + String.raw`(?=[=\s]|$)`)]);
+
+/**
+ * 허용 목록의 검사 명령(eslint·vitest·tsc)에 파일을 쓰는 옵션이 붙었으면 그 종류, 아니면 null.
+ * 허용 목록은 뒤 인자를 가리지 않으므로, 이것으로 소스를 고치거나 아무 파일이나 확인 없이 쓸 수 있다
+ */
+export function toolWriteOption(command) {
+  const bare = stripText(command);
+  return TOOL_WRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
+}
