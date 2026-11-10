@@ -1,5 +1,6 @@
-// PreToolUse(Bash|PowerShell): 되돌릴 수 없는 위험한 명령, settings.json deny 규칙을 형태만 바꿔 피한 git 명령, main 브랜치 직접 커밋, Claude 공동 작성자 줄이 든 커밋,
-// 커밋 기록을 고치는 명령(amend·rebase)을 막고, 파일을 쓰는 조회·검사 명령(git diff·log·show --output, eslint --fix 등)과 여러 작업이 섞인 PR은 사용자에게 묻는다
+// PreToolUse(Bash|PowerShell): blocks irreversible dangerous commands, git commands that dodge the settings.json deny rules by changing their form,
+// direct commits on main, commits with a Claude co-author line, and commands that rewrite commit history (amend, rebase).
+// Asks the user about read/check commands that write files (git diff/log/show --output, eslint --fix, etc.) and PRs that mix several kinds of work
 import { ask, block, commandDirOf, git, readInput } from "./io.mjs";
 import {
   dangerousCommand,
@@ -16,36 +17,36 @@ import {
 
 const input = await readInput();
 const command = input.tool_input?.command ?? "";
-// worktree의 서브에이전트는 자기 worktree 브랜치에서 커밋하므로 명령이 도는 폴더를 본다
+// A subagent in a worktree commits on its own worktree branch, so look at the folder the command runs in
 const dir = commandDirOf(input);
 
 const danger = dangerousCommand(command);
-if (danger) block(`위험한 명령이라 막았어요 (${danger}). 꼭 필요하면 사용자가 직접 실행하게 안내하세요.`);
+if (danger) block(`Blocked a dangerous command (${danger}). If it is really needed, ask the user to run it themselves.`);
 
 const forbidden = forbiddenGit(command);
-if (forbidden) block(`거부 목록의 명령이라 막았어요 (${forbidden}). 꼭 필요하면 사용자가 직접 실행하게 안내하세요.`);
+if (forbidden) block(`Blocked a command on the deny list (${forbidden}). If it is really needed, ask the user to run it themselves.`);
 
 const rewrite = historyRewrite(command);
 if (rewrite) {
-  block(`이미 만든 커밋은 고치지 않아요 (${rewrite}). 고칠 내용은 새 커밋으로 더하세요 (CLAUDE.md 커밋 규칙).`);
+  block(`Existing commits are never modified (${rewrite}). Add the fix as a new commit (CLAUDE.md commit rules).`);
 }
 
 if (isGitCommit(command)) {
   const branch = git(dir, ["branch", "--show-current"])?.trim();
-  if (branch === "main") block("main 브랜치에는 직접 커밋하지 않아요. 기능 브랜치를 먼저 만드세요 (git switch -c <이름>).");
+  if (branch === "main") block("Do not commit directly on main. Create a feature branch first (git switch -c <name>).");
   if (hasClaudeCoauthor(command)) {
-    block("커밋에 Claude 공동 작성자 줄(Co-Authored-By: Claude)을 넣지 않아요. 그 줄을 빼고 다시 커밋하세요.");
+    block("Do not put a Claude co-author line (Co-Authored-By: Claude) in commits. Remove that line and commit again.");
   }
 }
 
 const outputWrite = gitOutputFile(command);
 if (outputWrite) {
-  ask(`${outputWrite}는 결과를 파일에 써요. 조회 명령이라 허용 목록에 있지만 파일을 덮어쓸 수 있어 확인합니다. 실행할까요?`);
+  ask(`${outputWrite} writes its output to a file. It is a read command on the allowlist, but it can overwrite files, so confirming. Run it?`);
 }
 
 const toolWrite = toolWriteOption(command);
 if (toolWrite) {
-  ask(`${toolWrite}는 파일을 고치거나 써요. 검사 명령이라 허용 목록에 있지만 쓰기라 확인합니다. 실행할까요?`);
+  ask(`${toolWrite} modifies or writes files. It is a check command on the allowlist, but this is a write, so confirming. Run it?`);
 }
 
 if (isPrCreate(command)) {
@@ -54,8 +55,8 @@ if (isPrCreate(command)) {
   const types = subjects ? mainCommitTypes(subjects.split("\n").filter(Boolean)) : [];
   if (types.length > 1) {
     ask(
-      `이 PR에 서로 다른 작업 커밋(${types.join(", ")})이 섞여 있어요. ` +
-        "작업 하나당 브랜치·PR 하나가 규칙입니다(/parallel-tasks). 그래도 하나로 올릴까요?"
+      `This PR mixes commits from different kinds of work (${types.join(", ")}). ` +
+        "The rule is one branch and one PR per task (/parallel-tasks). Open it as one PR anyway?"
     );
   }
 }

@@ -1,56 +1,56 @@
-// 훅 스크립트가 쓰는 순수 판단 함수. 입출력 없이 테스트할 수 있게 분리했다
+// Pure decision functions used by the hook scripts, kept separate so they can be tested without I/O
 
 const toPosix = (p) => p.replace(/\\/g, "/");
 
-/** 수정된 파일이 lint 대상(src 아래 ts·tsx)이면 프로젝트 기준 상대 경로, 아니면 null */
+/** If the edited file is a lint target (ts/tsx under src), its path relative to the project; otherwise null */
 export function lintTarget(filePath, projectDir) {
   if (!filePath) return null;
   const root = toPosix(projectDir).replace(/\/$/, "") + "/";
   const file = toPosix(filePath);
-  // Windows 경로는 드라이브 문자 대소문자가 섞여 들어올 수 있다
+  // Windows paths can arrive with the drive letter in either case
   if (!file.toLowerCase().startsWith(root.toLowerCase())) return null;
   const rel = file.slice(root.length);
   return /^src\/.+\.tsx?$/.test(rel) ? rel : null;
 }
 
-/** 셸 명령에 git commit이 들어 있는지 (git -c k=v commit 형태 포함) */
+/** Whether a shell command contains git commit (including the git -c k=v commit form) */
 export function isGitCommit(command) {
   return /\bgit(?:\s+-c\s+\S+)*\s+commit\b/.test(command);
 }
 
-/** git status --porcelain 출력에 src/ 아래 변경이 있는지 */
+/** Whether git status --porcelain output has changes under src/ */
 export function hasSrcChanges(porcelain) {
   return porcelain
     .split("\n")
     .filter(Boolean)
     .some((line) => {
       const path = line.slice(3);
-      // 이름 바꾸기는 "옛 경로 -> 새 경로", 특수 문자가 든 경로는 따옴표로 감싸져 나온다
+      // A rename shows as "old path -> new path"; paths with special characters come quoted
       const target = path.includes(" -> ") ? path.split(" -> ")[1] : path;
       return target.replace(/^"/, "").startsWith("src/");
     });
 }
 
-// 비밀 형식. 앞뒤 경계를 둬서 disk-usage 같은 일반 단어에 걸리지 않게 한다
+// Secret formats. Boundaries on both sides keep ordinary words like disk-usage from matching
 const SECRET_PATTERNS = [
-  ["AWS 액세스 키", /\bAKIA[0-9A-Z]{16}\b/],
-  ["GitHub 토큰", /\bgh[pousr]_[A-Za-z0-9]{36,}|\bgithub_pat_[A-Za-z0-9_]{22,}/],
-  ["API 키(sk-)", /(?<![\w-])sk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}/],
-  ["개인키(PEM)", /-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----/],
-  ["Slack 토큰", /\bxox[baprs]-[A-Za-z0-9-]{10,}/],
+  ["AWS access key", /\bAKIA[0-9A-Z]{16}\b/],
+  ["GitHub token", /\bgh[pousr]_[A-Za-z0-9]{36,}|\bgithub_pat_[A-Za-z0-9_]{22,}/],
+  ["API key (sk-)", /(?<![\w-])sk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}/],
+  ["private key (PEM)", /-----BEGIN (?:[A-Z]+ )*PRIVATE KEY-----/],
+  ["Slack token", /\bxox[baprs]-[A-Za-z0-9-]{10,}/],
 ];
 
-/** 글에 비밀로 보이는 값이 있으면 그 종류, 없으면 null */
+/** The kind of secret if the text contains something that looks like one; otherwise null */
 export function findSecret(text) {
   return SECRET_PATTERNS.find(([, pattern]) => pattern.test(text))?.[0] ?? null;
 }
 
-/** .env 파일은 원래 비밀을 두는 곳이고 gitignore 대상이라 검사하지 않는다 */
+/** .env files are where secrets belong and are gitignored, so they are not checked */
 export function isSecretExempt(filePath) {
   return /(?:^|[\\/])\.env[^\\/]*$/.test(filePath);
 }
 
-/** Write·Edit·MultiEdit 입력에서 새로 쓰는 글 */
+/** The new text being written in a Write/Edit/MultiEdit input */
 export function writtenText(toolInput) {
   if (typeof toolInput.content === "string") return toolInput.content;
   if (typeof toolInput.new_string === "string") return toolInput.new_string;
@@ -59,34 +59,34 @@ export function writtenText(toolInput) {
 }
 
 const DANGEROUS_COMMANDS = [
-  ["홈·루트 전체 삭제", /\brm\s+(?:-\S+\s+)+(?:\/\*?|~\/?|\$HOME\/?)(?=\s|$|[;&|])/],
+  ["deleting all of home or root", /\brm\s+(?:-\S+\s+)+(?:\/\*?|~\/?|\$HOME\/?)(?=\s|$|[;&|])/],
   ["sudo", /(?:^|[;&|(]\s*)sudo\b/],
-  ["디스크 직접 쓰기", /\bdd\s+if=|>\s*\/dev\/(?:sd|nvme|disk)/],
-  ["디스크 포맷", /\bmkfs\b|\bFormat-Volume\b/i],
-  ["내려받은 스크립트 바로 실행", /\b(?:curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh|iex|Invoke-Expression)\b/i],
+  ["writing directly to a disk", /\bdd\s+if=|>\s*\/dev\/(?:sd|nvme|disk)/],
+  ["formatting a disk", /\bmkfs\b|\bFormat-Volume\b/i],
+  ["running a downloaded script directly", /\b(?:curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh|iex|Invoke-Expression)\b/i],
 ];
 
-/** 되돌릴 수 없는 위험한 명령이면 그 이유, 아니면 null */
+/** The reason if the command is irreversible and dangerous; otherwise null */
 export function dangerousCommand(command) {
   return DANGEROUS_COMMANDS.find(([, pattern]) => pattern.test(command))?.[0] ?? null;
 }
 
-/** 셸 명령에 gh pr create가 들어 있는지 */
+/** Whether a shell command contains gh pr create */
 export function isPrCreate(command) {
   return /\bgh\s+pr\s+create\b/.test(command);
 }
 
-/** gh pr create에 --head로 준 브랜치 (없으면 null) */
+/** The branch given to gh pr create with --head (null if none) */
 export function prHeadBranch(command) {
   return command.match(/--head(?:=|\s+)["']?([^\s"']+)/)?.[1] ?? null;
 }
 
-// 다른 작업에 딸려 오는 접두어 (기능과 함께 쓴 테스트·문서·서식). 작업 종류를 셀 때 빼고 센다
+// Prefixes that accompany other work (tests, docs, formatting written with a feature). Left out when counting kinds of work
 const SUPPORT_TYPES = new Set(["test", "docs", "style"]);
 
 /**
- * 커밋 제목들에서 주 접두어(feat, fix, ci …)를 모은다.
- * 둘 이상이면 PR 하나에 서로 다른 작업이 섞였을 가능성이 크다 (작업 하나당 PR 하나 규칙).
+ * Collect the main prefixes (feat, fix, ci …) from commit subjects.
+ * Two or more means the PR likely mixes different kinds of work (one PR per task rule).
  */
 export function mainCommitTypes(subjects) {
   const types = new Set();
@@ -97,44 +97,44 @@ export function mainCommitTypes(subjects) {
   return [...types];
 }
 
-/** 커밋 명령에 Claude 공동 작성자 줄(Co-Authored-By: Claude …)을 직접 넣었는지 */
+/** Whether the commit command puts a Claude co-author line (Co-Authored-By: Claude …) in directly */
 export function hasClaudeCoauthor(command) {
   return /co-authored-by:\s*claude|noreply@anthropic\.com/i.test(command);
 }
 
 /**
- * 명령이 아닌 글을 지운다: heredoc 본문(PR 본문 등), PowerShell here-string, 따옴표 안(커밋 메시지 등).
- * 글 속에 적힌 명령 이름을 실제 명령으로 오인하지 않게 한다
+ * Remove text that is not command: heredoc bodies (PR bodies, etc.), PowerShell here-strings, quoted text (commit messages, etc.).
+ * Keeps command names written inside text from being mistaken for real commands
  */
 const stripText = (command) =>
   command
     .replace(/<<-?\s*(["']?)(\w+)\1[^\n]*\n[\s\S]*?\n\s*\2[ \t]*(?=\n|$)/g, "")
     .replace(/@(["'])\r?\n[\s\S]*?\r?\n\1@/g, "")
-    // 줄 잇기(bash `\`, PowerShell 백틱 + 줄바꿈)는 한 명령이므로 공백으로 잇는다
+    // A line continuation (bash `\`, PowerShell backtick + newline) is one command, so join it with a space
     .replace(/[\\`]\r?\n/g, " ")
-    // 따옴표로 감싼 옵션 하나("--output=x", "--output=a b")는 셸이 따옴표를 벗겨 옵션으로 넘기므로 옵션으로 남긴다.
-    // `--이름` 또는 `--이름=값` 모양만 본다. "- 훅이 --amend를 막는다" 같은 글은 옵션이 아니다.
-    // 알려진 오탐: 따옴표 안 전체가 옵션 모양 한 단어면(-m "--amend") 셸 수준에서 구별할 수 없어 옵션으로 본다
+    // A single quoted option ("--output=x", "--output=a b") is unquoted by the shell and passed as an option, so keep it as one.
+    // Only the `--name` or `--name=value` shape counts. Text like "- 훅이 --amend를 막는다" is not an option.
+    // Known false positive: if the whole quoted text is one option-shaped word (-m "--amend"), it cannot be told apart at the shell level and counts as an option
     .replace(/(^|\s)(["'])(--[A-Za-z][\w-]*(?:=[^"']*)?)\2(?=[\s;&|)]|$)/g, "$1$3")
     .replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '""');
 
-// git과 하위 명령 사이의 전역 옵션(-C 경로, -c 키=값, --no-pager …)은 건너뛴다. `git -C . push`처럼 형태만 바꿔 피하지 못하게
+// Skip global options between git and the subcommand (-C path, -c key=value, --no-pager …) so a changed form like `git -C . push` cannot dodge the checks
 const GIT = String.raw`\bgit(?:\s+(?:-[Cc]|--git-dir|--work-tree|--namespace)\s+\S+|\s+-[\w-]+(?:=\S+)?)*\s+`;
-// 옵션은 같은 줄, 같은 명령(; & | 앞) 안에서만 찾는다
+// Options are looked for only on the same line, within the same command (before ; & |)
 const SAME_COMMAND = String.raw`[^;&|\n]*`;
-// 낱말 끝: 공백, 명령 구분자(; & | )), 줄 끝. 구분자가 바로 붙은 `--force;`도 놓치지 않게
+// End of a word: whitespace, a command separator (; & | )), or end of line, so `--force;` with a separator attached is not missed
 const END = String.raw`(?=[\s;&|)]|$)`;
 const OPTION_END = String.raw`(?=[=\s;&|)]|$)`;
 const HISTORY_REWRITES = [
   ["git commit --amend", new RegExp(GIT + String.raw`commit\b` + SAME_COMMAND + String.raw`\s--amend\b`)],
-  // 이미 진행 중인 rebase를 멈추는 --abort·--quit은 기록을 바꾸지 않으므로 허용한다
+  // --abort and --quit stop a rebase already in progress without changing history, so they are allowed
   ["git rebase", new RegExp(GIT + String.raw`rebase\b(?!` + SAME_COMMAND + String.raw`\s--(?:abort|quit)\b)`)],
   ["git pull --rebase", new RegExp(GIT + "pull\\b" + SAME_COMMAND + String.raw`\s(?:--rebase\b(?!=false)|-r\b)`)],
 ];
 
 /**
- * 이미 만든 커밋을 고치는 명령이면 그 종류, 아니면 null.
- * 커밋 규칙: 커밋은 고치지 않고, 고칠 게 생기면 새 커밋을 더한다.
+ * The kind if the command modifies existing commits; otherwise null.
+ * Commit rule: never modify commits; add a new commit when something needs fixing.
  */
 export function historyRewrite(command) {
   const bare = stripText(command);
@@ -144,15 +144,15 @@ export function historyRewrite(command) {
 const GIT_OUTPUT = new RegExp(GIT + String.raw`(diff|log|show)\b` + SAME_COMMAND + String.raw`\s--output(?=[=\s]|$)`);
 
 /**
- * 권한 허용 목록의 조회 명령(git diff·log·show)에 --output이 붙어 파일을 쓰면 "git <명령> --output", 아니면 null.
- * 허용 목록 `git log *`는 뒤 인자를 가리지 않으므로, 이것으로 아무 파일이나 확인 없이 덮어쓸 수 있다
+ * "git <command> --output" if an allowlisted read command (git diff/log/show) has --output and writes a file; otherwise null.
+ * The allowlist rule `git log *` does not look at the arguments, so this could overwrite any file without confirmation
  */
 export function gitOutputFile(command) {
   const match = stripText(command).match(GIT_OUTPUT);
   return match ? `git ${match[1]} --output` : null;
 }
 
-// 허용 목록(`npx eslint *`, `npm test *` …)의 검사 명령. npm run 뒤 `--` 인자는 그 도구로 넘어간다
+// Check commands on the allowlist (`npx eslint *`, `npm test *` …). Arguments after `--` in npm run are passed to the tool
 const ESLINT = String.raw`\b(?:npx\s+eslint|npm\s+run\s+lint)(?=\s|$)`;
 const VITEST = String.raw`\b(?:npx\s+vitest|npm\s+(?:run\s+)?test)(?=\s|$)`;
 const TSC = String.raw`\b(?:npx\s+tsc|npm\s+run\s+typecheck)(?=\s|$)`;
@@ -160,46 +160,46 @@ const TOOL_WRITES = [
   ["eslint --fix", ESLINT, "--fix"],
   ["eslint --output-file", ESLINT, "(?:-o|--output-file)"],
   ["vitest --update", VITEST, "(?:-u|--update)"],
-  // 리포터별로 `--outputFile.json=x`처럼 쓰기도 한다
+  // Per-reporter forms such as `--outputFile.json=x` also exist
   ["vitest --outputFile", VITEST, String.raw`--outputFile(?:\.\w+)?`],
-  // noEmit을 끄거나, noEmit이어도 빌드 정보·tsconfig·추적 파일을 쓰는 옵션
+  // Options that turn off noEmit, or that write build info, tsconfig or trace files even with noEmit
   [
-    "tsc 파일 출력",
+    "tsc file output",
     TSC,
     String.raw`(?:--noEmit(?:=|\s+)false|--outDir|--outFile|--declarationDir|--tsBuildInfoFile|--build|-b|--init|--generateTrace)`,
   ],
 ].map(([label, tool, option]) => [label, new RegExp(tool + SAME_COMMAND + String.raw`\s` + option + OPTION_END)]);
-// npx tsc에 파일 인자나 다른 -p를 주면 tsconfig의 noEmit이 적용되지 않아 .js를 쓴다. --noEmit을 직접 붙이지 않은 호출은 묻는다
+// With file arguments or another -p, npx tsc does not apply the tsconfig's noEmit and writes .js. Calls without an explicit --noEmit are asked about
 TOOL_WRITES.push([
-  "tsc 파일 출력",
+  "tsc file output",
   new RegExp(String.raw`\bnpx\s+tsc(?=\s|$)(?!` + SAME_COMMAND + String.raw`\s--noEmit` + END + ")"),
 ]);
 
 /**
- * 허용 목록의 검사 명령(eslint·vitest·tsc)에 파일을 쓰는 옵션이 붙었으면 그 종류, 아니면 null.
- * 허용 목록은 뒤 인자를 가리지 않으므로, 이것으로 소스를 고치거나 아무 파일이나 확인 없이 쓸 수 있다
+ * The kind if an allowlisted check command (eslint/vitest/tsc) has an option that writes files; otherwise null.
+ * The allowlist does not look at the arguments, so this could change sources or write any file without confirmation
  */
 export function toolWriteOption(command) {
   const bare = stripText(command);
   return TOOL_WRITES.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }
 
-// settings.json deny 규칙과 같은 명령. 허용 목록 규칙은 `git -C . push --force`처럼 형태를 바꾸면 맞지 않아 훅이 한 번 더 본다
+// The same commands as the settings.json deny rules. Permission rules stop matching when the form changes (`git -C . push --force`), so the hook checks again
 const PUSH = GIT + String.raw`push\b` + SAME_COMMAND;
 const FORBIDDEN_GIT = [
-  // --mirror는 원격 ref를 덮어쓰고 지우기까지 한다
+  // --mirror overwrites and even deletes remote refs
   [
     "force push",
     new RegExp(PUSH + String.raw`\s(?:(?:--force(?:-with-lease|-if-includes)?|--mirror)` + OPTION_END + String.raw`|-[a-z]*f[a-z]*` + END + String.raw`|\+\S)`),
   ],
-  // --all은 로컬 main까지 push한다
-  ["main 직접 push", new RegExp(PUSH + String.raw`(?:[\s:](?:refs/heads/)?main|\s--all)` + END)],
+  // --all pushes the local main too
+  ["direct push to main", new RegExp(PUSH + String.raw`(?:[\s:](?:refs/heads/)?main|\s--all)` + END)],
   ["git reset --hard", new RegExp(GIT + String.raw`reset\b` + SAME_COMMAND + String.raw`\s--hard\b`)],
 ];
 
-/** settings.json이 거부하는 git 명령(force push·--mirror, main 직접 push·--all, reset --hard)이면 그 종류, 아니면 null */
+/** The kind if it is a git command settings.json denies (force push/--mirror, direct push to main/--all, reset --hard); otherwise null */
 export function forbiddenGit(command) {
-  // 따옴표로 감싼 한 단어(`"main"`)는 셸이 따옴표를 벗겨 넘기므로 벗긴 채로 본다
+  // A single quoted word (`"main"`) is unquoted by the shell, so look at it unquoted
   const bare = stripText(command.replace(/(^|\s)(["'])([\w./:+-]+)\2(?=[\s;&|)]|$)/g, "$1$3"));
   return FORBIDDEN_GIT.find(([, pattern]) => pattern.test(bare))?.[0] ?? null;
 }
