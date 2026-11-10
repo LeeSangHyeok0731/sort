@@ -1,6 +1,6 @@
 ---
 name: pr
-description: 작업 브랜치를 push하고 PR을 올릴 때 쓴다("PR 올려줘", "push해"). 사용자가 push·PR을 승인했을 때만 실행한다. 브랜치·작업 섞임 확인 → 개발 로그 항목 → /verify → push → PR → CI 확인까지 하고, 머지는 하지 않는다(/merge).
+description: 작업 브랜치를 push하고 PR을 올릴 때 쓴다("PR 올려줘", "push해"). 사용자가 push·PR을 승인했을 때만 실행한다. 브랜치·작업 섞임 확인 → /verify·/review 확인 → 개발 로그 항목 → push → PR → CI 확인까지 하고, 머지는 하지 않는다(/merge).
 ---
 
 # PR 올리기
@@ -25,9 +25,16 @@ git log --oneline main..HEAD
 - 일에 딸린 `test:`·`docs:`·`style:` 커밋은 섞인 것으로 보지 않는다.
 - `gh pr create` 때 훅도 같은 것을 확인해서 묻는다.
 
-## 3. 개발 로그 항목
+## 3. 확인
 
-`DEVELOPMENT_LOG.md`에 이 PR의 항목을 하나 쓴다. PR 하나에 항목 하나다.
+- `/verify`를 돌린다. 이미 돌렸고 그 뒤에 커밋이 더해지지 않았으면 생략해도 된다. 생략했으면 PR 본문에 그렇게 쓴다.
+- `/review`를 거쳤는지 본다. 거치지 않았으면 **여기서 멈추고** `/review`를 돌린 뒤, 리뷰 결과와 고친 커밋을 보고하고 push·PR 승인을 다시 받는다. 사용자는 리뷰 결과를 보고 승인해야 한다.
+- 리뷰를 개발 로그보다 먼저 확인하는 것은, 리뷰에서 고친 커밋까지 개발 로그 항목에 담기 위해서다.
+- 리뷰를 생략해도 되는 것은 바뀐 파일이 `DEVELOPMENT_LOG.md`와 `README.md`뿐인 PR이다. 그 밖의 파일이 하나라도 바뀌었으면 리뷰한다. `docs/ARCHITECTURE.md`처럼 `CLAUDE.md`가 불러오는 규칙 문서, `docs/specs/`·`docs/plans/`, `.claude/`(스킬·에이전트·훅)도 리뷰 대상이다. 생략했으면 PR 본문에 그렇게 쓴다.
+
+## 4. 개발 로그 항목
+
+`DEVELOPMENT_LOG.md`에 이 PR의 항목을 하나 쓴다. PR 하나에 항목 하나다. 확인(3단계)을 마친 뒤에 쓴다. 개발 로그만 더한 커밋은 `/verify`를 다시 돌리지 않아도 된다.
 
 1. 파일 끝을 본다: `grep -n "^## \|^### [0-9]*\.\|마지막 업데이트" DEVELOPMENT_LOG.md | tail -5`
 2. 마지막 날짜 머리(`## 📅 YYYY. MM. DD …`)가 오늘이 아니면, 마지막 `---` 앞에 오늘 날짜 머리를 새로 만든다. 날짜 구역 사이에는 `---`를 둔다.
@@ -42,10 +49,6 @@ git log --oneline main..HEAD
 4. 파일 끝의 `_마지막 업데이트: YYYY-MM-DD_`를 오늘 날짜로 바꾼다.
 5. `/commit`으로 `docs: 개발 로그에 <제목> 추가`를 커밋한다.
 
-## 4. 확인
-
-`/verify`를 돌린다. 이미 돌렸고 그 뒤에 바뀐 게 개발 로그뿐이면 생략해도 된다. 생략했으면 PR 본문에 그렇게 쓴다.
-
 ## 5. push와 PR
 
 ```bash
@@ -58,7 +61,7 @@ PR 본문은 `.github/pull_request_template.md` 형식으로, 임시 폴더(스�
 gh pr create --base main --head <브랜치> --title "<접두어>: <한국어 한 줄>" --body-file <본문 파일>
 ```
 - 제목은 커밋 컨벤션을 따른다. 커밋이 하나면 그 제목을 쓴다.
-- "변경 내용"에는 무엇을, 왜 바꿨는지 쓴다. "확인"에는 `/verify` 보고를 그대로 옮긴다.
+- "변경 내용"에는 무엇을, 왜 바꿨는지 쓴다. "확인"에는 `/verify` 보고와 `/review` 결과(받은 지적·받지 않은 지적)를 옮긴다.
 - 본문 끝에 "Generated with Claude Code" 줄을 넣지 않는다(`attribution.pr: ""`).
 - 훅이 작업 섞임을 물으면 사용자 답을 따른다.
 
