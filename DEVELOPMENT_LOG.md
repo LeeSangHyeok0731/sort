@@ -391,6 +391,13 @@
 - `git diff`·`log`·`show`에 `--output`(파일 쓰기)이 붙으면 `guard-command` 훅이 확인을 묻는다. 허용 목록은 옵션을 가려낼 수 없어서 훅으로 막았다.
 - 훅의 명령 판단이 줄 잇기(bash 백슬래시·PowerShell 백틱)와 따옴표로 감싼 옵션을 놓치던 것을 고쳤다. 같은 방법으로 `--amend` 차단을 피할 수 있던 빈틈도 함께 막혔다.
 
+### 43. 🔒 npm·npx 권한 구멍과 deny 우회 막기
+
+- npm·npx 허용을 `npx vitest *`처럼 공백 형태로 바꿨다. 공백이 없으면 `npx vitest-evil` 같은 다른 패키지를 내려받아 실행하는 명령도 확인 없이 허용됐다.
+- 검사 명령에 파일을 쓰는 옵션(`eslint --fix`·`-o`, `vitest -u`·`--outputFile`, tsc 출력, `--noEmit` 없는 `npx tsc`)이 붙으면 `guard-command` 훅이 확인을 묻는다.
+- `git -C . push --force`, `git push -u origin main`, `HEAD:main`, `push --mirror`·`--all`처럼 형태를 바꿔 deny 규칙을 피하던 명령을 훅이 막는다.
+- 훅이 git 앞 옵션(`-C`, `-c`, `--no-pager` …)을 건너뛰게 해서 amend 차단과 `--output` 확인도 같은 우회에 뚫리지 않는다.
+
 ---
 
 _마지막 업데이트: 2026-11-10_
