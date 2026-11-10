@@ -290,6 +290,15 @@ describe("toolWriteOption", () => {
     expect(toolWriteOption('npx vitest run "--outputFile=a b.json"')).toBe("vitest --outputFile");
   });
 
+  it("구분자가 붙은 옵션, 리포터별 --outputFile, --noEmit 없는 npx tsc도 찾는다", () => {
+    expect(toolWriteOption("npx eslint src --fix;")).toBe("eslint --fix");
+    expect(toolWriteOption("npx vitest run --reporter=json --outputFile.json=x")).toBe("vitest --outputFile");
+    expect(toolWriteOption("npx vitest run --outputFile.json x")).toBe("vitest --outputFile");
+    expect(toolWriteOption("npx tsc src/shared/lib/cn.ts")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc -p other/tsconfig.json")).toBe("tsc 파일 출력");
+    expect(toolWriteOption("npx tsc --noEmit src/shared/lib/cn.ts")).toBeNull();
+  });
+
   it("쓰지 않는 검사 명령은 통과", () => {
     expect(toolWriteOption("npx eslint src/app")).toBeNull();
     expect(toolWriteOption("npx eslint src --fix-dry-run")).toBeNull();
@@ -327,6 +336,20 @@ describe("forbiddenGit", () => {
     expect(forbiddenGit('git push origin "main"')).toBe("main 직접 push");
     expect(forbiddenGit("git -C ../sort reset --hard")).toBe("git reset --hard");
     expect(forbiddenGit("git status && git push \\\n  --force")).toBe("force push");
+  });
+
+  it("명령 구분자가 바로 붙어도 찾는다", () => {
+    expect(forbiddenGit("git -C . push --force;echo x")).toBe("force push");
+    expect(forbiddenGit("git -C . push --force&&echo")).toBe("force push");
+    expect(forbiddenGit("git -C . push -f;")).toBe("force push");
+    expect(forbiddenGit("git -C . push origin main;echo x")).toBe("main 직접 push");
+    expect(forbiddenGit("git -C . push origin main&& echo x")).toBe("main 직접 push");
+    expect(forbiddenGit("(git -C . push origin main)")).toBe("main 직접 push");
+  });
+
+  it("--mirror·--all로 main을 덮어쓰거나 push하는 것도 찾는다", () => {
+    expect(forbiddenGit("git -C . push --mirror")).toBe("force push");
+    expect(forbiddenGit("git -C . push --all")).toBe("main 직접 push");
   });
 
   it("허용되는 push·reset은 통과", () => {
