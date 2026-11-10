@@ -1,15 +1,15 @@
 ---
 name: add-algorithm
-description: 새 정렬 알고리즘을 시각화 목록에 추가할 때 사용한다. 알고리즘 파일·테스트 작성, registry·families 등록, 검증까지의 절차.
+description: Use to add a new sorting algorithm to the visualizer list. Procedure from writing the algorithm file and tests, through registering in registry and families, to verification.
 ---
 
-# 정렬 알고리즘 추가
+# Add a sorting algorithm
 
-작업은 `/start-task`가 만든 `feat/<name>-sort` 브랜치에서 한다. main에 있으면 `/start-task`부터 한다.
+Work on the `feat/<name>-sort` branch created by `/start-task`. If you are on main, start with `/start-task`.
 
-알고리즘 파일은 `src/entities/sort-algorithm/` 아래에 있다. 기준 예시는 `algorithms/bubbleSort.ts`와 `algorithms/bubbleSort.test.ts`다. 시작 전에 둘 다 읽는다.
+The algorithm files live under `src/entities/sort-algorithm/`. The reference examples are `algorithms/bubbleSort.ts` and `algorithms/bubbleSort.test.ts`. Read both before starting.
 
-## 1. 알고리즘 파일 `algorithms/<name>Sort.ts`
+## 1. Algorithm file `algorithms/<name>Sort.ts`
 
 ```ts
 import { defineCode } from "../model/code-lines";
@@ -39,15 +39,16 @@ export const bubbleSort: SortAlgorithm = {
 };
 ```
 
-규칙:
-- **설명 코드(`defineCode`)는 실제 기록 방식과 1:1로 같아야 한다.** 화면에서 줄 하이라이트가 이 코드를 따라간다.
-- 연산이 일어나는 줄 끝에 `//@표식`을 단다. 표식 이름의 접두어가 연산 종류를 정한다: `cmp*` → `t.cmp`, `swap*` → `t.swap`, `move*` → `t.move`, `read*` → `t.mark`. 같은 종류가 여러 줄이면 `cmp-left`, `swap-root`처럼 접미어를 붙인다. 표식은 한 번씩만 쓴다.
-- `sort(t, options)` 안에서는 배열을 직접 만지지 않고 tracer 메서드만 쓴다: `t.length`, `t.value(i)`, `t.item(i)`, `t.cmp(i, j, line)`, `t.swap(i, j, line)`, `t.move(from, to, line)`, `t.mark(i, line)`, `t.arrange(start, target, line)`. 모든 호출에 `L.xxx` 줄 번호를 넘긴다.
-- 연산이 폭발할 수 있는 알고리즘(보고 정렬류)은 한도 초과 시 `true`를 반환하고 `note`에 주의 사항을 적는다.
-- `category`: `"standard" | "linear" | "special" | "fun"` (`fun`은 연산이 폭발할 수 있어 일부 테스트가 작은 입력만 쓴다).
-- 트리·힙·버킷처럼 구조 보기가 가능하면 `structure`를 지정한다(5단계).
+Rules:
+- **The explanation code (`defineCode`) must match what is actually recorded, 1:1.** The line highlight on screen follows this code.
+- Put a `//@label` at the end of each line where an op happens. The label's prefix sets the op kind: `cmp*` → `t.cmp`, `swap*` → `t.swap`, `move*` → `t.move`, `read*` → `t.mark`. If the same kind appears on several lines, add a suffix like `cmp-left`, `swap-root`. Each label is used once.
+- Inside `sort(t, options)`, never touch the array directly; use only tracer methods: `t.length`, `t.value(i)`, `t.item(i)`, `t.cmp(i, j, line)`, `t.swap(i, j, line)`, `t.move(from, to, line)`, `t.mark(i, line)`, `t.arrange(start, target, line)`. Pass an `L.xxx` line number to every call.
+- Algorithms whose op count can explode (bogosort and the like) return `true` when the limit is exceeded and put a caution in `note`.
+- `category`: `"standard" | "linear" | "special" | "fun"` (`fun` may explode, so some tests use only small inputs).
+- If a structure view is possible (tree, heap, buckets), set `structure` (step 5).
+- The name, description and comments are in Korean, like the existing algorithms.
 
-## 2. 테스트 `algorithms/<name>Sort.test.ts`
+## 2. Test `algorithms/<name>Sort.test.ts`
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -67,49 +68,49 @@ describe("bubbleSort", () => {
 });
 ```
 
-- `describeSortAlgorithm`이 정렬 결과, id 보존, 연산 재생, 안정성(stable이면)을 검증한다.
-- 알고리즘 고유 성질 테스트를 1~2개 더한다(연산 수, 특정 입력에서의 동작 등).
+- `describeSortAlgorithm` verifies the sort result, id preservation, op replay and stability (if stable).
+- Add 1–2 tests for properties specific to the algorithm (op counts, behavior on particular inputs, etc.).
 
 ## 3. `model/registry.ts`
 
-import를 알파벳 순서 자리에 넣고, `ALGORITHMS` 배열의 알맞은 구획(기본·비교 없는·특이한·재미있는 정렬)에 추가한다. id는 `AlgorithmId` 타입이 자동으로 만든다.
+Put the import in its alphabetical place and add the algorithm to the right section of the `ALGORITHMS` array (standard, non-comparison, special, fun). The `AlgorithmId` type derives the id automatically.
 
 ## 4. `model/families.ts`
 
-사이드바 폴더 중 하나에 id를 넣는다: exchange, selection, insertion, merge, quick, heap, tree, distribution, network, hybrid, fun. 빠뜨리면 `families.test.ts`가 실패한다.
+Put the id in one of the sidebar folders: exchange, selection, insertion, merge, quick, heap, tree, distribution, network, hybrid, fun. If you leave it out, `families.test.ts` fails.
 
-## 5. 구조 보기
+## 5. Structure view
 
-힙·트리·더미·버킷·자릿수 칸을 쓰는 알고리즘이면 `structure` 지정을 검토한다. 막대 말고 그 구조로도 볼 수 있게 된다.
+If the algorithm uses a heap, tree, piles, buckets or digit bins, consider setting `structure`. It can then also be viewed as that structure, not only as bars.
 
-- 지원하는 모양은 `model/types.ts`의 `AlgorithmStructure`다: `heap`(arity 2·3), `bst`, `splay`·`cartesian`·`tournament`(트리), `piles`·`buckets`·`counting`·`radix`(칸).
-- 같은 모양을 쓰는 기존 알고리즘(`grep -rln "kind: \"<모양>\"" src/entities/sort-algorithm/algorithms`)을 찾아 지정 방식을 그대로 따른다.
-- 모양마다 설명 코드에 있어야 할 표식이 정해져 있다: `src/widgets/visualizer/model/structures/scene.ts`의 `STRUCTURE_LABELS`(예: `cartesian`은 `cmp-build`·`cmp-heap`·`move`). 표식 이름을 그대로 맞춘다. `heap`은 여기 표식이 없고, 대신 `heapEndLabel`로 준 표식이 설명 코드에 있어야 한다(`src/widgets/visualizer/model/structure.test.ts`가 검사).
-- `scene.test.ts`가 `structure`를 지정한 모든 알고리즘을 자동으로 돌려 표식과 단계별 장면을 검사하므로, 지정만 하면 그 검사에 들어간다. 그 모양 안에서 동작이 다른 점(넣는 순서, 비교 순서 등)이 있으면 사례를 더한다. 힙은 `model/structure.test.ts`, 나머지 모양은 `model/structures/structures.test.ts`다.
-- 새 모양이 필요하면(기존 모양으로 그릴 수 없으면) 여기서 멈추고 사용자에게 알린다. `widgets/visualizer`를 바꾸는 큰 기능이라 `/design`부터 한다.
-- 구조 보기가 맞지 않는 알고리즘이면 지정하지 않는다.
+- The supported shapes are `AlgorithmStructure` in `model/types.ts`: `heap` (arity 2 or 3), `bst`, `splay`/`cartesian`/`tournament` (trees), `piles`/`buckets`/`counting`/`radix` (bins).
+- Find existing algorithms using the same shape (`grep -rln "kind: \"<shape>\"" src/entities/sort-algorithm/algorithms`) and follow how they set it.
+- Each shape requires certain labels in the explanation code: `STRUCTURE_LABELS` in `src/widgets/visualizer/model/structures/scene.ts` (e.g. `cartesian` needs `cmp-build`, `cmp-heap`, `move`). Use those label names exactly. `heap` has no labels there; instead the label given as `heapEndLabel` must be in the explanation code (checked by `src/widgets/visualizer/model/structure.test.ts`).
+- `scene.test.ts` automatically runs every algorithm with `structure` set and checks the labels and the scene at each step, so setting it puts the algorithm under that test. If its behavior within the shape differs (insertion order, comparison order, etc.), add a case. Heaps go in `model/structure.test.ts`; other shapes in `model/structures/structures.test.ts`.
+- If a new shape is needed (it cannot be drawn with an existing one), stop here and tell the user. Changing `widgets/visualizer` is a large feature, so it starts with `/design`.
+- If a structure view does not fit the algorithm, do not set one.
 
-## 6. 알고리즘 개수 갱신
+## 6. Update the algorithm count
 
-문서에 고정 숫자로 적힌 알고리즘 개수를 새 개수로 바꾼다.
+Replace the algorithm count written as a fixed number in the docs with the new count.
 
 ```bash
 ls src/entities/sort-algorithm/algorithms/*Sort.ts | wc -l
-grep -rnE "<옛 개수> ?(개|종|가지)" README.md CLAUDE.md docs/ARCHITECTURE.md
+grep -rnE "<old count>( ?(개|종|가지)| (sorting )?algorithms)" README.md CLAUDE.md docs/ARCHITECTURE.md
 ```
-- 첫 줄이 새 개수다(`rotation.ts` 같은 보조 파일은 `Sort.ts`로 끝나지 않아 빠진다).
-- 둘째 줄이 찾은 곳을 모두 바꾼다. 알고리즘 개수가 아닌 숫자(예: "1,000개")는 그대로 둔다.
+- The first line gives the new count (helper files such as `rotation.ts` do not end in `Sort.ts` and are left out).
+- Change every place the second line finds (README is in Korean, CLAUDE.md and ARCHITECTURE.md in English). Leave numbers that are not the algorithm count (e.g. "1,000개") as they are.
 
-## 7. 검증
+## 7. Verify
 
 ```bash
 npx vitest run src/entities/sort-algorithm
 npm run typecheck
 npm run lint
 ```
-`model/traced-code.test.ts`가 표식과 실제 연산 종류가 맞는지 검사한다. 실패하면 표식 접두어나 넘긴 줄 번호를 확인한다. 마지막으로 dev 서버에서 직접 재생해 줄 하이라이트가 자연스러운지 본다. 구조 보기를 지정했으면 그 보기도 재생해 본다.
+`model/traced-code.test.ts` checks that the labels match the actual op kinds. If it fails, check the label prefixes or the line numbers passed. Finally, play it in the dev server and see that the line highlight looks natural. If you set a structure view, play that view too.
 
-## 8. 커밋과 확인
+## 8. Commit and check
 
-- `/commit`으로 커밋한다. 알고리즘 파일·테스트·registry·families·구조 보기 테스트·개수 갱신은 "새 알고리즘 하나 추가"라는 일 하나라 `feat: <이름> 정렬 추가` 커밋 하나로 둔다.
-- 그다음 `/verify`로 넘긴다.
+- Commit with `/commit`. The algorithm file, test, registry, families, structure view tests and count update are one unit of work, "add one new algorithm", so they go in one commit: `feat: <이름> 정렬 추가`.
+- Then move on to `/verify`.

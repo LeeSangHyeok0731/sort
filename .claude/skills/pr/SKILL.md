@@ -1,44 +1,44 @@
 ---
 name: pr
-description: 작업 브랜치를 push하고 PR을 올릴 때 쓴다("PR 올려줘", "push해"). 사용자가 push·PR을 승인했을 때만 실행한다. 브랜치·작업 섞임 확인 → /verify·/review 확인 → 개발 로그 항목 → push → PR → CI 확인까지 하고, 머지는 하지 않는다(/merge).
+description: Use to push a work branch and open a PR ("PR 올려줘", "push해"). Runs only when the user has approved push/PR. Goes branch and mixed-work check → /verify and /review check → dev log entry → push → PR → CI check, and does not merge (/merge).
 ---
 
-# PR 올리기
+# Open a PR
 
-사용자가 이번 대화에서 push나 PR을 승인했을 때만 진행한다. 어느 단계든 실패하면 그 자리에서 멈추고 출력과 함께 보고한다. 우회(`--no-verify`, force push, 검사 생략)는 하지 않는다.
+Proceed only if the user approved push or PR in this conversation. If any step fails, stop right there and report it with the output. Do not work around anything (`--no-verify`, force push, skipping checks).
 
-## 1. 브랜치 확인
+## 1. Check the branch
 
 ```bash
 git branch --show-current
 git status --short
 git log --oneline main..HEAD
 ```
-- `main`이면 멈춘다.
-- 커밋 안 된 변경이 있으면 멈추고 커밋할지 묻는다(`/commit`).
-- `docs/perf-benchmark`면 `git push`만 하고 끝낸다. 이 브랜치는 PR·머지하지 않고 개발 로그도 쓰지 않는다.
+- If it is `main`, stop.
+- If there are uncommitted changes, stop and ask whether to commit them (`/commit`).
+- If it is `docs/perf-benchmark`, just `git push` and finish. This branch gets no PR, no merge and no dev log entry.
 
-## 2. 작업이 섞였는지
+## 2. Is the work mixed?
 
-`git log --oneline main..HEAD`의 접두어를 본다.
-- 서로 다른 작업 커밋(`feat`과 `ci`처럼)이 섞여 있으면 멈추고 나눌지 묻는다(`/parallel-tasks`).
-- 일에 딸린 `test:`·`docs:`·`style:` 커밋은 섞인 것으로 보지 않는다.
-- `gh pr create` 때 훅도 같은 것을 확인해서 묻는다.
+Look at the prefixes in `git log --oneline main..HEAD`.
+- If commits from different kinds of work are mixed (like `feat` and `ci`), stop and ask whether to split (`/parallel-tasks`).
+- Accompanying `test:`/`docs:`/`style:` commits do not count as mixed.
+- The hook checks the same thing at `gh pr create` and asks.
 
-## 3. 확인
+## 3. Checks
 
-- `/verify`를 돌린다. 이미 돌렸고 그 뒤에 커밋이 더해지지 않았으면 생략해도 된다. 생략했으면 PR 본문에 그렇게 쓴다.
-- `/review`를 거쳤는지 본다. 거치지 않았으면 **여기서 멈추고** `/review`를 돌린 뒤, 리뷰 결과와 고친 커밋을 보고하고 push·PR 승인을 다시 받는다. 사용자는 리뷰 결과를 보고 승인해야 한다.
-- 리뷰를 개발 로그보다 먼저 확인하는 것은, 리뷰에서 고친 커밋까지 개발 로그 항목에 담기 위해서다.
-- 리뷰를 생략해도 되는 것은 바뀐 파일이 `DEVELOPMENT_LOG.md`와 `README.md`뿐인 PR이다. 그 밖의 파일이 하나라도 바뀌었으면 리뷰한다. `docs/ARCHITECTURE.md`처럼 `CLAUDE.md`가 불러오는 규칙 문서, `docs/specs/`·`docs/plans/`, `.claude/`(스킬·에이전트·훅)도 리뷰 대상이다. 생략했으면 PR 본문에 그렇게 쓴다.
+- Run `/verify`. If it already ran and no commits were added since, you may skip it. If skipped, say so in the PR body.
+- Check whether `/review` was done. If not, **stop here**, run `/review`, report the review result and the fix commits, and get push/PR approval again. The user must approve after seeing the review result.
+- The review is checked before the dev log so that the dev log entry covers the review fix commits too.
+- Review may be skipped only for a PR whose changed files are just `DEVELOPMENT_LOG.md` and `README.md`. If any other file changed, review it. Rule documents loaded by `CLAUDE.md` such as `docs/ARCHITECTURE.md`, `docs/specs/`/`docs/plans/`, and `.claude/` (skills, agents, hooks) are all reviewed. If skipped, say so in the PR body.
 
-## 4. 개발 로그 항목
+## 4. Dev log entry
 
-`DEVELOPMENT_LOG.md`에 이 PR의 항목을 하나 쓴다. PR 하나에 항목 하나다. 확인(3단계)을 마친 뒤에 쓴다. 개발 로그만 더한 커밋은 `/verify`를 다시 돌리지 않아도 된다.
+Write one entry for this PR in `DEVELOPMENT_LOG.md`, in Korean. One PR, one entry. Write it after the checks (step 3). A commit that only adds the dev log does not need `/verify` again.
 
-1. 파일 끝을 본다: `grep -n "^## \|^### [0-9]*\.\|마지막 업데이트" DEVELOPMENT_LOG.md | tail -5`
-2. 마지막 날짜 머리(`## 📅 YYYY. MM. DD …`)가 오늘이 아니면, 마지막 `---` 앞에 오늘 날짜 머리를 새로 만든다. 날짜 구역 사이에는 `---`를 둔다.
-3. 마지막 번호 다음 번호로 항목을 쓴다.
+1. Look at the end of the file: `grep -n "^## \|^### [0-9]*\.\|마지막 업데이트" DEVELOPMENT_LOG.md | tail -5`
+2. If the last date header (`## 📅 YYYY. MM. DD …`) is not today, add today's date header before the last `---`. Put `---` between date sections.
+3. Write the entry with the next number after the last one.
 
    ```markdown
    ### N. <이모지> <제목>
@@ -46,34 +46,34 @@ git log --oneline main..HEAD
    - 무엇을, 왜 바꿨는지 (3~6줄 목록)
    - 사용자에게 보이는 변화가 있으면 그것부터
    ```
-4. 파일 끝의 `_마지막 업데이트: YYYY-MM-DD_`를 오늘 날짜로 바꾼다.
-5. `/commit`으로 `docs: 개발 로그에 <제목> 추가`를 커밋한다.
+4. Change `_마지막 업데이트: YYYY-MM-DD_` at the end of the file to today.
+5. Commit with `/commit` as `docs: 개발 로그에 <제목> 추가`.
 
-## 5. push와 PR
-
-```bash
-git push -u origin <브랜치>
-```
-
-PR 본문은 `.github/pull_request_template.md` 형식으로, 임시 폴더(스크래치패드)의 파일에 써서 넘긴다. 셸 따옴표 문제를 피하기 위해서다.
+## 5. Push and PR
 
 ```bash
-gh pr create --base main --head <브랜치> --title "<접두어>: <한국어 한 줄>" --body-file <본문 파일>
+git push -u origin <branch>
 ```
-- 제목은 커밋 컨벤션을 따른다. 커밋이 하나면 그 제목을 쓴다.
-- "변경 내용"에는 무엇을, 왜 바꿨는지 쓴다. "확인"에는 `/verify` 보고와 `/review` 결과(받은 지적·받지 않은 지적)를 옮긴다.
-- 본문 끝에 "Generated with Claude Code" 줄을 넣지 않는다(`attribution.pr: ""`).
-- 훅이 작업 섞임을 물으면 사용자 답을 따른다.
 
-## 6. CI 확인
+Write the PR body in Korean in the `.github/pull_request_template.md` format, to a file in the temp folder (scratchpad), and pass the file. This avoids shell quoting problems.
 
 ```bash
-gh pr checks <번호> --watch --interval 20
+gh pr create --base main --head <branch> --title "<prefix>: <한국어 한 줄>" --body-file <body file>
 ```
-- PR을 만든 직후에는 체크가 아직 없어서 "no checks reported"가 나올 수 있다. 잠시 기다렸다가 다시 본다.
-- `Lint · Typecheck · Test`는 main ruleset의 필수 체크라, 통과해야 머지된다. Vercel 미리보기도 함께 본다.
-- 실패하면 원인을 보고하고 새 커밋으로 고친 뒤 push한다(`/commit`).
+- The title follows the commit convention. With a single commit, use its subject.
+- "변경 내용" says what changed and why. "확인" carries the `/verify` report and the `/review` result (accepted and rejected findings).
+- Do not add a "Generated with Claude Code" line at the end of the body (`attribution.pr: ""`).
+- If the hook asks about mixed work, follow the user's answer.
 
-## 7. 보고
+## 6. Check CI
 
-PR 링크, CI 결과, 개발 로그 번호를 알린다. **머지하지 않는다.** 머지는 사용자가 승인한 뒤 `/merge`로 한다.
+```bash
+gh pr checks <number> --watch --interval 20
+```
+- Right after creating the PR there may be no checks yet ("no checks reported"). Wait a moment and look again.
+- `Lint · Typecheck · Test` is a required check in the main ruleset; it must pass to merge. Look at the Vercel preview too.
+- If it fails, report the cause, fix it in a new commit and push (`/commit`).
+
+## 7. Report
+
+Tell the user the PR link, the CI result and the dev log number. **Do not merge.** Merging is done with `/merge` after the user approves.

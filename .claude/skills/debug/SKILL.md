@@ -1,46 +1,46 @@
 ---
 name: debug
-description: 버그, 테스트 실패, 예상과 다른 동작을 고칠 때 쓴다("이거 버그야", "안 돼", "테스트가 깨져", "멈칫해"). 재현 → 실패하는 테스트 → 원인 확인 → 원인 수정 → /commit 순서로 진행하고, 원인을 확인하기 전에는 고치지 않는다.
+description: Use to fix a bug, a failing test, or unexpected behavior ("이거 버그야", "안 돼", "테스트가 깨져", "멈칫해"). Goes reproduce → failing test → confirm the cause → fix the cause → /commit, and does not fix anything before the cause is confirmed.
 ---
 
-# 디버깅
+# Debug
 
-증상을 가리는 수정이 아니라 원인을 고친다. 원인을 확인하기 전에는 코드를 고치지 않는다.
+Fix the cause, not a patch that hides the symptom. Do not change code before the cause is confirmed.
 
-## 1. 재현
+## 1. Reproduce
 
-- main이거나 이 버그와 상관없는 다른 작업의 브랜치면 `/start-task`로 `fix/…` 브랜치부터 만든다. 아직 머지되지 않은 그 작업의 버그를 고치는 중이면(`/review` 반영 등) 그 브랜치에서 그대로 한다.
-- 재현 절차를 적는다: 어떤 입력·설정에서, 무엇을 하면, 무엇이 나와야 하는데 무엇이 나오는지.
-- 화면 문제면 `npm run dev`로 띄워 직접 재현한다. URL 쿼리(`?algo=…&size=…`)로 상태를 고정하면 재현이 쉽다.
-- 성능 문제면 측정부터 한다(걸린 시간, 연산 수). "느린 것 같다"로 시작하지 않는다.
-- 재현이 안 되면 멈추고, 지금까지 시도한 것과 함께 사용자에게 더 많은 정보를 묻는다.
+- If you are on main or on another task's branch unrelated to this bug, create a `fix/…` branch with `/start-task` first. If you are fixing a bug in this branch's own unmerged work (e.g. a `/review` fix), stay on that branch.
+- Write down the reproduction: with which input and settings, doing what, what should appear and what appears instead.
+- For a UI problem, start `npm run dev` and reproduce it yourself. Fixing the state with URL query parameters (`?algo=…&size=…`) makes it easier.
+- For a performance problem, measure first (elapsed time, op count). Do not start from "it feels slow".
+- If it does not reproduce, stop and ask the user for more information, along with what you have tried.
 
-## 2. 실패하는 테스트
+## 2. Failing test
 
-- 가능하면 재현을 테스트로 만든다. 그 테스트가 **실패하는 것을 확인한다.**
-- 로직이 `ui` 컴포넌트 안에 묶여 있어 테스트할 수 없으면, 로직을 `model`·`lib`로 빼는 일도 이 작업에 넣는다. 이때는 동작을 바꾸지 않는 `refactor:` 커밋을 먼저 따로 만든다.
-- 테스트로 만들 수 없는 문제(브라우저 API, 시각 효과)면 재현 절차를 보고에 남긴다.
+- If possible, turn the reproduction into a test. **Confirm that the test fails.**
+- If the logic is tied up inside a `ui` component and cannot be tested, moving it into `model`/`lib` is part of this work. In that case make a behavior-preserving `refactor:` commit first.
+- If the problem cannot be tested (browser APIs, visual effects), leave the reproduction steps in the report.
 
-## 3. 원인
+## 3. Cause
 
-- 가설을 하나 세운다: "X 때문에 Y가 된다".
-- 가설을 **확인한다**: 값 출력, 중간 상태 검사, 조건을 바꿔 결과가 따라 바뀌는지 본다. 확인하지 않은 가설로 고치지 않는다.
-- 확인에 쓴 임시 출력(`console.log` 등)은 고치기 전에 지운다.
-- **가설이 두 번 틀리면 멈춘다.** 지금까지 확인한 사실과 배제한 가설을 사용자에게 보고하고 방향을 묻는다.
-- 자주 보는 곳
-  - 재생: `features/playback/model/track.ts`(연산 적용·되감기), `useSortPlayer.ts`(상태·프레임 루프)
-  - 계산: `runInBackground.ts`(워커 풀), `sortJob.ts`
-  - 연산 기록: `entities/sort-algorithm/model/tracer.ts`, `op.ts`
-  - 프로덕션에서만 나는 워커 문제: `npm run build && npm run check:worker`
+- Form one hypothesis: "Y happens because of X".
+- **Confirm** it: print values, inspect intermediate state, change a condition and see whether the result follows. Do not fix based on an unconfirmed hypothesis.
+- Remove temporary output used for confirming (`console.log`, etc.) before fixing.
+- **If a hypothesis is wrong twice, stop.** Report the facts confirmed so far and the hypotheses ruled out, and ask the user for direction.
+- Common places to look
+  - Playback: `features/playback/model/track.ts` (applying ops, rewinding), `useSortPlayer.ts` (state, frame loop)
+  - Computation: `runInBackground.ts` (worker pool), `sortJob.ts`
+  - Op recording: `entities/sort-algorithm/model/tracer.ts`, `op.ts`
+  - Worker problems that only appear in production: `npm run build && npm run check:worker`
 
-## 4. 수정
+## 4. Fix
 
-- 확인한 원인을 고친다. 증상만 막는 수정(예외 삼키기, 특수한 경우만 건너뛰기)은 하지 않는다.
-- 2단계의 테스트가 통과하는지 보고, 관련 테스트 전체와 `npm run typecheck`도 돌린다.
-- 같은 원인이 다른 곳에도 있는지 찾아본다(`Grep`). 있으면 이번 작업에서 함께 고칠지 사용자에게 묻는다.
+- Fix the confirmed cause. Do not just block the symptom (swallowing exceptions, skipping only the special case).
+- Check that the test from step 2 passes, and also run all related tests and `npm run typecheck`.
+- Look for the same cause elsewhere (`Grep`). If found, ask the user whether to fix it in this work too.
 
-## 5. 커밋과 보고
+## 5. Commit and report
 
-- `/commit`으로 `fix:` 커밋을 만든다. 아직 머지되지 않은 작업 브랜치에서 그 작업의 버그를 고칠 때(`/review` 반영 등)는 브랜치의 주 접두어(`feat:` 등)를 쓴다. 본문에 원인을 한 줄로 쓴다. 예: "원인: 슬라이더 포커스 중에는 INPUT이라 단축키를 모두 건너뛰었다."
-- 보고: 재현 절차, 원인, 고친 내용, 추가한 테스트, 확인하지 못한 것.
-- 그다음 `/verify`로 넘어간다.
+- Make a `fix:` commit with `/commit`. When fixing this branch's own unmerged work (e.g. a `/review` fix), use the branch's main prefix (`feat:`, etc.). State the cause in one line of the body (in Korean). Example: "원인: 슬라이더 포커스 중에는 INPUT이라 단축키를 모두 건너뛰었다."
+- Report (in Korean): reproduction, cause, what was fixed, tests added, what could not be checked.
+- Then move on to `/verify`.

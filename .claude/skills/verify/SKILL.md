@@ -1,52 +1,52 @@
 ---
 name: verify
-description: 작업이 끝났다고 말하기 전, PR을 올리기 전에 쓴다("확인해줘", "다 됐어?", 구현을 마쳤을 때). CI와 같은 검사를 같은 순서로 돌리고, 화면이 바뀌었으면 브라우저에서 확인한 뒤, 근거와 함께 결과를 보고한다.
+description: Use before saying work is done and before opening a PR ("확인해줘", "다 됐어?", or when implementation is finished). Runs the same checks as CI in the same order, checks the browser if the UI changed, and reports the result with evidence.
 ---
 
-# 완료 전 확인
+# Check before done
 
-"됐다"는 말은 검사 결과를 보고 나서 한다. 결과를 보기 전에는 "됐을 것"이라고 말하지 않는다.
+Say "done" only after seeing the check results. Before that, do not say "it should be done".
 
-## 1. 확인할 범위
+## 1. What to check
 
 ```bash
 git status --short
 git log --oneline main..HEAD
 git diff main...HEAD --stat
 ```
-- 커밋 안 된 변경이 있으면 먼저 `/commit`한다. 검사는 커밋된 상태를 기준으로 한다.
+- If there are uncommitted changes, `/commit` first. Checks run against the committed state.
 
-## 2. 검사 (CI와 같은 순서)
+## 2. Checks (same order as CI)
 
 ```bash
 npm run lint && npm run lint:fsd && npm run typecheck && npm test && npm run build && npm run check:worker
 ```
-- `.github/workflows/ci.yml`과 같은 순서다. CI 단계가 바뀌면 이 목록도 맞춘다.
-- 하나가 실패하면 거기서 멈춘다. 실패한 명령과 출력의 핵심 줄을 보고하고 고친다. 고친 것은 새 커밋으로 한다(`/commit`).
-- 테스트 수는 `npm test` 출력의 `Tests N passed` 줄에서 읽어 그대로 보고한다.
-- 빌드가 CSS를 옛 내용으로 낸다면 Turbopack 캐시 문제일 수 있다. CLAUDE.md "알아 둘 점"을 본다.
+- This is the same order as `.github/workflows/ci.yml`. If the CI steps change, update this list too.
+- If one fails, stop there. Report the failing command and the key lines of its output, then fix it. Fixes go in a new commit (`/commit`).
+- Read the test count from the `Tests N passed` line of `npm test` and report it as is.
+- If the build emits stale CSS, it may be the Turbopack cache. See "Things to know" in CLAUDE.md.
 
-## 3. 화면 확인 (화면이 바뀐 경우만)
+## 3. UI check (only if the UI changed)
 
-`src`의 `ui` 파일, `globals.css`, 재생·시각화 동작이 바뀌었으면 브라우저에서 직접 본다.
+If `ui` files under `src`, `globals.css`, or playback/visualization behavior changed, look at it in the browser.
 
-1. `npm run dev`를 백그라운드로 띄우고 `http://localhost:3000`을 연다.
-2. 바뀐 동작을 실제로 해 본다. 재생, 한 단계 이동, 진행바, 비교 모드 등 영향을 받는 것을 고른다.
-3. 밝은 테마와 어두운 테마(제목 옆 버튼)를 둘 다 본다.
-4. 브라우저 콘솔에 오류가 없는지 본다.
-- 데스크톱 화면만 본다. 모바일 폭은 보지 않는다.
-- 브라우저를 쓸 수 없는 환경이면 화면 확인을 건너뛰고 건너뛰었다고 보고한다.
-- 다 보면 dev 서버를 끈다.
+1. Start `npm run dev` in the background and open `http://localhost:3000`.
+2. Actually exercise the changed behavior. Pick what is affected: play, step, progress bar, compare mode, etc.
+3. Check both the light and the dark theme (the button next to the title).
+4. Check the browser console for errors.
+- Desktop only. Do not check mobile widths.
+- If no browser is available, skip the UI check and say it was skipped.
+- Stop the dev server when done.
 
-## 4. 보고
+## 4. Report
 
-다음 형식으로 보고한다. 이 내용은 `/pr`의 PR 본문 "확인"에 그대로 쓴다.
+Report in this format, in Korean. It goes into the "확인" section of the PR body in `/pr` as is.
 
 ```
 - lint, lint:fsd, typecheck, 테스트 N개, build, check:worker 통과
 - 브라우저: (확인한 동작, 테마) / 확인하지 않음 (이유)
 - 확인하지 못한 것: (있으면)
 ```
-- 실패가 하나라도 남았으면 "완료"라고 하지 않는다.
-- 건너뛴 검사가 있으면 건너뛰었다고 쓴다. 숨기지 않는다.
-- 서브에이전트가 "통과했다"고 보고한 결과도 여기서 다시 돌려 확인한다.
+- If any failure remains, do not call it "done".
+- If a check was skipped, say so. Do not hide it.
+- Results a subagent reported as "passed" are re-run and confirmed here.

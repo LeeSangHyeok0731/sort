@@ -1,67 +1,67 @@
 ---
 name: parallel-tasks
-description: 서로 다른 작업 둘 이상을 한 번에 맡았을 때 사용한다(예 "1, 2, 3 고치자", 서브에이전트 여러 개로 병렬 작업). 작업마다 main에서 브랜치를 따로 만들고 worktree 서브에이전트로 나눠 진행한 뒤, PR도 작업마다 따로 올린다.
+description: Use when given two or more separate tasks at once (e.g. "1, 2, 3 고치자", parallel work with several subagents). Creates a separate branch from main per task, splits the work across worktree subagents, and opens a separate PR per task.
 ---
 
-# 작업 하나당 브랜치·PR 하나
+# One branch and one PR per task
 
-여러 작업을 함께 맡아도 **작업 하나 = 브랜치 하나 = PR 하나**다. 한 브랜치에 커밋만 나눠 PR 하나로 묶지 않는다. PR을 만들 때 커밋 접두어가 섞여 있으면 `guard-command.mjs` 훅이 사용자에게 묻는다.
+Even when given several tasks together, **one task = one branch = one PR**. Do not split commits within one branch and bundle them into one PR. If commit prefixes are mixed when a PR is created, the `guard-command.mjs` hook asks the user.
 
-## 1. 작업 나누기
+## 1. Split the tasks
 
-- 작업마다 브랜치 이름을 `<접두어>/<짧은-이름>`으로 정한다(예: `ci/build-check`, `fix/sort-error-status`). 접두어는 그 작업의 커밋 접두어와 같다.
-- 작업끼리 같은 파일을 고쳐야 하면, 따로 진행하면 머지할 때 충돌한다. 그런 작업은 하나로 묶을지, 순서대로 할지 사용자에게 묻는다.
-- 큰 기능이 섞여 있으면 CLAUDE.md 규칙대로 그 작업은 설계 문서부터 쓴다.
+- Name each task's branch `<prefix>/<short-name>` (e.g. `ci/build-check`, `fix/sort-error-status`). The prefix is the same as that task's commit prefix.
+- If tasks need to change the same files, doing them separately causes merge conflicts. Ask the user whether to combine such tasks or do them in order.
+- If a large feature is among them, that task starts with a design document per the CLAUDE.md rules.
 
-## 2. 작업자 띄우기
+## 2. Launch the workers
 
-작업마다 `Agent`를 `subagent_type: "worker"`, `isolation: "worktree"`로 띄운다. 서로 의존하지 않으면 한 메시지에서 함께 띄운다. 각 작업자는 `.claude/worktrees/` 아래 자기 작업 사본에서 일하므로, 같은 폴더에서 서로의 파일을 덮어쓰지 않는다.
+For each task, launch `Agent` with `subagent_type: "worker"` and `isolation: "worktree"`. If they do not depend on each other, launch them together in one message. Each worker works in its own copy under `.claude/worktrees/`, so they do not overwrite each other's files in a shared folder.
 
-공통 규칙(worktree 밖 금지, 브랜치 맞추기, `/implement`·`/commit` 절차, 검사, push·PR 금지, 보고 형식)은 작업자 정의(`.claude/agents/worker.md`)에 있다. 지시문에는 그 작업에 관한 것만 쓴다.
+The common rules (nothing outside the worktree, aligning the branch, the `/implement` and `/commit` procedures, checks, no push/PR, report format) are in the worker definition (`.claude/agents/worker.md`). The prompt contains only what is specific to the task.
 
 ```
-브랜치: <접두어>/<짧은-이름>
-목표: <무엇을, 왜. 끝났다고 볼 조건>
-범위: <고칠 파일·폴더, 건드리지 말 파일>
-참고: <관련 코드 위치, 설계·계획 문서 경로, 없으면 "없음">
+Branch: <prefix>/<short-name>
+Goal: <what and why; the condition for calling it done>
+Scope: <files and folders to change, files not to touch>
+References: <related code locations, design/plan doc paths, or "none">
 ```
 
-- 작업자는 이 대화를 모른다. 지시문만 읽고 일할 수 있게 쓴다.
-- worktree에는 `node_modules`가 없다. 그래도 Node가 위쪽 폴더로 올라가 프로젝트 루트의 `node_modules`를 찾으므로 lint, lint:fsd, typecheck, vitest는 그대로 돈다(확인함).
-- 작업자의 브랜치 맞추기(`git branch -m`, `git switch -c`)는 권한 허용 목록에 없어서 확인 창이 뜬다. 작업마다 한 번씩 승인한다.
+- The worker does not know this conversation. Write the prompt so it can work from the prompt alone.
+- A worktree has no `node_modules`. Node still walks up the folders and finds the project root's `node_modules`, so lint, lint:fsd, typecheck and vitest run as usual (verified).
+- The worker's branch alignment (`git branch -m`, `git switch -c`) is not in the permission allowlist, so a confirmation prompt appears. Approve it once per task.
 
-## 3. 검토 (worktree가 있는 동안)
+## 3. Review (while the worktree exists)
 
-작업자 보고만 믿지 말고 브랜치마다 직접 확인한다.
+Do not just trust the worker's report; check each branch yourself.
 
-1. diff를 본다.
+1. Look at the diff.
    ```bash
    git worktree list
-   git diff main...<브랜치> --stat
-   git diff main...<브랜치>
+   git diff main...<branch> --stat
+   git diff main...<branch>
    ```
-2. 브랜치마다 `/review`를 돌린다. 작업 폴더는 `git worktree list`에서 그 브랜치 줄의 경로다. 브랜치가 여럿이면 리뷰어를 한 메시지에서 함께 띄운다.
-3. 받은 지적은 그 worktree 안에서 새 커밋으로 고친다. 파일은 worktree 절대 경로로 고친다. 커밋은 `cd <worktree 경로>`를 **따로 먼저** 실행한 뒤 다음 명령에서 한다. 훅은 명령을 실행하기 전의 셸 폴더에서 브랜치를 보므로, `cd … && git commit`을 한 명령으로 이으면 본 폴더의 브랜치(main)를 보고 막는다. `git -C <경로> commit`은 훅이 커밋으로 알아보지 못해 main·공동 작성자 줄 검사가 빠지므로 쓰지 않는다.
-4. `/review` 4단계의 "고쳤으면 `/verify`를 다시"는 여기서 하지 않는다. worktree에서는 빌드를 돌리지 않으므로, 이 스킬 4단계에서 본 폴더로 옮긴 뒤 한다. 일반 순서(`/verify` → `/review`)와 달리 여기서는 리뷰가 먼저다.
+2. Run `/review` for each branch. The working folder is the path on that branch's line in `git worktree list`. With several branches, launch the reviewers together in one message.
+3. Fix accepted findings in new commits inside that worktree. Edit files by their absolute worktree paths. For the commit, run `cd <worktree path>` **separately first**, then commit in the next command. The hook checks the branch in the shell folder before the command runs, so chaining `cd … && git commit` in one command makes it see the main folder's branch (main) and block. Do not use `git -C <path> commit`: the hook does not recognize it as a commit, so the main and co-author checks are skipped.
+4. The "rerun `/verify` after fixing" of `/review` step 4 is not done here. Builds are not run in a worktree, so it is done after moving to the main folder in step 4 of this skill. Unlike the usual order (`/verify` → `/review`), review comes first here.
 
-## 4. 본 폴더에서 확인
+## 4. Check in the main folder
 
-빌드는 본 폴더에서만 확인한다(worktree에서 `npm run build`를 돌려 본 적이 없다). 같은 브랜치를 두 폴더에서 동시에 체크아웃할 수 없으므로, **worktree를 먼저 지우고** 본 폴더에서 그 브랜치로 바꾼다. worktree를 지워도 브랜치와 커밋은 남는다.
+The build is checked only in the main folder (`npm run build` has never been tried in a worktree). The same branch cannot be checked out in two folders at once, so **remove the worktree first**, then switch to that branch in the main folder. Removing the worktree keeps the branch and its commits.
 
 ```bash
-git worktree remove <worktree 경로>
-git switch <브랜치>
+git worktree remove <worktree path>
+git switch <branch>
 ```
-- 셸이 그 worktree 안에 있으면 지워지지 않는다. 먼저 본 폴더로 나와서 지운다.
-- 커밋 안 된 변경이 남아 있으면 `git worktree remove`가 멈춘다. `--force`로 지우지 말고, 그 변경이 무엇인지 보고 커밋할지 사용자에게 묻는다.
-- 그 브랜치에서 `/verify`를 돌린다. 브랜치마다 하나씩 한다.
+- If the shell is inside that worktree, it cannot be removed. Leave to the main folder first.
+- If uncommitted changes remain, `git worktree remove` stops. Do not remove it with `--force`; look at what the changes are and ask the user whether to commit them.
+- Run `/verify` on that branch. Do one branch at a time.
 
-## 5. 반영
+## 5. Ship
 
-- push·PR·머지는 사용자가 승인한 뒤에만 한다. 브랜치마다 `/pr`을 **따로** 돌려 PR을 하나씩 올린다.
-- 머지는 승인받은 PR부터 `/merge`로 하나씩 한다. 앞 PR을 머지한 뒤 뒤 브랜치가 충돌하면 `/merge` 3단계대로 `git merge main`으로 맞춘다. rebase는 훅이, force push는 권한 설정과 훅이 막는다.
-- 사용자에게 보고할 때는 PR 링크를 작업별로 나눠 적는다.
+- Push, PR and merge only after the user approves. Run `/pr` **separately** per branch to open the PRs one by one.
+- Merge the approved PRs one at a time with `/merge`. If a later branch conflicts after an earlier PR is merged, bring it up to date with `git merge main` as in `/merge` step 3. The hook blocks rebase, and the permission settings and hook block force push.
+- When reporting to the user, list the PR links per task.
 
-## 6. 정리
+## 6. Clean up
 
-- 변경 없이 끝난 worktree는 자동으로 지워진다. 남은 것은 `git worktree list`로 확인하고 4단계처럼 지운다.
+- Worktrees that finished with no changes are removed automatically. Check for the rest with `git worktree list` and remove them as in step 4.

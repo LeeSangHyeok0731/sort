@@ -1,54 +1,56 @@
 ---
 name: review
-description: /verify를 통과한 브랜치를 PR 전에 검토받을 때 쓴다("리뷰해줘", "검토해 봐", /parallel-tasks에서 브랜치마다). reviewer 에이전트를 띄우고, 지적을 하나씩 직접 검증해 맞는 것만 새 커밋으로 고친 뒤 /verify를 다시 돌리고 결과를 보고한다.
+description: Use to get a branch that passed /verify reviewed before its PR ("리뷰해줘", "검토해 봐", or per branch in /parallel-tasks). Launches the reviewer agent, verifies each finding yourself, fixes only the valid ones in new commits, reruns /verify and reports.
 ---
 
-# 리뷰
+# Review
 
-리뷰어는 변경을 만들지 않은 새 눈이다. 리뷰어의 지적도 검증 없이 받아들이지 않는다.
+The reviewer is a fresh pair of eyes that did not make the change. Its findings are not accepted without verification either.
 
-## 1. 리뷰어 띄우기
+## 1. Launch the reviewer
 
-`Agent`를 `subagent_type: "reviewer"`로 띄운다. 리뷰어는 읽기만 하므로 worktree로 격리하지 않는다. 지시문에는 다음을 넣는다.
+Launch `Agent` with `subagent_type: "reviewer"`. The reviewer only reads, so it is not isolated in a worktree. The prompt contains:
 
 ```
-브랜치: <브랜치 이름>
-작업 폴더: <그 브랜치가 체크아웃된 절대 경로, 어디에도 체크아웃돼 있지 않으면 "없음">
-목적: <이 작업이 무엇을 하려는지 한 줄>
-설계·계획: <docs/specs/…, docs/plans/… 경로, 없으면 "없음">
-특히 볼 곳: <걱정되는 부분이 있으면>
+Branch: <branch name>
+Working folder: <absolute path where that branch is checked out, or "none" if it is not checked out anywhere>
+Purpose: <one line on what this work is meant to do>
+Design/plan: <docs/specs/…, docs/plans/… paths, or "none">
+Focus: <areas of concern, if any>
 ```
 
-- 작업 폴더는 `git worktree list`에서 그 브랜치 줄의 경로다. 리뷰어는 본 폴더에서 돌기 때문에, 이 경로를 주지 않으면 본 폴더에 체크아웃된 다른 브랜치의 파일을 읽고 테스트한다.
-- 브랜치가 여러 개면(`/parallel-tasks`) 한 메시지에서 브랜치마다 하나씩 동시에 띄운다.
-- 큰 변경이면 기본 제공 `/code-review`를 함께 돌려도 된다. 일반 버그는 그쪽이, 이 저장소의 규칙은 `reviewer`가 더 잘 본다.
+- The working folder is the path on that branch's line in `git worktree list`. The reviewer runs in the main folder, so without this path it reads and tests the files of whatever other branch is checked out there.
+- With several branches (`/parallel-tasks`), launch one reviewer per branch in a single message.
+- For a large change, the built-in `/code-review` can run alongside. It is better at general bugs; `reviewer` is better at this repo's rules.
 
-## 2. 지적 검증
+## 2. Verify the findings
 
-지적마다 직접 코드를 열어 확인하고 셋 중 하나로 정한다.
+Open the code for each finding and classify it as one of three.
 
-| 판정 | 기준 | 다음 |
+| Verdict | Criterion | Next |
 |---|---|---|
-| 받음 | 코드에서 문제를 확인했다 | 3단계에서 고친다 |
-| 받지 않음 | 지적이 틀렸다(코드를 잘못 읽음, 이미 처리됨, 규칙에 없는 요구) | 이유를 한 줄 적는다 |
-| 범위 밖 | 맞지만 이번 작업과 무관하다 | 고치지 않고 사용자에게 따로 알린다 |
+| Accepted | You confirmed the problem in the code | Fix it in step 3 |
+| Rejected | The finding is wrong (misread code, already handled, not a rule here) | Write the reason in one line |
+| Out of scope | Correct but unrelated to this work | Do not fix; tell the user separately |
 
-- "확인 필요"로 온 지적은 직접 재현하거나 테스트를 돌려 받음·받지 않음 중 하나로 정한다.
-- 리뷰어가 맞다고 우겨도 근거가 없으면 받지 않는다. 내가 틀렸으면 받아들인다.
+- Findings marked "needs checking" are resolved to accepted or rejected by reproducing them or running tests yourself.
+- Even if the reviewer insists, reject it without evidence. If you were wrong, accept it.
 
-## 3. 고치기
+## 3. Fix
 
-- 받은 지적은 **새 커밋으로** 고친다(`/commit`). 기존 커밋을 고치지 않는다.
-- 지적 하나가 커밋 하나다. 같은 원인의 지적 여러 개는 커밋 하나로 묶어도 된다.
-- 버그 지적이면 `/debug` 순서(실패하는 테스트 → 원인 확인 → 수정)를 따른다.
-- 커밋 접두어는 **브랜치의 주 접두어**를 따른다. `feat:` 브랜치에서 리뷰로 찾은 버그를 고치면 `fix:`가 아니라 `feat:`이다. 아직 머지되지 않은 그 작업의 일부이기 때문이다. `fix:`를 쓰면 `/pr` 2단계와 훅이 작업이 섞였다고 본다. 딸린 `test:`·`docs:`·`style:`은 그대로 쓴다.
+- Fix accepted findings **in new commits** (`/commit`). Do not modify existing commits.
+- One finding is one commit. Several findings with the same cause may share one commit.
+- For a bug finding, follow the `/debug` order (failing test → confirm cause → fix).
+- The commit prefix follows **the branch's main prefix**. A bug found by review on a `feat:` branch is fixed with `feat:`, not `fix:`, because it is part of that unmerged work. With `fix:`, `/pr` step 2 and the hook treat the work as mixed. Accompanying `test:`/`docs:`/`style:` stay as they are.
 
-## 4. 다시 확인
+## 4. Check again
 
-- 고쳤으면 `/verify`를 다시 돌린다.
-- 고친 양이 많거나 구조가 바뀌었으면 `/review`를 한 번 더 돌린다. 두 번째 리뷰에도 새 "반드시 고침"이 나오면 멈추고 사용자와 방향을 정한다.
+- After fixing, rerun `/verify`.
+- If the fixes were large or changed the structure, run `/review` once more. If the second review still has a new "must fix", stop and settle the direction with the user.
 
-## 5. 보고
+## 5. Report
+
+Report in Korean in this format:
 
 ```
 - 리뷰어 의견: <머지해도 됨 / 반드시 고침 N개>
@@ -57,4 +59,4 @@ description: /verify를 통과한 브랜치를 PR 전에 검토받을 때 쓴다
 - 범위 밖: <문제 한 줄> (따로 처리 제안)
 ```
 
-이 내용은 `/pr`의 PR 본문 "확인"에 "리뷰" 항목으로 옮긴다.
+This goes into the "확인" section of the PR body in `/pr` as the "리뷰" item.
